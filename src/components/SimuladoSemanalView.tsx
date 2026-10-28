@@ -6,7 +6,7 @@ import {
 } from '../data/simuladosFgvData';
 import { CRONOGRAMA_DATA } from '../data/tributarioData';
 import { SafeStorage } from '../utils/storage';
-import { dispararConfetesSuaves } from '../utils/confetti';
+import { dispararConfetesSuaves, dispararMegaConfetes150L } from '../utils/confetti';
 import { tocarAlarmeWebAudio } from '../utils/audio';
 import {
   Sparkles,
@@ -23,7 +23,8 @@ import {
   RotateCcw,
   Upload,
   Info,
-  Scale
+  Scale,
+  Trophy
 } from 'lucide-react';
 import { GerenciadorSimulados } from './GerenciadorSimulados';
 
@@ -146,8 +147,18 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
       return;
     }
 
+    const totalLinhasRedigidas = textoRedacao ? textoRedacao.split('\n').length : 0;
+    const atingiu150Linhas = totalLinhasRedigidas >= 150;
+
     setCorrigindo(true);
     setCorrecaoModalAberta(true);
+
+    // Se atingiu o teto oficial de 150 linhas, dispara imediatamente a celebração épica densa e persistente
+    if (atingiu150Linhas) {
+      dispararMegaConfetes150L();
+      tocarAlarmeWebAudio('suave');
+      mostrarToast('🏆 CONQUISTA ÉPICA! Você redigiu as 150 linhas oficiais da prova FGV!');
+    }
 
     try {
       const res = await fetch('/api/corrigir-simulado', {
@@ -178,7 +189,11 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
         setNotasHistorico(atualizado);
         SafeStorage.set('tributa_simulados_notas', JSON.stringify(atualizado));
 
-        if (resultado.aprovadoNaPeca) {
+        if (atingiu150Linhas) {
+          dispararMegaConfetes150L();
+          tocarAlarmeWebAudio('suave');
+          mostrarToast(`🏆 150 Linhas + Nota ${resultado.notaFinal.toFixed(2)}/5,00 na Peça Profissional!`);
+        } else if (resultado.aprovadoNaPeca) {
           dispararConfetesSuaves({ count: 80, originY: 0.3 });
           tocarAlarmeWebAudio('suave');
           mostrarToast(`🎉 Parabéns! Nota ${resultado.notaFinal.toFixed(2)}/5,00 na Peça Profissional!`);
@@ -251,11 +266,17 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
       setNotasHistorico(atualizado);
       SafeStorage.set('tributa_simulados_notas', JSON.stringify(atualizado));
 
-      if (aprovado) {
+      if (atingiu150Linhas) {
+        dispararMegaConfetes150L();
+        tocarAlarmeWebAudio('suave');
+        mostrarToast(`🏆 150 Linhas Completas! Nota final calculada: ${notaFinal.toFixed(2)}/5,00.`);
+      } else if (aprovado) {
         dispararConfetesSuaves({ count: 70, originY: 0.35 });
         tocarAlarmeWebAudio('suave');
+        mostrarToast(`Simulado finalizado! Nota calculada: ${notaFinal.toFixed(2)}/5,00.`);
+      } else {
+        mostrarToast(`Simulado finalizado! Nota calculada: ${notaFinal.toFixed(2)}/5,00.`);
       }
-      mostrarToast(`Simulado finalizado! Nota calculada: ${notaFinal.toFixed(2)}/5,00.`);
     } finally {
       setCorrigindo(false);
     }
@@ -740,6 +761,43 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
               </div>
             ) : resultadoCorrecao ? (
               <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+                {/* Banner de Conquista Máxima: 150 Linhas Redigidas */}
+                {textoRedacao && textoRedacao.split('\n').length >= 150 && (
+                  <div className="rounded-2xl border-2 border-amber-400/90 bg-gradient-to-r from-amber-500/25 via-yellow-500/15 to-emerald-500/20 p-4 shadow-xl flex items-center justify-between gap-4 flex-wrap animate-in fade-in zoom-in-95">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-extrabold shadow-lg">
+                        <Trophy className="h-6 w-6 text-slate-950" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="badge b-AMARELO text-[10px] font-bold">
+                            🏆 Conquista Épica FGV
+                          </span>
+                          <span className="badge b-VERDE text-[10px] font-bold font-mono">
+                            {textoRedacao.split('\n').length} Linhas • 5/5 Páginas
+                          </span>
+                        </div>
+                        <h3 className="text-sm font-extrabold text-white mt-1">
+                          Teto Máximo de 150 Linhas Atingido na Folha Oficial!
+                        </h3>
+                        <p className="text-[11px] text-amber-100/90 leading-snug mt-0.5 max-w-xl">
+                          Você redigiu integralmente todas as 150 linhas da folha padrão da OAB com rigor formal, teses de direito material e fundamentação processual completa!
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        dispararMegaConfetes150L();
+                        tocarAlarmeWebAudio('suave');
+                      }}
+                      className="rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold px-3.5 py-2 text-xs shadow-md transition transform active:scale-95 cursor-pointer whitespace-nowrap ml-auto"
+                      title="Disparar novamente a chuva densa de confetes e poeira estelar"
+                    >
+                      🎉 Repetir Mega Confetes
+                    </button>
+                  </div>
+                )}
+
                 {/* Score Banner */}
                 <div
                   className={`rounded-xl border p-4 flex items-center justify-between flex-wrap gap-4 ${

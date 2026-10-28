@@ -9,6 +9,8 @@ interface SimuladorSintaxeBarProps {
   activeCategories: Record<SyntaxCategory, boolean>;
   onToggleCategory: (cat: SyntaxCategory) => void;
   onInserirTermo?: (termo: string) => void;
+  tooltipsAtivos?: boolean;
+  onToggleTooltips?: () => void;
 }
 
 export const SimuladorSintaxeBar: React.FC<SimuladorSintaxeBarProps> = ({
@@ -17,7 +19,9 @@ export const SimuladorSintaxeBar: React.FC<SimuladorSintaxeBarProps> = ({
   stats,
   activeCategories,
   onToggleCategory,
-  onInserirTermo
+  onInserirTermo,
+  tooltipsAtivos = true,
+  onToggleTooltips
 }) => {
   const [guiaExpandido, setGuiaExpandido] = useState(false);
 
@@ -25,7 +29,7 @@ export const SimuladorSintaxeBar: React.FC<SimuladorSintaxeBarProps> = ({
     <div className="rounded-xl border border-[#455468] bg-[#222c3a] p-3 shadow-sm transition-all space-y-2.5">
       {/* Top Header of Syntax Bar */}
       <div className="flex items-center justify-between flex-wrap gap-2.5">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={onToggleAtivo}
             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all shadow-sm cursor-pointer active:scale-95 ${
@@ -38,6 +42,20 @@ export const SimuladorSintaxeBar: React.FC<SimuladorSintaxeBarProps> = ({
             <Sparkles className={`h-3.5 w-3.5 ${ativo ? 'text-amber-200 animate-spin' : 'text-slate-400'}`} />
             <span>{ativo ? 'Destaque de Sintaxe: Ativado' : 'Destaque de Sintaxe: Inativo'}</span>
           </button>
+
+          {ativo && onToggleTooltips && (
+            <button
+              onClick={onToggleTooltips}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all shadow-sm cursor-pointer active:scale-95 ${
+                tooltipsAtivos
+                  ? 'bg-emerald-600 text-white border border-emerald-400 shadow-emerald-600/20'
+                  : 'border border-[#56677d] bg-[#1b232e] text-slate-400 hover:text-slate-200'
+              }`}
+              title="Ativar ou desativar as janelas flutuantes com definições e fundamentações jurídicas ao passar o mouse"
+            >
+              <span>💡 Tooltips Jurídicos: {tooltipsAtivos ? 'Ativados' : 'Desativados'}</span>
+            </button>
+          )}
 
           {ativo && (
             <span className="inline-flex items-center gap-1 text-[11px] font-mono font-semibold text-slate-300 bg-[#1b232e] px-2.5 py-1 rounded-full border border-slate-700">

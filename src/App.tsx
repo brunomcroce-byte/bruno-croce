@@ -37,8 +37,9 @@ import {
   baixarRedacaoTxt
 } from './utils/exportWord';
 import { exportarEsqueletoParaPdf, imprimirEsqueletoPeca, exportarRelatorioSemanalPdf } from './utils/exportPdf';
-import { dispararConfetesSuaves } from './utils/confetti';
+import { dispararConfetesSuaves, dispararMegaConfetes150L } from './utils/confetti';
 import { CronogramaProgressoChart } from './components/CronogramaProgressoChart';
+import { GraficoComparativoMensal } from './components/GraficoComparativoMensal';
 import { NotificacaoEstudoModal } from './components/NotificacaoEstudoModal';
 import { BuscaGlobalModal } from './components/BuscaGlobalModal';
 import { SimuladorApoioDrawer } from './components/SimuladorApoioDrawer';
@@ -49,6 +50,8 @@ import { SIMULADOS_FGV_32, SimuladoFGV } from './data/simuladosFgvData';
 import { SimuladorSintaxeOverlay } from './components/SimuladorSintaxeOverlay';
 import { SimuladorSintaxeBar } from './components/SimuladorSintaxeBar';
 import { parseLegalSyntax, SyntaxCategory } from './utils/syntaxHighlight';
+import { lookupLegalTerm, LegalTooltipInfo } from './utils/legalGlossary';
+import { TooltipJuridico } from './components/TooltipJuridico';
 import { GerenciadorVersoesModal, VersaoRedacao } from './components/GerenciadorVersoesModal';
 import {
   BookOpen,
@@ -224,6 +227,67 @@ export default function App() {
   const sintaxeResultado = useMemo(() => {
     return parseLegalSyntax(textoRedacao, { activeCategories: sintaxeCategorias });
   }, [textoRedacao, sintaxeCategorias]);
+
+  // Tooltips Jurídicos nos Termos Destacados pela Sintaxe FGV
+  const [tooltipsAtivos, setTooltipsAtivos] = useState(() =>
+    SafeStorage.get('tributa_tooltips_sintaxe', 'true') === 'true'
+  );
+  const [tooltipInfo, setTooltipInfo] = useState<LegalTooltipInfo | null>(null);
+  const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null);
+  const tooltipLeaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleHoverSyntaxTerm = (term: string, category: SyntaxCategory, rect: DOMRect) => {
+    if (!tooltipsAtivos) return;
+    if (tooltipLeaveTimerRef.current) {
+      clearTimeout(tooltipLeaveTimerRef.current);
+      tooltipLeaveTimerRef.current = null;
+    }
+
+    const info = lookupLegalTerm(term, category);
+    const tooltipWidth = 360;
+    const tooltipHeight = 280;
+    const padding = 16;
+
+    let left = rect.left;
+    if (left + tooltipWidth > window.innerWidth - padding) {
+      left = window.innerWidth - tooltipWidth - padding;
+    }
+    if (left < padding) left = padding;
+
+    let top = rect.bottom + 8;
+    if (top + tooltipHeight > window.innerHeight - padding) {
+      top = Math.max(padding, rect.top - tooltipHeight - 8);
+    }
+
+    setTooltipInfo(info);
+    setTooltipPos({ top, left });
+  };
+
+  const handleLeaveSyntaxTerm = () => {
+    if (tooltipLeaveTimerRef.current) {
+      clearTimeout(tooltipLeaveTimerRef.current);
+    }
+    tooltipLeaveTimerRef.current = setTimeout(() => {
+      setTooltipInfo(null);
+      setTooltipPos(null);
+    }, 280);
+  };
+
+  const toggleTooltipsSintaxe = () => {
+    const novo = !tooltipsAtivos;
+    setTooltipsAtivos(novo);
+    SafeStorage.set('tributa_tooltips_sintaxe', String(novo));
+    if (!novo) {
+      setTooltipInfo(null);
+      setTooltipPos(null);
+    }
+    tocarAlarmeWebAudio('suave');
+    mostrarToast(
+      novo
+        ? '💡 Tooltips Jurídicos ativados! Passe o mouse sobre os termos para ver a fundamentação.'
+        : 'Tooltips Jurídicos desativados.'
+    );
+  };
 
   // Gerenciador de Versões de Redação e Comparador de Mudanças (Diff)
   const [modalVersoesAberto, setModalVersoesAberto] = useState(false);
@@ -1016,6 +1080,10 @@ export default function App() {
   const handleRedacaoChange = (val: string) => {
     setTextoRedacao(val);
     SafeStorage.set('tributa_redacao', val);
+    if (tooltipInfo) {
+      setTooltipInfo(null);
+      setTooltipPos(null);
+    }
   };
 
   const handlePlannerUpdate = (id: string, value: any) => {
@@ -1781,7 +1849,7 @@ export default function App() {
                 onMostrarToast={mostrarToast}
               />
 
-              {/* CARD: METAS DIÁRIAS (ATÉ 3 MICRO-METAS COM LIMPEZA AUTOMÁTICA ÀS 00:00) */}
+              {/* CARD: METAS DIÁRIAS & TAREFAS RÁPIDAS (COM CHECKBOX E LIMPEZA AUTOMÁTICA ÀS 00:00) */}
               <MetasDiariasCard
                 onNavigateToTab={(tab) => setActiveTab(tab as TabType)}
                 onMostrarToast={mostrarToast}
@@ -1985,6 +2053,14 @@ export default function App() {
                   </div>
                 </div>
               </div>
+
+              {/* GRÁFICO COMPARATIVO MENSAL (RECHARTS): ÚLTIMOS 4 MESES (TAXA DE FLASHCARDS & LINHAS REDIGIDAS) */}
+              <GraficoComparativoMensal
+                taxaAtualFlashcards={taxaAcertoEstimada}
+                linhasSemanaisSimulador={totalLinhasSemana}
+                onNavegarParaSimulador={() => setActiveTab('simulador')}
+                onNavegarParaFlashcards={() => setActiveTab('flashcards')}
+              />
 
               {/* PAINEL DE NOTIFICAÇÃO DIÁRIA DE ESTUDO (LOCALSTORAGE) */}
               <div className="rounded-2xl border border-amber-500/70 bg-[#2b3646] p-5 shadow-md">
@@ -3503,6 +3579,21 @@ export default function App() {
                           <span>{destaqueSintaxe ? 'Destaque: Ativado' : 'Destaque de Sintaxe'}</span>
                         </button>
 
+                        {/* Botão de Tooltips Jurídicos Flutuantes */}
+                        {destaqueSintaxe && (
+                          <button
+                            onClick={toggleTooltipsSintaxe}
+                            className={`rounded-full px-3 py-1 text-xs font-semibold transition inline-flex items-center gap-1.5 shadow-sm cursor-pointer ${
+                              tooltipsAtivos
+                                ? 'bg-emerald-600 text-white border border-emerald-400 shadow-emerald-500/20'
+                                : 'border border-[#56677d] bg-[#3b495e] text-slate-300 hover:bg-slate-600'
+                            }`}
+                            title="Alternar exibição de janelas flutuantes com conceitos jurídicos e fundamentação ao passar o mouse sobre os termos"
+                          >
+                            <span>💡 {tooltipsAtivos ? 'Tooltips: Ativados' : 'Tooltips: Desativados'}</span>
+                          </button>
+                        )}
+
                         <button
                           onClick={() => setModalVersoesAberto(true)}
                           className="rounded-full px-3 py-1 text-xs font-semibold transition inline-flex items-center gap-1.5 shadow-sm cursor-pointer border border-[#56677d] bg-[#3b495e] text-slate-200 hover:bg-slate-600 hover:text-white"
@@ -3544,6 +3635,8 @@ export default function App() {
                         activeCategories={sintaxeCategorias}
                         onToggleCategory={toggleCategoriaSintaxe}
                         onInserirTermo={(termo) => inserirTextoNaRedacao(termo, false)}
+                        tooltipsAtivos={tooltipsAtivos}
+                        onToggleTooltips={toggleTooltipsSintaxe}
                       />
                     </div>
 
@@ -3557,9 +3650,9 @@ export default function App() {
                           {destaqueSintaxe && sintaxeResultado.stats.total > 0 && (
                             <span
                               className="inline-flex items-center gap-1 rounded-full bg-sky-100 text-sky-800 border border-sky-300 px-2 py-0.5 text-[10px] font-bold"
-                              title={`${sintaxeResultado.stats.peca} peças, ${sintaxeResultado.stats.artigo} artigos, ${sintaxeResultado.stats.tributo} tributos, ${sintaxeResultado.stats.tese} teses`}
+                              title={`${sintaxeResultado.stats.peca} peças, ${sintaxeResultado.stats.artigo} artigos, ${sintaxeResultado.stats.tributo} tributos, ${sintaxeResultado.stats.tese} teses. Passe o mouse nos termos para ver o conceito.`}
                             >
-                              ✨ {sintaxeResultado.stats.total} termos destacados
+                              ✨ {sintaxeResultado.stats.total} termos destacados {tooltipsAtivos ? '(passe o mouse)' : ''}
                             </span>
                           )}
                           {totalLinhasSemana >= 150 && (
@@ -3593,13 +3686,17 @@ export default function App() {
                           ))}
                         </div>
 
-                        {/* Editor com Camada Sobreposta (Overlay) de Destaque de Sintaxe */}
+                        {/* Editor com Camada Sobreposta (Overlay) de Destaque de Sintaxe e Tooltips Jurídicos */}
                         <div className="relative flex-1 min-h-[4200px] h-[4200px] flex">
                           {destaqueSintaxe && (
                             <SimuladorSintaxeOverlay
                               text={textoRedacao}
                               activeCategories={sintaxeCategorias}
                               overlayRef={syntaxOverlayRef}
+                              editorRef={editorRef}
+                              onHoverTerm={handleHoverSyntaxTerm}
+                              onLeaveTerm={handleLeaveSyntaxTerm}
+                              tooltipsHabilitados={tooltipsAtivos}
                             />
                           )}
                           <textarea
@@ -3614,6 +3711,20 @@ export default function App() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Janela Flutuante de Tooltip Jurídico ao passar o mouse sobre termos destacados */}
+                    {destaqueSintaxe && tooltipsAtivos && tooltipInfo && tooltipPos && (
+                      <TooltipJuridico
+                        info={tooltipInfo}
+                        position={tooltipPos}
+                        onClose={() => {
+                          setTooltipInfo(null);
+                          setTooltipPos(null);
+                        }}
+                        onNavegarParaAba={(aba) => setActiveTab(aba as TabType)}
+                        onInserirFundamentacao={(texto) => inserirTextoNaRedacao(texto, false)}
+                      />
+                    )}
 
                     {/* Actions Toolbar */}
                     <div className="flex items-center justify-between mt-3 flex-wrap gap-2">
@@ -3643,8 +3754,14 @@ export default function App() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => {
+                            if (linhasCount >= 150) {
+                              dispararMegaConfetes150L();
+                              tocarAlarmeWebAudio('suave');
+                              mostrarToast('🏆 150 Linhas concluídas na íntegra! Abrindo avaliação oficial FGV...');
+                            } else {
+                              mostrarToast('Finalizando simulado! Avaliando no espelho oficial da banca FGV...');
+                            }
                             setActiveTab('cronograma');
-                            mostrarToast('Finalizando simulado! Avaliando no espelho oficial da banca FGV...');
                           }}
                           className="rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-emerald-500 transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer active:scale-95"
                           title="Finalizar simulado e receber a nota oficial da banca FGV (0 a 5.00)"
