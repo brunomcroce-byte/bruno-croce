@@ -49,6 +49,7 @@ import { SIMULADOS_FGV_32, SimuladoFGV } from './data/simuladosFgvData';
 import { SimuladorSintaxeOverlay } from './components/SimuladorSintaxeOverlay';
 import { SimuladorSintaxeBar } from './components/SimuladorSintaxeBar';
 import { parseLegalSyntax, SyntaxCategory } from './utils/syntaxHighlight';
+import { GerenciadorVersoesModal, VersaoRedacao } from './components/GerenciadorVersoesModal';
 import {
   BookOpen,
   Calendar,
@@ -89,7 +90,9 @@ import {
   Moon,
   Star,
   Printer,
-  Monitor
+  Monitor,
+  History,
+  GitCompare
 } from 'lucide-react';
 
 type TabType =
@@ -221,6 +224,92 @@ export default function App() {
   const sintaxeResultado = useMemo(() => {
     return parseLegalSyntax(textoRedacao, { activeCategories: sintaxeCategorias });
   }, [textoRedacao, sintaxeCategorias]);
+
+  // Gerenciador de Versões de Redação e Comparador de Mudanças (Diff)
+  const [modalVersoesAberto, setModalVersoesAberto] = useState(false);
+  const [versoesRedacao, setVersoesRedacao] = useState<VersaoRedacao[]>(() => {
+    try {
+      const raw = SafeStorage.get('tributa_redacao_versoes_v1', '');
+      if (raw) return JSON.parse(raw);
+      // Versões iniciais pré-configuradas para demonstração imediata do Diff
+      return [
+        {
+          id: 'v_seed_1',
+          casoId: 0,
+          casoTitulo: 'Caso 1: Mandado de Segurança com Pedido Liminar (FGV 2024)',
+          nome: 'Versão 1 - Esqueleto e Endereçamento',
+          descricao: 'Estruturação formal dos tópicos, endereçamento à Vara de Fazenda e preâmbulo das partes.',
+          texto: `EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA ... VARA DA FAZENDA PÚBLICA DA COMARCA DE ...\n\nIMPETRANTE ..., pessoa jurídica de direito privado, inscrita no CNPJ sob o nº ..., com sede em ..., por seu advogado que esta subscreve, vem respeitosamente perante Vossa Excelência impetrar o presente\n\nMANDADO DE SEGURANÇA COM PEDIDO DE MEDIDA LIMINAR\n\nem face do ATO COATOR praticado pelo ILUSTRÍSSIMO SENHOR DELEGADO REGIONAL DA RECEITA ESTADUAL DE ...\n\nI - DOS FATOS\n(Síntese fática da exordial conforme o enunciado oficial da prova)\n\nII - DO CABIMENTO E TEMPESTIVIDADE\nO presente writ é cabível nos termos do Art. 5º, LXIX da CF/88 e Lei 12.016/09.\n\nIII - DO DIREITO E FUNDAMENTAÇÃO JURÍDICA\n1. Da Ilegalidade da Exigência Fiscal e Violação ao Princípio da Legalidade\n2. Da Suspensão da Exigibilidade do Crédito Tributário (Art. 151, IV do CTN)\n\nIV - DO PEDIDO LIMINAR\nFumaça do bom direito (fumus boni iuris) e o perigo da demora (periculum in mora).\n\nV - DOS PEDIDOS E REQUERIMENTOS\nNestes termos,\nPede deferimento.\nLocal ..., Data ...\nAdvogado ... / OAB ...`,
+          criadoEm: 'Hoje, 09:15',
+          linhasCount: 26,
+          palavrasCount: 168,
+          tag: 'esqueleto'
+        },
+        {
+          id: 'v_seed_2',
+          casoId: 0,
+          casoTitulo: 'Caso 1: Mandado de Segurança com Pedido Liminar (FGV 2024)',
+          nome: 'Versão 2 - Fundamentação Completa com Artigos & Súmulas',
+          descricao: 'Adição de preliminares, citação de ICMS, Art. 151 do CTN e requerimento formal de liminar inaudita altera parte.',
+          texto: `EXCELENTÍSSIMO SENHOR DOUTOR JUIZ DE DIREITO DA ... VARA DA FAZENDA PÚBLICA DA COMARCA DE ...\n\nIMPETRANTE ..., pessoa jurídica de direito privado, inscrita no CNPJ sob o nº ..., com sede em ..., por seu advogado constituído (procuração anexa), vem perante Vossa Excelência impetrar\n\nMANDADO DE SEGURANÇA COM PEDIDO DE MEDIDA LIMINAR\n\nem face do ATO COATOR praticado pelo ILUSTRÍSSIMO SENHOR DELEGADO REGIONAL DA RECEITA ESTADUAL DE ...\n\nI - DA TEMPESTIVIDADE E PROVA PRÉ-CONSTITUÍDA\nO presente writ é tempestivo, impetrado no prazo decadencial de 120 dias previsto no Art. 23 da Lei 12.016/09. Demonstra-se direito líquido e certo mediante prova documental pré-constituída acostada aos autos.\n\nII - DOS FATOS\nO Fisco Estadual efetuou lançamento de ofício cobrando indevidamente ICMS em desacordo com a jurisprudência pacífica dos Tribunais Superiores.\n\nIII - DO DIREITO E MÉRITO TRIBUTÁRIO\n1. Da Não Incidência do ICMS sobre a Operação em Questão (Art. 155, II da CF/88)\n2. Da Aplicação da Súmula 166 do STJ e Tema com Repercussão Geral do STF\n3. Da Suspensão da Exigibilidade do Crédito Tributário pelo Art. 151, inciso IV do CTN\n\nIV - DO PEDIDO DE CONCESSÃO DE LIMINAR\nPresentes a fumaça do bom direito e o perigo da demora nos termos do Art. 7º, inciso III da Lei 12.016/09, requer a suspensão imediata do ato coator.\n\nV - DOS PEDIDOS\na) Concessão da medida liminar inaudita altera parte;\nb) Notificação da autoridade coatora para prestar informações no prazo de 10 dias;\nc) Oitiva do douto representante do Ministério Público;\nd) Concessão definitiva da segurança, confirmando a liminar expedida.\nNestes termos,\nPede deferimento.\nLocal ..., Data ...\nAdvogado ... / OAB ...`,
+          criadoEm: 'Hoje, 10:40',
+          linhasCount: 35,
+          palavrasCount: 245,
+          tag: 'merito'
+        }
+      ];
+    } catch {
+      return [];
+    }
+  });
+
+  const salvarNovaVersaoRedacao = (dados: { nome: string; descricao?: string; tag: VersaoRedacao['tag'] }) => {
+    const agora = new Date();
+    const dataFormatada =
+      agora.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) +
+      ', ' +
+      agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    const nova: VersaoRedacao = {
+      id: `v_${Date.now()}`,
+      casoId: casoIndex,
+      casoTitulo: CASOS_SIMULADO[casoIndex]?.titulo || `Caso ${casoIndex + 1}`,
+      nome: dados.nome,
+      descricao: dados.descricao,
+      texto: textoRedacao,
+      criadoEm: dataFormatada,
+      linhasCount: textoRedacao.split('\n').length,
+      palavrasCount: textoRedacao.trim() ? textoRedacao.trim().split(/\s+/).length : 0,
+      tag: dados.tag
+    };
+
+    const atualizadas = [nova, ...versoesRedacao];
+    setVersoesRedacao(atualizadas);
+    SafeStorage.set('tributa_redacao_versoes_v1', JSON.stringify(atualizadas));
+    tocarAlarmeWebAudio('suave');
+    mostrarToast(`💾 Versão "${dados.nome}" salva no histórico!`);
+  };
+
+  const restaurarVersaoRedacao = (versao: VersaoRedacao) => {
+    if (
+      textoRedacao.trim() !== '' &&
+      !window.confirm(`Deseja carregar a versão "${versao.nome}" no editor? A redação atual será substituída.`)
+    ) {
+      return;
+    }
+    setTextoRedacao(versao.texto);
+    SafeStorage.set('tributa_redacao', versao.texto);
+    tocarAlarmeWebAudio('suave');
+    setModalVersoesAberto(false);
+    mostrarToast(`🔄 Versão "${versao.nome}" restaurada na folha de 150 linhas!`);
+  };
+
+  const excluirVersaoRedacao = (id: string) => {
+    const atualizadas = versoesRedacao.filter(v => v.id !== id);
+    setVersoesRedacao(atualizadas);
+    SafeStorage.set('tributa_redacao_versoes_v1', JSON.stringify(atualizadas));
+    mostrarToast('Versão excluída do histórico.');
+  };
 
   // Flashcards module
   const [filtroCatFlash, setFiltroCatFlash] = useState('TODOS');
@@ -3415,6 +3504,15 @@ export default function App() {
                         </button>
 
                         <button
+                          onClick={() => setModalVersoesAberto(true)}
+                          className="rounded-full px-3 py-1 text-xs font-semibold transition inline-flex items-center gap-1.5 shadow-sm cursor-pointer border border-[#56677d] bg-[#3b495e] text-slate-200 hover:bg-slate-600 hover:text-white"
+                          title="Gerenciar e comparar versões da redação com visualização de diff"
+                        >
+                          <History className="h-3.5 w-3.5 text-sky-400" />
+                          <span>Versões ({versoesRedacao.length})</span>
+                        </button>
+
+                        <button
                           onClick={() => setModoRascunho(!modoRascunho)}
                           className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                             modoRascunho
@@ -3532,6 +3630,14 @@ export default function App() {
                           title="Abrir os 32 simulados de provas reais FGV"
                         >
                           🎲 32 Simulados FGV
+                        </button>
+                        <button
+                          onClick={() => setModalVersoesAberto(true)}
+                          className="rounded-full bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer active:scale-95"
+                          title="Comparar histórico de versões com visualização de diff"
+                        >
+                          <GitCompare className="h-3.5 w-3.5" />
+                          <span>Versões & Diff ({versoesRedacao.length})</span>
                         </button>
                       </div>
                       <div className="flex items-center gap-2">
@@ -4485,6 +4591,19 @@ export default function App() {
         onIrParaCronograma={() => setActiveTab('cronograma')}
         onIrParaFlashcards={() => setActiveTab('flashcards')}
         onExportarWord={() => exportarRedacaoNoWord(textoRedacao)}
+      />
+
+      {/* MODAL DO GERENCIADOR DE VERSÕES DE REDAÇÃO & COMPARADOR DIFF */}
+      <GerenciadorVersoesModal
+        aberta={modalVersoesAberto}
+        onFechar={() => setModalVersoesAberto(false)}
+        textoAtual={textoRedacao}
+        casoIndexAtual={casoIndex}
+        casoTituloAtual={CASOS_SIMULADO[casoIndex]?.titulo || `Caso ${casoIndex + 1}`}
+        versoes={versoesRedacao}
+        onSalvarVersao={salvarNovaVersaoRedacao}
+        onRestaurarVersao={restaurarVersaoRedacao}
+        onExcluirVersao={excluirVersaoRedacao}
       />
 
       {/* MODAL DE BUSCA GLOBAL INTEGRADA (CTRL+K / '/') */}
