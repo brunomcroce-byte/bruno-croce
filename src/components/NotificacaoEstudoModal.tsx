@@ -130,7 +130,7 @@ export function NotificacaoEstudoModal({
                 <Clock className="h-4 w-4 shrink-0 text-sky-200" />
                 <div>
                   <div>Iniciar Bloco Foco</div>
-                  <div className="text-[10px] font-normal text-sky-200">Pomodoro de 50 min</div>
+                  <div className="text-[10px] font-normal text-sky-200">Pomodoro de Foco</div>
                 </div>
               </button>
 

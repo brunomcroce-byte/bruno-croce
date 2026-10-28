@@ -113,12 +113,23 @@ type TabType =
   | 'teses'
   | 'planner';
 
+export type PomodoroModo = '50m' | '25m';
+export type PomodoroTipo = 'foco' | 'pausa';
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Pomodoro Timer State (50 min)
-  const [pomodoroSecs, setPomodoroSecs] = useState(50 * 60);
+  // Pomodoro Timer State (50 min padrão vs 25 min clássico com pausa curta de 5 min)
+  const [pomodoroModo, setPomodoroModo] = useState<PomodoroModo>(() => {
+    const salvo = SafeStorage.get('tributa_pomodoro_modo', '50m');
+    return salvo === '25m' ? '25m' : '50m';
+  });
+  const [pomodoroTipo, setPomodoroTipo] = useState<PomodoroTipo>('foco');
+  const [pomodoroSecs, setPomodoroSecs] = useState<number>(() => {
+    const salvo = SafeStorage.get('tributa_pomodoro_modo', '50m');
+    return salvo === '25m' ? 25 * 60 : 50 * 60;
+  });
   const [pomodoroRunning, setPomodoroRunning] = useState(false);
   const [pomodoroConcluido, setPomodoroConcluido] = useState(false);
 
@@ -908,7 +919,15 @@ export default function App() {
     return Math.ceil((target.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
   }, [dataProva]);
 
-  // Pomodoro effect (50 minutos)
+  // Duração total do bloco atual (foco de 50m ou 25m, ou pausa de 10m ou 5m)
+  const tempoTotalPomodoro = useMemo(() => {
+    if (pomodoroTipo === 'pausa') {
+      return pomodoroModo === '25m' ? 5 * 60 : 10 * 60;
+    }
+    return pomodoroModo === '25m' ? 25 * 60 : 50 * 60;
+  }, [pomodoroTipo, pomodoroModo]);
+
+  // Pomodoro effect (50 min padrão vs 25 min clássico com pausa de 5 min)
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (pomodoroRunning && pomodoroSecs > 0) {
@@ -919,8 +938,17 @@ export default function App() {
             setPomodoroConcluido(true);
             dispararConfetesSuaves({ count: 75, originY: 0.35 });
             tocarAlarmeWebAudio('suave');
-            lerTextoEmVozAlta('Parabéns! Bloco de cinquenta minutos de estudo concluído com sucesso! Faça uma pausa revigorante.');
-            mostrarToast('🎉 Bloco de foco de 50 minutos concluído com sucesso!');
+            if (pomodoroTipo === 'pausa') {
+              const msg = 'Pausa curta concluída! Mente revigorada para o próximo bloco de estudos.';
+              lerTextoEmVozAlta(msg);
+              mostrarToast('☕ Pausa curta concluída! Pronto para retomar os estudos?');
+            } else {
+              const duracaoMin = pomodoroModo === '25m' ? 25 : 50;
+              const pausaMin = pomodoroModo === '25m' ? 5 : 10;
+              const msg = `Parabéns! Bloco de ${duracaoMin} minutos de foco concluído com sucesso! Faça uma pausa revigorante de ${pausaMin} minutos.`;
+              lerTextoEmVozAlta(msg);
+              mostrarToast(`🎉 Bloco de foco de ${duracaoMin} minutos concluído! Faça uma pausa curta de ${pausaMin} min.`);
+            }
             return 0;
           }
           return prev - 1;
@@ -928,31 +956,70 @@ export default function App() {
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [pomodoroRunning, pomodoroSecs]);
+  }, [pomodoroRunning, pomodoroSecs, pomodoroTipo, pomodoroModo]);
 
   // Pomodoro progress (0 to 1)
   const pomodoroProgresso = useMemo(() => {
-    const total = 50 * 60;
-    return Math.min(1, Math.max(0, (total - pomodoroSecs) / total));
-  }, [pomodoroSecs]);
+    return Math.min(1, Math.max(0, (tempoTotalPomodoro - pomodoroSecs) / tempoTotalPomodoro));
+  }, [pomodoroSecs, tempoTotalPomodoro]);
+
+  const alternarModoPomodoro = (novoModo: PomodoroModo) => {
+    setPomodoroModo(novoModo);
+    SafeStorage.set('tributa_pomodoro_modo', novoModo);
+    setPomodoroRunning(false);
+    setPomodoroConcluido(false);
+    setPomodoroTipo('foco');
+    const novoTempo = novoModo === '25m' ? 25 * 60 : 50 * 60;
+    setPomodoroSecs(novoTempo);
+    tocarAlarmeWebAudio('suave');
+    if (novoModo === '25m') {
+      mostrarToast('🍅 Modo Pomodoro Clássico ativado: 25 min de foco + 5 min de pausa curta.');
+    } else {
+      mostrarToast('⏱️ Modo Pomodoro Padrão ativado: 50 min de foco profundo + 10 min de pausa.');
+    }
+  };
 
   const iniciarPomodoro = () => {
     setPomodoroConcluido(false);
     if (!pomodoroRunning) tocarAlarmeWebAudio();
     setPomodoroRunning(true);
-    mostrarToast('Bloco de foco de 50 minutos iniciado!');
+    const tipoTxt = pomodoroTipo === 'pausa' ? 'Pausa curta' : 'Bloco de foco';
+    const minutos = Math.ceil(pomodoroSecs / 60);
+    mostrarToast(`${tipoTxt} de ${minutos} minutos iniciado!`);
   };
 
   const pausarPomodoro = () => {
     setPomodoroRunning(false);
-    mostrarToast('Bloco de foco pausado.');
+    const tipoTxt = pomodoroTipo === 'pausa' ? 'Pausa curta pausada' : 'Bloco de foco pausado';
+    mostrarToast(`${tipoTxt}.`);
   };
 
-  const reiniciarPomodoro = (segundos: number = 50 * 60) => {
+  const reiniciarPomodoro = (segundos?: number) => {
     setPomodoroRunning(false);
     setPomodoroConcluido(false);
-    setPomodoroSecs(segundos);
-    mostrarToast('Temporizador Pomodoro reiniciado para 50:00.');
+    const duracao = segundos !== undefined ? segundos : tempoTotalPomodoro;
+    setPomodoroSecs(duracao);
+    mostrarToast(`Temporizador Pomodoro reiniciado para ${formatTimer(duracao)}.`);
+  };
+
+  const iniciarPausaCurta = () => {
+    setPomodoroTipo('pausa');
+    setPomodoroConcluido(false);
+    const duracaoPausa = pomodoroModo === '25m' ? 5 * 60 : 10 * 60;
+    setPomodoroSecs(duracaoPausa);
+    tocarAlarmeWebAudio('suave');
+    setPomodoroRunning(true);
+    mostrarToast(`☕ Pausa curta de ${duracaoPausa / 60} minutos iniciada! Relaxe e beba água.`);
+  };
+
+  const iniciarNovoBlocoFoco = () => {
+    setPomodoroTipo('foco');
+    setPomodoroConcluido(false);
+    const duracaoFoco = pomodoroModo === '25m' ? 25 * 60 : 50 * 60;
+    setPomodoroSecs(duracaoFoco);
+    tocarAlarmeWebAudio('suave');
+    setPomodoroRunning(true);
+    mostrarToast(`🎯 Bloco de foco de ${duracaoFoco / 60} minutos iniciado! Bom estudo.`);
   };
 
   const simularConclusaoPomodoro = () => {
@@ -961,8 +1028,11 @@ export default function App() {
     setPomodoroConcluido(true);
     dispararConfetesSuaves({ count: 75, originY: 0.35 });
     tocarAlarmeWebAudio('suave');
-    mostrarToast('🎉 Parabéns! Bloco de 50 minutos concluído com sucesso!');
-    lerTextoEmVozAlta('Parabéns! Bloco de cinquenta minutos de estudo concluído com sucesso! Excelente foco.');
+    const tempoDesc = pomodoroTipo === 'pausa'
+      ? (pomodoroModo === '25m' ? '5 minutos de pausa' : '10 minutos de pausa')
+      : (pomodoroModo === '25m' ? '25 minutos de foco' : '50 minutos de foco');
+    mostrarToast(`🎉 Parabéns! Bloco de ${tempoDesc} concluído com sucesso!`);
+    lerTextoEmVozAlta(`Parabéns! Bloco de ${tempoDesc} concluído com sucesso!`);
   };
 
   // Prova 5h effect
@@ -1508,29 +1578,77 @@ export default function App() {
             </nav>
           </div>
 
-        {/* Focus Pomodoro Box com Animação Visual de Círculo e Pulse de Cor */}
+        {/* Focus Pomodoro Box com Alternador 50m Padrão vs 25m Clássico e Pausa de 5m */}
         <div
           className={`m-3 rounded-2xl border p-3.5 shadow-md transition-all duration-500 relative overflow-hidden ${
             pomodoroConcluido
               ? 'pomodoro-success-glow border-emerald-400 bg-gradient-to-br from-[#1b3d2f] via-[#234b3a] to-[#163326] ring-2 ring-emerald-400/50 shadow-[0_0_25px_rgba(34,197,94,0.35)]'
               : pomodoroRunning
-              ? 'border-sky-500/70 bg-gradient-to-b from-[#2b3646] to-[#24303f] ring-1 ring-sky-500/30'
+              ? pomodoroTipo === 'pausa'
+                ? 'border-amber-500/70 bg-gradient-to-b from-[#3a2e22] to-[#2b241e] ring-1 ring-amber-500/40'
+                : pomodoroModo === '25m'
+                ? 'border-rose-500/70 bg-gradient-to-b from-[#38262b] to-[#282025] ring-1 ring-rose-500/40'
+                : 'border-sky-500/70 bg-gradient-to-b from-[#2b3646] to-[#24303f] ring-1 ring-sky-500/30'
               : 'border-[#455468] bg-[#2b3646]'
           }`}
         >
+          {/* Alternador de Modo: 50m Padrão vs 25m Clássico */}
+          <div className="flex items-center rounded-xl bg-[#1b232e] p-1 border border-[#455468] mb-2.5">
+            <button
+              type="button"
+              onClick={() => alternarModoPomodoro('50m')}
+              className={`flex-1 py-1 px-1.5 rounded-lg text-[10.5px] font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
+                pomodoroModo === '50m'
+                  ? 'bg-sky-600 text-white shadow-xs'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              }`}
+              title="Modo Padrão: 50 min de foco profundo + 10 min de pausa"
+            >
+              <span>⏱️ 50m Padrão</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => alternarModoPomodoro('25m')}
+              className={`flex-1 py-1 px-1.5 rounded-lg text-[10.5px] font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
+                pomodoroModo === '25m'
+                  ? 'bg-rose-600 text-white shadow-xs'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              }`}
+              title="Modo Clássico: 25 min de foco + 5 min de pausa curta"
+            >
+              <span>🍅 25m Clássico</span>
+            </button>
+          </div>
+
           {/* Header do Box */}
-          <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center justify-between mb-2">
             <span
               className={`flex items-center gap-1.5 text-[11px] font-bold ${
-                pomodoroConcluido ? 'text-emerald-300' : 'text-amber-300'
+                pomodoroConcluido
+                  ? 'text-emerald-300'
+                  : pomodoroTipo === 'pausa'
+                  ? 'text-amber-300'
+                  : pomodoroModo === '25m'
+                  ? 'text-rose-300'
+                  : 'text-sky-300'
               }`}
             >
               <Clock
                 className={`h-3.5 w-3.5 ${
-                  pomodoroConcluido ? 'text-emerald-400 animate-spin' : 'text-amber-400'
+                  pomodoroConcluido
+                    ? 'text-emerald-400 animate-spin'
+                    : pomodoroRunning
+                    ? 'animate-pulse'
+                    : ''
                 }`}
               />
-              <span>Bloco de Foco (50 min)</span>
+              <span>
+                {pomodoroTipo === 'pausa'
+                  ? `Pausa Curta (${pomodoroModo === '25m' ? '5 min' : '10 min'})`
+                  : pomodoroModo === '25m'
+                  ? 'Pomodoro Clássico (25 min)'
+                  : 'Bloco de Foco (50 min)'}
+              </span>
             </span>
 
             {pomodoroConcluido ? (
@@ -1538,13 +1656,29 @@ export default function App() {
                 ✓ CONCLUÍDO
               </span>
             ) : pomodoroRunning ? (
-              <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                Em Foco
+              <span
+                className={`text-[10px] font-semibold flex items-center gap-1 ${
+                  pomodoroTipo === 'pausa'
+                    ? 'text-amber-400'
+                    : pomodoroModo === '25m'
+                    ? 'text-rose-400'
+                    : 'text-emerald-400'
+                }`}
+              >
+                <span
+                  className={`h-1.5 w-1.5 rounded-full animate-ping ${
+                    pomodoroTipo === 'pausa'
+                      ? 'bg-amber-400'
+                      : pomodoroModo === '25m'
+                      ? 'bg-rose-400'
+                      : 'bg-emerald-400'
+                  }`}
+                ></span>
+                {pomodoroTipo === 'pausa' ? 'Em Pausa' : 'Em Foco'}
               </span>
             ) : (
               <span className="text-[10px] text-slate-400">
-                {pomodoroSecs === 50 * 60 ? 'Pronto' : 'Pausado'}
+                {pomodoroSecs === tempoTotalPomodoro ? 'Pronto' : 'Pausado'}
               </span>
             )}
           </div>
@@ -1579,9 +1713,13 @@ export default function App() {
                   className={`transition-all duration-700 ${
                     pomodoroConcluido
                       ? 'text-emerald-400 stroke-current'
+                      : pomodoroTipo === 'pausa'
+                      ? 'text-amber-400 stroke-current'
+                      : pomodoroModo === '25m'
+                      ? 'text-rose-400 stroke-current'
                       : pomodoroRunning
                       ? 'text-sky-400 stroke-current'
-                      : 'text-amber-400/80 stroke-current'
+                      : 'text-slate-400/80 stroke-current'
                   }`}
                   strokeWidth="4.5"
                   strokeDasharray="138.23"
@@ -1601,7 +1739,15 @@ export default function App() {
                 {pomodoroConcluido ? (
                   <Check className="h-6 w-6 text-emerald-300 animate-bounce stroke-[3]" />
                 ) : pomodoroRunning ? (
-                  <Sparkles className="h-4 w-4 text-sky-300 animate-pulse" />
+                  <Sparkles
+                    className={`h-4 w-4 animate-pulse ${
+                      pomodoroTipo === 'pausa'
+                        ? 'text-amber-300'
+                        : pomodoroModo === '25m'
+                        ? 'text-rose-300'
+                        : 'text-sky-300'
+                    }`}
+                  />
                 ) : (
                   <span className="font-mono text-[10px] font-bold text-slate-300">
                     {Math.round(pomodoroProgresso * 100)}%
@@ -1616,6 +1762,10 @@ export default function App() {
                 className={`font-mono text-2xl font-black tracking-wider transition-colors ${
                   pomodoroConcluido
                     ? 'text-emerald-300 drop-shadow-[0_0_10px_rgba(52,211,153,0.7)] animate-pulse'
+                    : pomodoroTipo === 'pausa'
+                    ? 'text-amber-300'
+                    : pomodoroModo === '25m'
+                    ? 'text-rose-200'
                     : 'text-white'
                 }`}
               >
@@ -1625,19 +1775,22 @@ export default function App() {
               <div className="text-[11px] leading-snug mt-0.5">
                 {pomodoroConcluido ? (
                   <span className="text-emerald-200 font-bold flex items-center gap-1">
-                    🎉 Bloco finalizado com sucesso!
+                    🎉 {pomodoroTipo === 'pausa' ? 'Pausa concluída! Pronto pro foco?' : 'Bloco finalizado com sucesso!'}
                   </span>
                 ) : pomodoroRunning ? (
-                  <span className="text-sky-200">
-                    Faltam {Math.ceil(pomodoroSecs / 60)} min para concluir
+                  <span className={pomodoroTipo === 'pausa' ? 'text-amber-200' : 'text-sky-200'}>
+                    {pomodoroTipo === 'pausa' ? '☕ Pausa: ' : 'Faltam '}
+                    {Math.ceil(pomodoroSecs / 60)} min para concluir
                   </span>
-                ) : pomodoroSecs < 50 * 60 ? (
+                ) : pomodoroSecs < tempoTotalPomodoro ? (
                   <span className="text-slate-300">
                     Restam {formatTimer(pomodoroSecs)}
                   </span>
                 ) : (
                   <span className="text-slate-300">
-                    Meta: 50 minutos de foco
+                    {pomodoroModo === '25m'
+                      ? 'Meta: 25 min de foco + 5 min pausa'
+                      : 'Meta: 50 min de foco + 10 min pausa'}
                   </span>
                 )}
               </div>
@@ -1647,81 +1800,124 @@ export default function App() {
           {/* Barra de Ações do Pomodoro */}
           {pomodoroConcluido ? (
             <div className="space-y-1.5 pt-1">
+              {pomodoroTipo === 'foco' ? (
+                <>
+                  <button
+                    onClick={iniciarPausaCurta}
+                    className="w-full rounded-full border border-amber-400/60 bg-amber-500 hover:bg-amber-400 px-3 py-1.5 text-xs font-bold text-slate-950 transition shadow-md inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    ☕ Iniciar Pausa Curta ({pomodoroModo === '25m' ? '5m' : '10m'})
+                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={iniciarNovoBlocoFoco}
+                      className="flex-1 rounded-full border border-emerald-400 bg-emerald-600 hover:bg-emerald-500 px-2.5 py-1 text-[11px] font-bold text-white transition cursor-pointer inline-flex items-center justify-center gap-1"
+                    >
+                      <Sparkles className="h-3 w-3" /> Novo Foco ({pomodoroModo === '25m' ? '25m' : '50m'})
+                    </button>
+                    <button
+                      onClick={() => reiniciarPomodoro()}
+                      className="rounded-full border border-slate-600 bg-[#1b232e] hover:bg-slate-800 px-2.5 py-1 text-xs text-slate-300 transition cursor-pointer"
+                      title="Reiniciar temporizador"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={iniciarNovoBlocoFoco}
+                    className="w-full rounded-full bg-emerald-500 hover:bg-emerald-400 px-3 py-1.5 text-xs font-bold text-slate-950 transition shadow-md inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    🎯 Retomar Foco ({pomodoroModo === '25m' ? '25m' : '50m'})
+                  </button>
+                  <button
+                    onClick={() => reiniciarPomodoro()}
+                    className="w-full rounded-full border border-slate-600 bg-[#1b232e] hover:bg-slate-800 px-2.5 py-1 text-xs text-slate-300 transition cursor-pointer inline-flex items-center justify-center gap-1"
+                  >
+                    <RotateCcw className="h-3 w-3" /> Reiniciar Pausa ({pomodoroModo === '25m' ? '5m' : '10m'})
+                  </button>
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-1.5 pt-1">
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => {
-                    reiniciarPomodoro(50 * 60);
-                    iniciarPomodoro();
+                    if (pomodoroRunning) {
+                      pausarPomodoro();
+                    } else {
+                      iniciarPomodoro();
+                    }
                   }}
-                  className="flex-1 rounded-full bg-emerald-500 hover:bg-emerald-400 px-3 py-1.5 text-xs font-bold text-slate-950 transition shadow-md inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                  className={`flex-1 rounded-full px-3 py-1.5 text-xs font-semibold text-white transition shadow-sm inline-flex items-center justify-center gap-1.5 cursor-pointer ${
+                    pomodoroRunning
+                      ? 'bg-amber-600 hover:bg-amber-500'
+                      : pomodoroTipo === 'pausa'
+                      ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold'
+                      : pomodoroModo === '25m'
+                      ? 'bg-rose-600 hover:bg-rose-500'
+                      : 'bg-sky-600 hover:bg-sky-500'
+                  }`}
                 >
-                  <Sparkles className="h-3.5 w-3.5" /> Iniciar Novo Bloco (50m)
+                  {pomodoroRunning ? (
+                    <>
+                      <Clock className="h-3.5 w-3.5" /> Pausar
+                    </>
+                  ) : pomodoroSecs < tempoTotalPomodoro ? (
+                    <>
+                      <Play className="h-3.5 w-3.5 fill-current" /> Retomar
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-3.5 w-3.5 fill-current" />
+                      <span>
+                        {pomodoroTipo === 'pausa'
+                          ? `Iniciar Pausa ${pomodoroModo === '25m' ? '5m' : '10m'}`
+                          : `Iniciar ${pomodoroModo === '25m' ? '25m' : '50m'}`}
+                      </span>
+                    </>
+                  )}
                 </button>
+
                 <button
-                  onClick={() => reiniciarPomodoro(50 * 60)}
-                  className="rounded-full border border-emerald-500/50 bg-[#1b232e] hover:bg-slate-800 px-2.5 py-1.5 text-xs text-emerald-300 transition cursor-pointer"
-                  title="Voltar ao início de 50 minutos"
+                  onClick={() => reiniciarPomodoro()}
+                  className="rounded-full border border-slate-600 bg-slate-700/80 px-2.5 py-1.5 text-xs text-slate-300 hover:bg-slate-600 transition cursor-pointer"
+                  title="Reiniciar Timer"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
                 </button>
+
+                {/* Botão de Teste Rápido para simular a conclusão imediatamente */}
+                <button
+                  onClick={simularConclusaoPomodoro}
+                  className="rounded-full border border-emerald-500/40 bg-[#1b232e] hover:bg-emerald-950/60 px-2 py-1.5 text-[10px] font-bold text-emerald-300 transition cursor-pointer"
+                  title="Testar animação visual de conclusão agora (00:00)"
+                >
+                  ⚡ 00:00
+                </button>
               </div>
-              <button
-                onClick={() => {
-                  reiniciarPomodoro(10 * 60);
-                  iniciarPomodoro();
-                }}
-                className="w-full rounded-full border border-emerald-400/40 bg-emerald-950/40 hover:bg-emerald-900/50 px-2.5 py-1 text-[11px] font-semibold text-emerald-200 transition cursor-pointer"
-              >
-                ☕ Pausa Curta de Descanso (10m)
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 pt-1">
-              <button
-                onClick={() => {
-                  if (pomodoroRunning) {
-                    pausarPomodoro();
-                  } else {
-                    iniciarPomodoro();
-                  }
-                }}
-                className={`flex-1 rounded-full px-3 py-1.5 text-xs font-semibold text-white transition shadow-sm inline-flex items-center justify-center gap-1.5 cursor-pointer ${
-                  pomodoroRunning
-                    ? 'bg-amber-600 hover:bg-amber-500'
-                    : 'bg-sky-600 hover:bg-sky-500'
-                }`}
-              >
-                {pomodoroRunning ? (
-                  <>
-                    <Clock className="h-3.5 w-3.5" /> Pausar
-                  </>
-                ) : pomodoroSecs < 50 * 60 ? (
-                  <>
-                    <Play className="h-3.5 w-3.5 fill-current" /> Retomar
-                  </>
-                ) : (
-                  <>
-                    <Play className="h-3.5 w-3.5 fill-current" /> Iniciar 50m
-                  </>
-                )}
-              </button>
 
-              <button
-                onClick={() => reiniciarPomodoro(50 * 60)}
-                className="rounded-full border border-slate-600 bg-slate-700/80 px-2.5 py-1.5 text-xs text-slate-300 hover:bg-slate-600 transition cursor-pointer"
-                title="Reiniciar Timer para 50 minutos"
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-              </button>
-
-              {/* Botão de Teste Rápido para simular a conclusão imediatamente */}
-              <button
-                onClick={simularConclusaoPomodoro}
-                className="rounded-full border border-emerald-500/40 bg-[#1b232e] hover:bg-emerald-950/60 px-2 py-1.5 text-[10px] font-bold text-emerald-300 transition cursor-pointer"
-                title="Testar animação visual de conclusão de 50 minutos agora (00:00)"
-              >
-                ⚡ 00:00
-              </button>
+              {/* Botão alternativo para trocar entre Foco e Pausa a qualquer momento */}
+              {pomodoroTipo === 'foco' ? (
+                <button
+                  type="button"
+                  onClick={iniciarPausaCurta}
+                  className="w-full text-center py-1 text-[10.5px] font-medium text-amber-300 hover:text-amber-200 hover:bg-amber-950/30 rounded-lg transition border border-amber-500/30 cursor-pointer flex items-center justify-center gap-1"
+                >
+                  <span>☕ Ir para Pausa Curta ({pomodoroModo === '25m' ? '5 min' : '10 min'})</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={iniciarNovoBlocoFoco}
+                  className="w-full text-center py-1 text-[10.5px] font-medium text-sky-300 hover:text-sky-200 hover:bg-sky-950/30 rounded-lg transition border border-sky-500/30 cursor-pointer flex items-center justify-center gap-1"
+                >
+                  <span>🎯 Voltar ao Modo Foco ({pomodoroModo === '25m' ? '25 min' : '50 min'})</span>
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -1760,7 +1956,7 @@ export default function App() {
             </button>
 
             {/* Widget Mini Temporizador Pomodoro no Subheader */}
-            {(pomodoroRunning || pomodoroConcluido || pomodoroSecs < 50 * 60) && (
+            {(pomodoroRunning || pomodoroConcluido || pomodoroSecs < tempoTotalPomodoro) && (
               <button
                 onClick={() => {
                   if (pomodoroConcluido) {
@@ -1773,14 +1969,38 @@ export default function App() {
                   pomodoroConcluido
                     ? 'border-emerald-400 bg-emerald-500/25 text-emerald-300 ring-2 ring-emerald-400/50 animate-pulse shadow-[0_0_12px_rgba(34,197,94,0.4)]'
                     : pomodoroRunning
-                    ? 'border-sky-400/60 bg-sky-950/40 text-sky-200'
-                    : 'border-amber-500/50 bg-amber-950/30 text-amber-300'
+                    ? pomodoroTipo === 'pausa'
+                      ? 'border-amber-400/60 bg-amber-950/40 text-amber-200'
+                      : pomodoroModo === '25m'
+                      ? 'border-rose-400/60 bg-rose-950/40 text-rose-200'
+                      : 'border-sky-400/60 bg-sky-950/40 text-sky-200'
+                    : 'border-slate-500/50 bg-slate-800 text-slate-300'
                 }`}
-                title={pomodoroConcluido ? 'Bloco de 50 minutos concluído com sucesso! Clique para reiniciar' : 'Temporizador Pomodoro de 50m'}
+                title={
+                  pomodoroConcluido
+                    ? 'Bloco concluído com sucesso! Clique para reiniciar'
+                    : pomodoroTipo === 'pausa'
+                    ? `Pausa Curta (${pomodoroModo === '25m' ? '5m' : '10m'})`
+                    : `Temporizador Pomodoro ${pomodoroModo === '25m' ? 'Clássico 25m' : 'Padrão 50m'}`
+                }
               >
-                <Clock className={`h-3 w-3 ${pomodoroConcluido ? 'text-emerald-300 animate-spin' : pomodoroRunning ? 'text-sky-300 animate-pulse' : 'text-amber-300'}`} />
+                <Clock
+                  className={`h-3 w-3 ${
+                    pomodoroConcluido
+                      ? 'text-emerald-300 animate-spin'
+                      : pomodoroRunning
+                      ? pomodoroTipo === 'pausa'
+                        ? 'text-amber-300 animate-pulse'
+                        : pomodoroModo === '25m'
+                        ? 'text-rose-300 animate-pulse'
+                        : 'text-sky-300 animate-pulse'
+                      : 'text-slate-300'
+                  }`}
+                />
                 <span className="font-mono font-bold">
-                  {pomodoroConcluido ? '🎉 50m Concluído!' : formatTimer(pomodoroSecs)}
+                  {pomodoroConcluido
+                    ? `🎉 ${pomodoroTipo === 'pausa' ? 'Pausa' : pomodoroModo === '25m' ? '25m' : '50m'} Concluído!`
+                    : `${pomodoroTipo === 'pausa' ? '☕ ' : ''}${formatTimer(pomodoroSecs)}`}
                 </span>
               </button>
             )}
@@ -4700,9 +4920,7 @@ export default function App() {
         tipo={notifTipoModal}
         onFechar={() => setNotifModalAberta(false)}
         onIniciarFoco={() => {
-          if (!pomodoroRunning) tocarAlarmeWebAudio();
-          setPomodoroRunning(true);
-          mostrarToast('Bloco de foco de 50 minutos iniciado!');
+          iniciarPomodoro();
         }}
         onIrParaSimulador={() => setActiveTab('simulador')}
         onIrParaCronograma={() => setActiveTab('cronograma')}
