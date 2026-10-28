@@ -1,0 +1,7 @@
+---
+type: "feature"
+title: "Transcribe audio"
+icon: "speech_to_text"
+---
+
+Add a feature where users can input audio with their microphone and the app with transcribe it. You MUST add audio transcription to the app using model gemini-3.5-transcribe

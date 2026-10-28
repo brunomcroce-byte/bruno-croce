@@ -1,0 +1,7 @@
+---
+type: "feature"
+title: "Generate video from text"
+icon: "video_spark"
+---
+
+You MUST add video generation to the app using the `gemini-interactions-api` skill with the model gemini-omni-1.1-flash via the Interactions API. The generated video must have an aspect ratio of `16:9` (landscape) or `9:16` (portrait).

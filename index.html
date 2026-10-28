@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR" class="theme-light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f8fafc" />
+    <title>Remix Remix TributaOAB Desktop Pro</title>
+    <meta name="description" content="Plataforma de preparação para OAB 2ª Fase em Direito Tributário com simulador de folha FGV de 150 linhas, peças práticas, súmulas, precedentes, flashcards, vade mecum e planner." />
+    <meta property="og:title" content="Remix Remix TributaOAB Desktop Pro" />
+    <meta property="og:description" content="Plataforma de preparação para OAB 2ª Fase em Direito Tributário com simulador de folha FGV de 150 linhas, peças práticas, súmulas, precedentes, flashcards, vade mecum e planner." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    
+    <!-- Folha de estilo externa com tipografia, acessibilidade e temas modulares -->
+    <link rel="stylesheet" href="/src/tributario-theme.css" />
+
+    <!-- Detecção imediata do tema do Sistema Operacional (prefers-color-scheme) antes da renderização -->
+    <script>
+      (function() {
+        try {
+          var isManual = localStorage.getItem('tributa_tema_manual') === 'true';
+          var saved = localStorage.getItem('tributa_tema');
+          var isDark = false;
+          if (isManual && (saved === 'escuro' || saved === 'claro')) {
+            isDark = (saved === 'escuro');
+          } else if (window.matchMedia) {
+            isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          }
+          if (isDark) {
+            document.documentElement.classList.remove('theme-light');
+            document.documentElement.classList.add('theme-dark');
+            var metaTheme = document.querySelector('meta[name="theme-color"]');
+            if (metaTheme) metaTheme.setAttribute('content', '#181c24');
+          } else {
+            document.documentElement.classList.remove('theme-dark');
+            document.documentElement.classList.add('theme-light');
+            var metaTheme = document.querySelector('meta[name="theme-color"]');
+            if (metaTheme) metaTheme.setAttribute('content', '#f8fafc');
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <!-- Ponto de Montagem Principal do Aplicativo React SPA -->
+    <div id="root" role="application" aria-label="TributaOAB Desktop Pro - Plataforma de Estudo OAB"></div>
+
+    <!-- Fallback Semântico e Acessível para Ambientes sem JavaScript -->
+    <noscript>
+      <header style="background: #1b232e; color: #fff; padding: 20px; text-align: center;">
+        <h1>TributaOAB Desktop Pro — Direito Tributário 2ª Fase</h1>
+        <p>Preparação para a Prova da Ordem dos Advogados do Brasil</p>
+      </header>
+      <main style="padding: 20px; max-width: 800px; margin: auto; color: #e2e8f0; background: #222b38;">
+        <section>
+          <h2>Módulos Incluídos</h2>
+          <ul>
+            <li>Painel & Regras Oficiais FGV com Notificação Diária de Estudo</li>
+            <li>Cronograma Intensivo de 8 Semanas</li>
+            <li>Catálogo de Peças Prático-Profissionais & Peçômetro Interativo</li>
+            <li>Competência e Impostos em Espécie (Reforma EC 132/2023)</li>
+            <li>Direito Material e Precedentes Qualificados STF/STJ</li>
+            <li>Súmulas Vinculantes, STF e STJ Compiladas</li>
+            <li>Simulador Oficial de Folha Padrão de 150 Linhas</li>
+            <li>Flashcards com Repetição Espaçada e Síntese de Voz</li>
+            <li>Vade Mecum com Sistema 4 Cores e Clipes</li>
+            <li>Central de Legislação Compilada (Planalto)</li>
+            <li>Mapas Mentais em PDF</li>
+            <li>Teses de Peças Frequentes</li>
+            <li>Planner Nativo Integrado (Mensal, Semanal, Diário e Controle de Aulas)</li>
+          </ul>
+        </section>
+        <footer>
+          <p>Para desfrutar da experiência completa com cronômetros e simulação, ative o JavaScript no seu navegador.</p>
+        </footer>
+      </main>
+    </noscript>
+
+    <!-- Script de Interatividade & Acessibilidade -->
+    <script type="module" src="/src/interactive-tools.js"></script>
+    <!-- Entrada do Aplicativo React -->
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

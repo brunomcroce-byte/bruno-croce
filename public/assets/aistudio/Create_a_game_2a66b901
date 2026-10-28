@@ -1,0 +1,13 @@
+---
+type: "feature"
+title: "Create a game"
+icon: "sports_esports"
+---
+
+I want to build an interactive game in this app. If the game is 3D, you **MUST** use the `threejs` skill.
+
+Follow these core game craft guidelines:
+- **Game Shell & Title Screen**: Use a full-viewport Game Shell (`Title Screen` -> `Playing` -> `Pause / Victory / Game Over` modal) — never render website navbars or footers. Stage an atmospheric live-world camera pan or interactive hero centerpiece on the Title Screen with a bespoke inline `<svg>` title lockup over 30–40% negative space, a primary Start CTA (`Enter`/`Space` to start), and a single flat control-hint line (`WASD Move · Space Action · Esc Pause`).
+- **World-Matched, Low-Occlusion UI**: Keep at least 85% of the playfield unobstructed (`pointer-events: none` on overlay wrappers; never use `backdrop-filter` over an active WebGL/Canvas viewport). Style perimeter status clusters and custom `<svg>` icons in the game world's own palette with `tabular-nums` integer readouts.
+- **60fps Simulation & Responsive Input**: Mount the `<canvas>` in an isolated container so React state updates never re-render the game loop. Clamp frame delta time (`Math.min(rawDt, 0.05)`), separate continuous `held` inputs from edge-triggered `justPressed` actions (with input buffering and coyote time where applicable), and clear held keys on window blur.
+- **Game Feel & Encounter Design**: Trigger weight-scaled visual and procedural Web Audio synth feedback on core actions (hit flashes, brief 30–80ms simulation hitstop on heavy impacts, decaying camera shake, pooled particle bursts, squash-and-stretch, and a mute toggle). Design distinct enemy/hazard behaviors with visible windup telegraphs and a smooth difficulty ramp.

@@ -1,0 +1,549 @@
+/* ==========================================================================
+   TRIBUTAOAB DESKTOP PRO — WINDOWS 11 FLUENT DESIGN (EDICAO CLARA)
+   Mica Alt Backgrounds, Acrylic Materials, Segoe UI Variable & Fluent Controls
+   ========================================================================== */
+
+:root {
+  /* Windows 11 Light Mode Default Palette (Fluent / Mica Light) */
+  --win11-desktop-bg: #f3f3f3;
+  --win11-mica-bg: #f8fafc;
+  --win11-acrylic-panel: rgba(248, 250, 252, 0.94);
+  --win11-card-bg: rgba(255, 255, 255, 0.96);
+  --win11-card-hover: #ffffff;
+  --win11-border-subtle: rgba(0, 0, 0, 0.08);
+  --win11-border-card: rgba(0, 0, 0, 0.09);
+  --win11-text-primary: #0f172a;
+  --win11-text-secondary: #475569;
+  --win11-text-muted: #64748b;
+  
+  /* Windows 11 Accent Colors (Signature Windows Blue) */
+  --win11-accent: #0067c0;
+  --win11-accent-hover: #005ea6;
+  --win11-accent-active: #004f8c;
+  --win11-accent-light: #0078d4;
+  --win11-accent-subtle: #e8f3fc;
+  
+  /* Status Colors */
+  --win11-success: #107c10;
+  --win11-warning: #795e00;
+  --win11-caution: #b14605;
+  --win11-danger: #c42b1c;
+  
+  /* Chart helpers */
+  --chart-grid: #e2e8f0;
+  --chart-axis: #64748b;
+
+  /* Typography */
+  --font-fluent: 'Segoe UI Variable Display', 'Segoe UI Variable Text', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, system-ui, sans-serif;
+  --font-mono: 'Cascadia Code', 'Consolas', monospace;
+}
+
+/* Modo Escuro opcional sob demanda */
+.theme-dark {
+  --win11-desktop-bg: #181c24;
+  --win11-mica-bg: #202632;
+  --win11-acrylic-panel: rgba(32, 38, 50, 0.78);
+  --win11-card-bg: rgba(43, 52, 68, 0.72);
+  --win11-card-hover: rgba(52, 63, 82, 0.85);
+  --win11-border-subtle: rgba(255, 255, 255, 0.09);
+  --win11-border-card: rgba(255, 255, 255, 0.12);
+  --win11-text-primary: #f1f5f9;
+  --win11-text-secondary: #cbd5e1;
+  --win11-text-muted: #94a3b8;
+  --win11-accent: #0078d4;
+  --win11-accent-hover: #1084d8;
+  --win11-accent-active: #006cbe;
+  --win11-accent-light: #60cdff;
+  --win11-accent-subtle: rgba(96, 205, 255, 0.15);
+  --chart-grid: #334155;
+  --chart-axis: #94a3b8;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-fluent);
+  color-scheme: light;
+  scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+html.theme-dark {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  /* Windows 11 Light Mica Backdrop Effect */
+  background-color: var(--win11-desktop-bg);
+  background-image: 
+    radial-gradient(circle at 12% 15%, rgba(0, 103, 192, 0.06) 0%, transparent 45%),
+    radial-gradient(circle at 88% 85%, rgba(0, 120, 212, 0.04) 0%, transparent 50%),
+    linear-gradient(180deg, #f8fafc 0%, #edf2f7 100%);
+  background-attachment: fixed;
+  color: var(--win11-text-primary);
+  line-height: 1.5;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+body.theme-dark {
+  background-color: var(--win11-desktop-bg);
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(0, 120, 212, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(96, 205, 255, 0.08) 0%, transparent 45%),
+    linear-gradient(180deg, #181d26 0%, #1f2530 100%);
+  color: #f1f5f9;
+}
+
+/* ==========================================================================
+   Windows 11 Fluent Window Chrome (Titlebar & Controls)
+   ========================================================================== */
+.win11-titlebar {
+  height: 38px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px) saturate(125%);
+  border-bottom: 1px solid var(--win11-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  user-select: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.theme-dark .win11-titlebar {
+  background: rgba(24, 29, 38, 0.88);
+  color: #f1f5f9;
+  border-bottom-color: var(--win11-border-subtle);
+}
+
+.win11-window-controls {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.win11-caption-btn {
+  width: 44px;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.theme-dark .win11-caption-btn {
+  color: #cbd5e1;
+}
+
+.win11-caption-btn:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+}
+
+.theme-dark .win11-caption-btn:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.win11-caption-btn.close:hover {
+  background-color: #c42b1c !important;
+  color: #ffffff !important;
+}
+
+/* ==========================================================================
+   Windows 11 Fluent Acrylic Sidebar Navigation
+   ========================================================================== */
+.win11-sidebar {
+  background: var(--win11-acrylic-panel);
+  backdrop-filter: blur(30px) saturate(140%);
+  border-right: 1px solid var(--win11-border-subtle);
+}
+
+.win11-nav-item {
+  position: relative;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: all 0.16s cubic-bezier(0.1, 0.9, 0.2, 1);
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  color: #475569;
+}
+
+.theme-dark .win11-nav-item {
+  color: #cbd5e1;
+}
+
+.win11-nav-item:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  color: #0f172a;
+}
+
+.theme-dark .win11-nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.win11-nav-item.active {
+  background-color: var(--win11-accent-subtle);
+  color: var(--win11-accent);
+  font-weight: 600;
+}
+
+.theme-dark .win11-nav-item.active {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+/* O icônico indicador ativo vertical do Windows 11 */
+.win11-nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3.5px;
+  height: 16px;
+  background-color: var(--win11-accent);
+  border-radius: 99px;
+  box-shadow: 0 0 6px rgba(0, 103, 192, 0.4);
+}
+
+.theme-dark .win11-nav-item.active::before {
+  background-color: #60cdff;
+  box-shadow: 0 0 8px rgba(96, 205, 255, 0.6);
+}
+
+/* ==========================================================================
+   Windows 11 Fluent Cards & Widgets
+   ========================================================================== */
+.win11-widget-card {
+  background: var(--win11-card-bg);
+  backdrop-filter: blur(24px) saturate(130%);
+  border: 1px solid var(--win11-border-card);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.win11-widget-card:hover {
+  border-color: rgba(0, 103, 192, 0.25);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.theme-dark .win11-widget-card {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.24);
+}
+
+.theme-dark .win11-widget-card:hover {
+  border-color: rgba(96, 205, 255, 0.3);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
+}
+
+.win11-subcard {
+  background: #f8fafc;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 10px;
+}
+
+.theme-dark .win11-subcard {
+  background: rgba(30, 37, 49, 0.7);
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+/* Botões Estilo Windows 11 */
+.win11-btn-primary {
+  background-color: var(--win11-accent) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 6px 14px;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+.win11-btn-primary:hover {
+  background-color: var(--win11-accent-hover) !important;
+}
+
+.win11-btn-primary:active {
+  background-color: var(--win11-accent-active) !important;
+  transform: scale(0.98);
+}
+
+.win11-btn-secondary {
+  background-color: #ffffff;
+  color: #1e293b;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 12px;
+  padding: 6px 14px;
+  transition: background-color 0.15s ease;
+}
+
+.theme-dark .win11-btn-secondary {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.win11-btn-secondary:hover {
+  background-color: #f1f5f9;
+}
+
+.theme-dark .win11-btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   Inputs e Barra de Busca Estilo Fluent
+   ========================================================================== */
+.win11-input {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-bottom: 2px solid #94a3b8;
+  border-radius: 6px;
+  color: #0f172a;
+  padding: 6px 12px;
+  font-size: 12px;
+  transition: all 0.15s ease;
+}
+
+.win11-input:focus {
+  outline: none;
+  background: #ffffff;
+  border-bottom-color: var(--win11-accent);
+  box-shadow: 0 0 0 3px rgba(0, 103, 192, 0.15);
+}
+
+.theme-dark .win11-input {
+  background: rgba(20, 24, 32, 0.7);
+  border-color: rgba(255, 255, 255, 0.1);
+  border-bottom-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.theme-dark .win11-input:focus {
+  background: rgba(26, 32, 42, 0.85);
+  border-bottom-color: var(--win11-accent-light);
+  box-shadow: 0 0 10px rgba(96, 205, 255, 0.2);
+}
+
+/* Barra de rolagem Windows 11 fluida */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.theme-dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.theme-dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Animações sutis Windows 11 */
+@keyframes win11Entrance {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.win11-animate {
+  animation: win11Entrance 0.2s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+
+/* ==========================================================================
+   REGRAS ESPECÍFICAS DE CONVERSÃO PARA O TEMA CLARO
+   Garante contraste, nitidez e conforto visual em toda a aplicação
+   ========================================================================== */
+
+.theme-light {
+  color-scheme: light;
+  color: #0f172a;
+}
+
+/* Painéis e Fundos em Tema Claro */
+.theme-light .bg-\[\#222b38\] {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.theme-light .bg-\[\#1b232e\] {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.theme-light .bg-\[\#2b3646\] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+}
+
+.theme-light .bg-\[\#344154\],
+.theme-light .bg-\[\#3b495e\] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+.theme-light .bg-\[\#202733\]\/80,
+.theme-light .bg-\[\#1e2532\]\/75,
+.theme-light .bg-slate-800,
+.theme-light .bg-slate-800\/80,
+.theme-light .bg-slate-900,
+.theme-light .bg-slate-900\/60 {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+/* Bordas em Tema Claro */
+.theme-light .border-\[\#455468\],
+.theme-light .border-\[\#56677d\],
+.theme-light .border-slate-700,
+.theme-light .border-slate-600,
+.theme-light .border-white\/10,
+.theme-light .border-white\/5 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Tipografia em Tema Claro */
+.theme-light .text-white:not(.win11-btn-primary):not(.badge):not(.btn-colored):not([class*="bg-sky"]):not([class*="bg-blue"]):not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-amber"]):not([class*="bg-indigo"]):not([class*="bg-purple"]) {
+  color: #0f172a !important;
+}
+
+.theme-light .text-\[\#f1f5f9\] {
+  color: #0f172a !important;
+}
+
+.theme-light .text-\[\#cbd5e1\],
+.theme-light .text-slate-300 {
+  color: #334155 !important;
+}
+
+.theme-light .text-slate-200 {
+  color: #1e293b !important;
+}
+
+.theme-light .text-slate-400 {
+  color: #64748b !important;
+}
+
+/* Garante que botões de ação e badges mantenham texto branco legível */
+.theme-light .bg-sky-600,
+.theme-light .bg-blue-600,
+.theme-light .bg-emerald-600,
+.theme-light .bg-emerald-700,
+.theme-light .bg-indigo-600,
+.theme-light .bg-rose-600,
+.theme-light .bg-amber-600,
+.theme-light .win11-btn-primary {
+  color: #ffffff !important;
+}
+
+.theme-light .bg-sky-600 *,
+.theme-light .bg-blue-600 *,
+.theme-light .bg-emerald-600 *,
+.theme-light .bg-indigo-600 *,
+.theme-light .win11-btn-primary * {
+  color: #ffffff !important;
+}
+
+/* Botões com fundo transparente ou neutro no tema claro */
+.theme-light button.bg-slate-700\/80,
+.theme-light button.bg-slate-800 {
+  background-color: #e2e8f0 !important;
+  color: #1e293b !important;
+  border-color: #cbd5e1 !important;
+}
+
+.theme-light button.bg-slate-700\/80:hover,
+.theme-light button.bg-slate-800:hover {
+  background-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* Inputs, Selects e Textareas em Tema Claro */
+.theme-light input,
+.theme-light select,
+.theme-light textarea:not(.fgv-lined-textarea) {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.theme-light input::placeholder,
+.theme-light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Modal e Drawer no Tema Claro */
+.theme-light .fixed.inset-0.bg-black\/75,
+.theme-light .fixed.inset-0.bg-black\/70,
+.theme-light .fixed.inset-0.bg-black\/60 {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(6px) !important;
+}
+
+/* Header subnavigation bar */
+.theme-light header.border-b {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+/* Barra de pesquisa da barra de título no tema claro */
+.theme-light .win11-titlebar button.border-white\/10 {
+  border-color: #cbd5e1 !important;
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+}
+
+.theme-light .win11-titlebar button.border-white\/10:hover {
+  background-color: #e2e8f0 !important;
+  border-color: var(--win11-accent) !important;
+}
+
+.theme-light .win11-titlebar button.border-white\/10 kbd {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+  color: #475569 !important;
+}

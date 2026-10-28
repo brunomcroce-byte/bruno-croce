@@ -1,0 +1,7 @@
+---
+type: "feature"
+title: "Generate music"
+icon: "music_note"
+---
+
+You MUST add music generation to the app using lyria-3-clip-preview for short clips (up to 30s) or lyria-3-pro-preview for full-length tracks.

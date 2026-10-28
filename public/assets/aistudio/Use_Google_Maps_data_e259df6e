@@ -1,0 +1,7 @@
+---
+type: "feature"
+title: "Use Google Maps data"
+icon: "google_pin"
+---
+
+You MUST add Maps Grounding to the app where relevant to get up to date and accurate information. Use gemini-3.8-flash (with googleMaps tool)

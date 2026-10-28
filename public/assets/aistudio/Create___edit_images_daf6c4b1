@@ -1,0 +1,7 @@
+---
+type: "feature"
+title: "Create & edit images"
+icon: "image_edit_auto"
+---
+
+Add functionality to the app for users to use text prompts to create or edit images using gemini-nano-banana-2.1.

@@ -1,0 +1,7 @@
+---
+type: "feature"
+title: "Animate images into video"
+icon: "movie"
+---
+
+You MUST add the ability for users to upload a photo and then generate a video using the `gemini-interactions-api` skill with model: gemini-omni-1.1-flash via the Interactions API. The generated video must have an aspect ratio of `16:9` (landscape) or `9:16` (portrait).
