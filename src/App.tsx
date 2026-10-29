@@ -53,6 +53,14 @@ import { parseLegalSyntax, SyntaxCategory } from './utils/syntaxHighlight';
 import { lookupLegalTerm, LegalTooltipInfo } from './utils/legalGlossary';
 import { TooltipJuridico } from './components/TooltipJuridico';
 import { GerenciadorVersoesModal, VersaoRedacao } from './components/GerenciadorVersoesModal';
+import { NotificacaoFimSimuladoModal } from './components/NotificacaoFimSimuladoModal';
+import { CentralAtualizacoesModal } from './components/CentralAtualizacoesModal';
+import { onlineLegalSync, StatusConexao } from './utils/onlineLegalSync';
+import {
+  soundscapeManager,
+  SoundscapeTipo,
+  SOUNDSCAPE_OPCOES
+} from './utils/soundscapes';
 import {
   BookOpen,
   Calendar,
@@ -95,7 +103,12 @@ import {
   Printer,
   Monitor,
   History,
-  GitCompare
+  GitCompare,
+  Headphones,
+  Pause,
+  RefreshCw,
+  Wifi,
+  Database
 } from 'lucide-react';
 
 type TabType =
@@ -132,6 +145,130 @@ export default function App() {
   });
   const [pomodoroRunning, setPomodoroRunning] = useState(false);
   const [pomodoroConcluido, setPomodoroConcluido] = useState(false);
+
+  // Contador de Blocos Pomodoro Diários (com auto-reset à meia-noite 00:00)
+  const [pomodoroBlocosHoje, setPomodoroBlocosHoje] = useState<number>(() => {
+    const hoje = new Date().toISOString().slice(0, 10);
+    const dataSalva = SafeStorage.get('tributa_pomodoro_data_dia', '');
+    if (dataSalva !== hoje) {
+      SafeStorage.set('tributa_pomodoro_data_dia', hoje);
+      SafeStorage.set('tributa_pomodoro_blocos_hoje', '0');
+      return 0;
+    }
+    const salvo = SafeStorage.get('tributa_pomodoro_blocos_hoje', '0');
+    return Number(salvo) || 0;
+  });
+
+  const resetarBlocosPomodoroHoje = () => {
+    const hoje = new Date().toISOString().slice(0, 10);
+    setPomodoroBlocosHoje(0);
+    SafeStorage.set('tributa_pomodoro_data_dia', hoje);
+    SafeStorage.set('tributa_pomodoro_blocos_hoje', '0');
+    tocarAlarmeWebAudio('suave');
+    mostrarToast('🔄 Contador diário de blocos Pomodoro zerado! (Reseta automaticamente à meia-noite)');
+  };
+
+  const ajustarBlocosPomodoroHoje = (delta: number) => {
+    const hoje = new Date().toISOString().slice(0, 10);
+    const novo = Math.max(0, pomodoroBlocosHoje + delta);
+    setPomodoroBlocosHoje(novo);
+    SafeStorage.set('tributa_pomodoro_data_dia', hoje);
+    SafeStorage.set('tributa_pomodoro_blocos_hoje', String(novo));
+    if (delta > 0) {
+      tocarAlarmeWebAudio('suave');
+      dispararConfetesSuaves({ count: 35, originY: 0.35 });
+      mostrarToast(`🍅 +1 Bloco Pomodoro registrado! Total de hoje: ${novo} bloco${novo > 1 ? 's' : ''}.`);
+    } else {
+      mostrarToast(`Bloco Pomodoro removido. Total de hoje: ${novo}.`);
+    }
+  };
+
+  const contabilizarBlocoFocoConcluido = () => {
+    const hoje = new Date().toISOString().slice(0, 10);
+    const dataSalva = SafeStorage.get('tributa_pomodoro_data_dia', '');
+    const contagemAtual = dataSalva === hoje ? Number(SafeStorage.get('tributa_pomodoro_blocos_hoje', '0')) || 0 : 0;
+    const novoTotal = contagemAtual + 1;
+    SafeStorage.set('tributa_pomodoro_data_dia', hoje);
+    SafeStorage.set('tributa_pomodoro_blocos_hoje', String(novoTotal));
+    setPomodoroBlocosHoje(novoTotal);
+    return novoTotal;
+  };
+
+  // Soundscape de Foco (Ruído Branco, Chuva, Lo-fi) via Web Audio API
+  const [soundscapeTipo, setSoundscapeTipo] = useState<SoundscapeTipo>(() => {
+    const salvo = SafeStorage.get('tributa_pomodoro_soundscape', 'nenhum');
+    if (salvo === 'ruido_branco' || salvo === 'chuva' || salvo === 'lofi') {
+      return salvo;
+    }
+    return 'nenhum';
+  });
+  const [soundscapeVolume, setSoundscapeVolume] = useState<number>(() => {
+    return soundscapeManager.getVolume();
+  });
+  const [soundscapeTocando, setSoundscapeTocando] = useState(false);
+  const [soundscapePreviewManual, setSoundscapePreviewManual] = useState(false);
+
+  // Efeito para ligar/desligar o Soundscape de Foco automaticamente durante os blocos de foco do Pomodoro
+  useEffect(() => {
+    const deveTocar =
+      (pomodoroRunning && pomodoroTipo === 'foco' && soundscapeTipo !== 'nenhum') ||
+      soundscapePreviewManual;
+
+    if (deveTocar) {
+      soundscapeManager.reproduzir(soundscapeTipo);
+      setSoundscapeTocando(true);
+    } else {
+      soundscapeManager.parar();
+      setSoundscapeTocando(false);
+    }
+  }, [pomodoroRunning, pomodoroTipo, soundscapeTipo, soundscapePreviewManual]);
+
+  const alterarSoundscapeTipo = (novoTipo: SoundscapeTipo) => {
+    setSoundscapeTipo(novoTipo);
+    SafeStorage.set('tributa_pomodoro_soundscape', novoTipo);
+    if (novoTipo === 'nenhum') {
+      soundscapeManager.parar();
+      setSoundscapeTocando(false);
+      setSoundscapePreviewManual(false);
+      mostrarToast('🔇 Soundscape desligado.');
+    } else {
+      const opcao = SOUNDSCAPE_OPCOES.find(o => o.id === novoTipo);
+      if (pomodoroRunning && pomodoroTipo === 'foco') {
+        soundscapeManager.reproduzir(novoTipo);
+        setSoundscapeTocando(true);
+        mostrarToast(`${opcao?.icone} Soundscape "${opcao?.nome}" tocando no seu bloco de foco!`);
+      } else {
+        mostrarToast(`${opcao?.icone} Soundscape "${opcao?.nome}" ativado para tocar nos blocos de foco!`);
+      }
+    }
+  };
+
+  const alterarVolumeSoundscape = (novoVol: number) => {
+    setSoundscapeVolume(novoVol);
+    soundscapeManager.setVolume(novoVol);
+  };
+
+  const alternarPreviewSoundscape = () => {
+    if (soundscapeTipo === 'nenhum') {
+      alterarSoundscapeTipo('ruido_branco');
+      setSoundscapePreviewManual(true);
+      return;
+    }
+    const novoPreview = !soundscapePreviewManual;
+    setSoundscapePreviewManual(novoPreview);
+    if (novoPreview) {
+      soundscapeManager.reproduzir(soundscapeTipo);
+      setSoundscapeTocando(true);
+      const nome = soundscapeTipo === 'ruido_branco' ? 'Ruído Branco' : soundscapeTipo === 'chuva' ? 'Chuva' : 'Lo-fi';
+      mostrarToast(`🎧 Pré-visualização do Soundscape "${nome}" iniciada.`);
+    } else {
+      if (!pomodoroRunning || pomodoroTipo !== 'foco') {
+        soundscapeManager.parar();
+        setSoundscapeTocando(false);
+      }
+      mostrarToast('Pré-visualização de áudio pausada.');
+    }
+  };
 
   // 5h Exam Timer State
   const [prova5hSecs, setProva5hSecs] = useState(5 * 3600);
@@ -424,6 +561,21 @@ export default function App() {
   const [notifModalAberta, setNotifModalAberta] = useState(false);
   const [notifTipoModal, setNotifTipoModal] = useState<'estudo' | 'word'>('estudo');
 
+  // Notificação de Fim de Simulado (150 Linhas) e Sugestão de Pausa de 15 Minutos com Áudio de Relaxamento
+  const [modalFimSimuladoAberto, setModalFimSimuladoAberto] = useState(false);
+  const notif150SimuladoDisparadaRef = useRef<boolean>(
+    (SafeStorage.get('tributa_redacao', '').split('\n').length || 0) >= 150
+  );
+
+  // Central de Atualizações de Leis & Banco de Dados (Sempre Online & Varredura Contínua)
+  const [modalAtualizacoesAberta, setModalAtualizacoesAberta] = useState(false);
+  const [statusConexao, setStatusConexao] = useState<StatusConexao>(() => onlineLegalSync.getStatus());
+
+  useEffect(() => {
+    const unsub = onlineLegalSync.subscrever((st) => setStatusConexao(st));
+    return unsub;
+  }, []);
+
   // Lembrete Específico de Exportação da Redação para Word (Frequência Semanal no LocalStorage)
   const [notifWordAtivo, setNotifWordAtivo] = useState(() =>
     SafeStorage.get('tributa_notif_word_ativo', 'true') === 'true'
@@ -440,6 +592,12 @@ export default function App() {
       'Lembrete Semanal: Hora de exportar sua redação para Word (.doc) e manter seu backup de 150 linhas em dia!'
     )
   );
+
+  // Aba ativa na seção de Disciplina & Automações do Dashboard (Alarme Diário vs Lembrete Word)
+  const [disciplinaTab, setDisciplinaTab] = useState<'alarme' | 'word'>('alarme');
+
+  // Sub-aba no Card Pomodoro da Sidebar (Blocos Diários vs Soundscape de Foco)
+  const [pomodoroSubTab, setPomodoroSubTab] = useState<'blocos' | 'soundscape'>('blocos');
 
   // Tom do Alarme Sonoro (Web Audio API: 'padrao' | 'suave' | 'urgente')
   const [tomAlarme, setTomAlarme] = useState<TomAlarme>(() => {
@@ -485,18 +643,18 @@ export default function App() {
     SafeStorage.set('tributa_tema', tema);
     if (tema === 'claro') {
       document.documentElement.classList.add('theme-light');
-      document.documentElement.classList.remove('theme-dark');
+      document.documentElement.classList.remove('theme-dark', 'dark');
       document.body.classList.add('theme-light');
-      document.body.classList.remove('theme-dark');
+      document.body.classList.remove('theme-dark', 'dark');
       const metaTheme = document.querySelector('meta[name="theme-color"]');
-      if (metaTheme) metaTheme.setAttribute('content', '#f8fafc');
+      if (metaTheme) metaTheme.setAttribute('content', '#f3f3f3');
     } else {
-      document.documentElement.classList.add('theme-dark');
+      document.documentElement.classList.add('theme-dark', 'dark');
       document.documentElement.classList.remove('theme-light');
-      document.body.classList.add('theme-dark');
+      document.body.classList.add('theme-dark', 'dark');
       document.body.classList.remove('theme-light');
       const metaTheme = document.querySelector('meta[name="theme-color"]');
-      if (metaTheme) metaTheme.setAttribute('content', '#181c24');
+      if (metaTheme) metaTheme.setAttribute('content', '#202020');
     }
   }, [tema]);
 
@@ -613,7 +771,8 @@ export default function App() {
       dataProva,
       dataRepescagem,
       repescagemPaga,
-      vadeMarcadosCount: vadeMarcados.length
+      vadeMarcadosCount: vadeMarcados.length,
+      pomodoroBlocosHoje
     });
     mostrarToast('📄 Relatório Semanal de Progresso gerado e baixado em PDF!');
   };
@@ -733,6 +892,14 @@ export default function App() {
       const currentTime = `${hh}:${mm}`;
       const dayOfWeek = now.getDay();
       const todayStr = now.toISOString().slice(0, 10);
+
+      // 0. Auto-Reset dos Blocos Pomodoro Diários à Meia-Noite (00:00)
+      const dataSalvaPomodoro = SafeStorage.get('tributa_pomodoro_data_dia', '');
+      if (dataSalvaPomodoro && dataSalvaPomodoro !== todayStr) {
+        SafeStorage.set('tributa_pomodoro_data_dia', todayStr);
+        SafeStorage.set('tributa_pomodoro_blocos_hoje', '0');
+        setPomodoroBlocosHoje(0);
+      }
 
       // 1. Checagem do Alarme Diário de Estudo
       if (notifAtiva) {
@@ -943,11 +1110,12 @@ export default function App() {
               lerTextoEmVozAlta(msg);
               mostrarToast('☕ Pausa curta concluída! Pronto para retomar os estudos?');
             } else {
+              const novoTotalHoje = contabilizarBlocoFocoConcluido();
               const duracaoMin = pomodoroModo === '25m' ? 25 : 50;
               const pausaMin = pomodoroModo === '25m' ? 5 : 10;
               const msg = `Parabéns! Bloco de ${duracaoMin} minutos de foco concluído com sucesso! Faça uma pausa revigorante de ${pausaMin} minutos.`;
               lerTextoEmVozAlta(msg);
-              mostrarToast(`🎉 Bloco de foco de ${duracaoMin} minutos concluído! Faça uma pausa curta de ${pausaMin} min.`);
+              mostrarToast(`🎉 Bloco de foco de ${duracaoMin} min concluído! (${novoTotalHoje} hoje) Faça uma pausa curta de ${pausaMin} min.`);
             }
             return 0;
           }
@@ -1028,10 +1196,15 @@ export default function App() {
     setPomodoroConcluido(true);
     dispararConfetesSuaves({ count: 75, originY: 0.35 });
     tocarAlarmeWebAudio('suave');
+    let blocoHojeDesc = '';
+    if (pomodoroTipo === 'foco') {
+      const novoTotal = contabilizarBlocoFocoConcluido();
+      blocoHojeDesc = ` (${novoTotal} hoje)`;
+    }
     const tempoDesc = pomodoroTipo === 'pausa'
       ? (pomodoroModo === '25m' ? '5 minutos de pausa' : '10 minutos de pausa')
       : (pomodoroModo === '25m' ? '25 minutos de foco' : '50 minutos de foco');
-    mostrarToast(`🎉 Parabéns! Bloco de ${tempoDesc} concluído com sucesso!`);
+    mostrarToast(`🎉 Parabéns! Bloco de ${tempoDesc}${blocoHojeDesc} concluído com sucesso!`);
     lerTextoEmVozAlta(`Parabéns! Bloco de ${tempoDesc} concluído com sucesso!`);
   };
 
@@ -1227,6 +1400,19 @@ export default function App() {
     }
   }, [totalLinhasSemana]);
 
+  // Notificação de Fim de Simulado: detecta quando o usuário completa as 150 linhas no simulador e sugere automaticamente pausa de 15m
+  useEffect(() => {
+    if (linhasCount >= 150) {
+      if (!notif150SimuladoDisparadaRef.current) {
+        notif150SimuladoDisparadaRef.current = true;
+        setModalFimSimuladoAberto(true);
+        mostrarToast('🏆 150 Linhas concluídas! Sugerimos uma pausa de 15 minutos com áudio relaxante.');
+      }
+    } else if (linhasCount < 145) {
+      notif150SimuladoDisparadaRef.current = false;
+    }
+  }, [linhasCount]);
+
   const palavrasCount = useMemo(() => {
     return textoRedacao.trim() === '' ? 0 : textoRedacao.trim().split(/\s+/).length;
   }, [textoRedacao]);
@@ -1391,24 +1577,24 @@ export default function App() {
     { id: 'vademecum', label: '9. Vade Mecum (40)', icon: Highlighter, kbd: 'Alt+9' },
     { id: 'legislacao', label: '10. Legislação', icon: ExternalLink, kbd: 'Alt+0' },
     { id: 'mapas', label: '11. Mapas Mentais', icon: MapIcon, kbd: 'Alt+M' },
-    { id: 'teses', label: '13. Teses de Peças', icon: Award, kbd: '' },
-    { id: 'planner', label: '12. Planner Nativo', icon: FileCheck2, kbd: 'Alt+P' }
+    { id: 'planner', label: '12. Planner Nativo', icon: FileCheck2, kbd: 'Alt+P' },
+    { id: 'teses', label: '13. Teses de Peças', icon: Award, kbd: '' }
   ];
 
   const totalTarefas = CRONOGRAMA_DATA.reduce((acc, curr) => acc + curr.tarefas.length, 0);
 
   return (
-    <div className={`flex h-screen w-screen flex-col overflow-hidden ${tema === 'claro' ? 'theme-light bg-[#f3f3f3] text-[#0f172a]' : 'theme-dark bg-[#181c24] text-[#f1f5f9]'}`}>
+    <div className={`flex h-screen w-screen flex-col overflow-hidden select-none ${tema === 'claro' ? 'theme-light bg-[#f3f3f3] text-[#1e1e1e]' : 'theme-dark dark bg-[#202020] text-[#f1f5f9]'}`}>
       {/* WINDOWS 11 TITLEBAR CHROME */}
       <header className="win11-titlebar shrink-0 z-50">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-sky-500 to-blue-600 font-bold text-[10px] text-white shadow-sm">
+          <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-[#0067c0] to-[#0078d4] font-bold text-[10px] text-white shadow-sm">
             §
           </div>
-          <span className="font-semibold tracking-tight text-xs flex items-center gap-1.5">
+          <span className="font-semibold tracking-tight text-xs flex items-center gap-1.5 text-slate-900 dark:text-white">
             TributaOAB Desktop Pro
-            <span className="hidden sm:inline text-[9.5px] font-normal border border-current/15 px-1.5 py-0.2 rounded bg-black/5 dark:bg-white/5 opacity-80">
-              Fluent 11
+            <span className="hidden sm:inline text-[9.5px] font-normal border border-black/10 dark:border-white/15 px-1.5 py-0.2 rounded bg-black/[0.04] dark:bg-white/[0.06] text-slate-600 dark:text-slate-300">
+              Windows 11 Fluent
             </span>
           </span>
         </div>
@@ -1416,14 +1602,14 @@ export default function App() {
         {/* Windows 11 Centered Search Bar */}
         <button
           onClick={() => setBuscaGlobalAberta(true)}
-          className="hidden md:flex items-center justify-between w-72 lg:w-96 rounded-md border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 px-3 py-1 text-xs hover:border-sky-500/50 transition cursor-pointer"
+          className="hidden md:flex items-center justify-between w-72 lg:w-96 rounded-md border border-black/10 dark:border-white/10 bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.07] dark:hover:bg-white/[0.09] px-3 py-1 text-xs text-slate-700 dark:text-slate-300 transition cursor-pointer"
           title="Pesquisar em todas as abas (Ctrl+K ou /)"
         >
-          <span className="flex items-center gap-2 opacity-70">
-            <Search className="h-3.5 w-3.5 text-sky-500" />
-            <span className="text-[11.5px]">Pesquisar peças, teses, súmulas, vade...</span>
+          <span className="flex items-center gap-2">
+            <Search className="h-3.5 w-3.5 text-[#0067c0] dark:text-[#4cc2ff]" />
+            <span className="text-[11.5px] text-slate-500 dark:text-slate-400">Pesquisar peças, teses, súmulas, vade...</span>
           </span>
-          <kbd className="rounded bg-black/10 dark:bg-black/40 border border-current/10 px-1.5 py-0.2 font-mono text-[9px] opacity-80">
+          <kbd className="rounded bg-black/10 dark:bg-black/40 border border-black/10 dark:border-white/10 px-1.5 py-0.2 font-mono text-[9px] text-slate-600 dark:text-slate-400">
             Ctrl+K
           </kbd>
         </button>
@@ -1478,10 +1664,27 @@ export default function App() {
             )}
           </div>
 
-          <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 mr-1">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-[11px] opacity-80">Base Ativa</span>
-          </div>
+          {/* Status Sempre Online & Central de Atualizações de Leis */}
+          <button
+            type="button"
+            onClick={() => setModalAtualizacoesAberta(true)}
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 transition cursor-pointer"
+            title="Sempre Online: Sincronização contínua de Leis e Banco de Dados ativada (Clique para abrir a Central)"
+          >
+            <span
+              className={`h-2 w-2 rounded-full ${
+                statusConexao.online ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'
+              }`}
+            />
+            <span className="font-medium text-slate-800 dark:text-slate-200">
+              {statusConexao.online ? `Online (${statusConexao.latenciaMs}ms)` : 'Offline'}
+            </span>
+            <span className="text-[10px] text-[#0067c0] dark:text-[#4cc2ff] font-bold">
+              • Leis v3.5
+            </span>
+          </button>
+
+          {/* Windows 11 Caption Controls */}
           <div className="win11-window-controls">
             <button
               className="win11-caption-btn"
@@ -1516,38 +1719,38 @@ export default function App() {
 
       {/* WORKSPACE AREA (SIDEBAR + MAIN CONTENT) */}
       <div className="flex flex-1 overflow-hidden min-h-0">
-        {/* SIDEBAR */}
+        {/* SIDEBAR (WINDOWS 11 FLUENT NAVIGATION VIEW) */}
         <aside
-          className={`fixed inset-y-0 left-0 top-[38px] lg:top-0 z-40 flex w-[280px] flex-col justify-between win11-sidebar border-r border-white/10 transition-transform duration-200 lg:static lg:translate-x-0 ${
+          className={`fixed inset-y-0 left-0 top-[36px] lg:top-0 z-40 flex w-[275px] shrink-0 flex-col justify-between win11-sidebar border-r border-black/[0.08] dark:border-white/[0.08] transition-transform duration-200 lg:static lg:translate-x-0 ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
           <div className="flex flex-col overflow-y-auto">
             {/* Brand header */}
-            <div className="flex items-center justify-between border-b border-white/10 p-3.5">
+            <div className="flex items-center justify-between border-b border-black/[0.08] dark:border-white/[0.08] p-3.5">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 font-bold text-white shadow-md text-sm">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#0067c0] to-[#0078d4] font-bold text-white shadow-sm text-sm">
                   §
                 </div>
                 <div>
-                  <div className="text-[14px] font-bold text-white tracking-tight">
-                    Tributa<span className="text-sky-400">OAB</span>
+                  <div className="text-[14px] font-bold text-slate-900 dark:text-white tracking-tight">
+                    Tributa<span className="text-[#0067c0] dark:text-[#4cc2ff]">OAB</span>
                   </div>
-                  <div className="text-[10.5px] text-[#94a3b8]">2ª Fase FGV • Windows 11</div>
+                  <div className="text-[10.5px] text-slate-500 dark:text-[#94a3b8]">2ª Fase FGV • Fluent 11</div>
                 </div>
               </div>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="rounded-lg p-1 text-[#cbd5e1] hover:bg-white/10 lg:hidden"
+                className="rounded-lg p-1 text-slate-500 hover:bg-black/5 dark:text-[#cbd5e1] dark:hover:bg-white/10 lg:hidden"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Navigation */}
-            <nav className="flex flex-col gap-1 p-2">
-              <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#94a3b8]">
-                Módulos de Estudo
+            <nav className="flex flex-col gap-0.5 p-2">
+              <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-[#94a3b8]">
+                Módulos de Preparação
               </div>
               {navItems.map(item => {
                 const Icon = item.icon;
@@ -1564,11 +1767,11 @@ export default function App() {
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <Icon className={`h-4 w-4 ${isActive ? 'text-sky-300' : 'text-slate-400'}`} />
-                      <span>{item.label}</span>
+                      <Icon className={`h-4 w-4 ${isActive ? 'text-[#0067c0] dark:text-[#4cc2ff]' : 'text-slate-500 dark:text-slate-400'}`} />
+                      <span className={isActive ? 'font-semibold text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}>{item.label}</span>
                     </div>
                     {item.kbd && (
-                      <kbd className="rounded bg-black/40 border border-white/5 px-1.5 py-0.5 font-mono text-[9.5px] text-slate-400">
+                      <kbd className="rounded bg-black/[0.04] dark:bg-black/40 border border-black/10 dark:border-white/5 px-1.5 py-0.5 font-mono text-[9px] text-slate-500 dark:text-slate-400">
                         {item.kbd}
                       </kbd>
                     )}
@@ -1578,272 +1781,150 @@ export default function App() {
             </nav>
           </div>
 
-        {/* Focus Pomodoro Box com Alternador 50m Padrão vs 25m Clássico e Pausa de 5m */}
+        {/* SESSÕES DE FOCO (WINDOWS 11 FOCUS SESSIONS POMODORO) */}
         <div
-          className={`m-3 rounded-2xl border p-3.5 shadow-md transition-all duration-500 relative overflow-hidden ${
+          className={`m-2.5 rounded-xl border p-3 shadow-xs transition-all duration-300 relative overflow-hidden win11-focus-card ${
             pomodoroConcluido
-              ? 'pomodoro-success-glow border-emerald-400 bg-gradient-to-br from-[#1b3d2f] via-[#234b3a] to-[#163326] ring-2 ring-emerald-400/50 shadow-[0_0_25px_rgba(34,197,94,0.35)]'
+              ? 'pomodoro-success-glow border-emerald-500 bg-emerald-50/80 dark:bg-[#1b3d2f]/90'
               : pomodoroRunning
               ? pomodoroTipo === 'pausa'
-                ? 'border-amber-500/70 bg-gradient-to-b from-[#3a2e22] to-[#2b241e] ring-1 ring-amber-500/40'
+                ? 'border-amber-500/50 bg-amber-50/60 dark:bg-[#3a2e22]/80'
                 : pomodoroModo === '25m'
-                ? 'border-rose-500/70 bg-gradient-to-b from-[#38262b] to-[#282025] ring-1 ring-rose-500/40'
-                : 'border-sky-500/70 bg-gradient-to-b from-[#2b3646] to-[#24303f] ring-1 ring-sky-500/30'
-              : 'border-[#455468] bg-[#2b3646]'
+                ? 'border-rose-500/50 bg-rose-50/60 dark:bg-[#38262b]/80'
+                : 'border-[#0067c0]/40 dark:border-sky-500/50 bg-sky-50/60 dark:bg-[#253243]/80'
+              : 'border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-[#272727]'
           }`}
         >
           {/* Alternador de Modo: 50m Padrão vs 25m Clássico */}
-          <div className="flex items-center rounded-xl bg-[#1b232e] p-1 border border-[#455468] mb-2.5">
+          <div className="flex items-center rounded-lg bg-black/[0.04] dark:bg-black/40 p-0.5 border border-black/[0.06] dark:border-white/5 mb-2.5">
             <button
               type="button"
               onClick={() => alternarModoPomodoro('50m')}
-              className={`flex-1 py-1 px-1.5 rounded-lg text-[10.5px] font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
+              className={`flex-1 py-1 rounded-md text-[10.5px] font-semibold transition cursor-pointer flex items-center justify-center gap-1 ${
                 pomodoroModo === '50m'
-                  ? 'bg-sky-600 text-white shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  ? 'bg-[#0067c0] dark:bg-sky-600 text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
-              title="Modo Padrão: 50 min de foco profundo + 10 min de pausa"
+              title="Modo Padrão: 50 min foco + 10 min pausa"
             >
-              <span>⏱️ 50m Padrão</span>
+              <span>⏱️ 50m Foco</span>
             </button>
             <button
               type="button"
               onClick={() => alternarModoPomodoro('25m')}
-              className={`flex-1 py-1 px-1.5 rounded-lg text-[10.5px] font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
+              className={`flex-1 py-1 rounded-md text-[10.5px] font-semibold transition cursor-pointer flex items-center justify-center gap-1 ${
                 pomodoroModo === '25m'
                   ? 'bg-rose-600 text-white shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
-              title="Modo Clássico: 25 min de foco + 5 min de pausa curta"
+              title="Modo Clássico: 25 min foco + 5 min pausa curta"
             >
               <span>🍅 25m Clássico</span>
             </button>
           </div>
 
-          {/* Header do Box */}
-          <div className="flex items-center justify-between mb-2">
-            <span
-              className={`flex items-center gap-1.5 text-[11px] font-bold ${
-                pomodoroConcluido
-                  ? 'text-emerald-300'
-                  : pomodoroTipo === 'pausa'
-                  ? 'text-amber-300'
-                  : pomodoroModo === '25m'
-                  ? 'text-rose-300'
-                  : 'text-sky-300'
-              }`}
-            >
-              <Clock
-                className={`h-3.5 w-3.5 ${
-                  pomodoroConcluido
-                    ? 'text-emerald-400 animate-spin'
-                    : pomodoroRunning
-                    ? 'animate-pulse'
-                    : ''
-                }`}
-              />
-              <span>
-                {pomodoroTipo === 'pausa'
-                  ? `Pausa Curta (${pomodoroModo === '25m' ? '5 min' : '10 min'})`
-                  : pomodoroModo === '25m'
-                  ? 'Pomodoro Clássico (25 min)'
-                  : 'Bloco de Foco (50 min)'}
-              </span>
-            </span>
-
-            {pomodoroConcluido ? (
-              <span className="badge b-VERDE text-[9.5px] font-extrabold shadow-sm animate-pulse">
-                ✓ CONCLUÍDO
-              </span>
-            ) : pomodoroRunning ? (
-              <span
-                className={`text-[10px] font-semibold flex items-center gap-1 ${
-                  pomodoroTipo === 'pausa'
-                    ? 'text-amber-400'
-                    : pomodoroModo === '25m'
-                    ? 'text-rose-400'
-                    : 'text-emerald-400'
-                }`}
-              >
-                <span
-                  className={`h-1.5 w-1.5 rounded-full animate-ping ${
-                    pomodoroTipo === 'pausa'
-                      ? 'bg-amber-400'
-                      : pomodoroModo === '25m'
-                      ? 'bg-rose-400'
-                      : 'bg-emerald-400'
-                  }`}
-                ></span>
-                {pomodoroTipo === 'pausa' ? 'Em Pausa' : 'Em Foco'}
-              </span>
-            ) : (
-              <span className="text-[10px] text-slate-400">
-                {pomodoroSecs === tempoTotalPomodoro ? 'Pronto' : 'Pausado'}
-              </span>
-            )}
-          </div>
-
           {/* Área Central: Círculo de Progresso + Display do Timer */}
-          <div className="flex items-center gap-3 my-2.5">
-            {/* SVG Círculo de Progresso com Animação de Preenchimento e Pulse */}
-            <div
-              className={`relative shrink-0 flex items-center justify-center ${
-                pomodoroConcluido ? 'pomodoro-circle-pulse' : ''
-              }`}
-            >
-              <svg className="w-14 h-14 -rotate-90 transform" viewBox="0 0 56 56">
-                {/* Círculo de Fundo */}
+          <div className="flex items-center gap-3 my-2">
+            <div className={`relative shrink-0 flex items-center justify-center ${pomodoroConcluido ? 'pomodoro-circle-pulse' : ''}`}>
+              <svg className="w-12 h-12 -rotate-90 transform" viewBox="0 0 56 56">
                 <circle
                   cx="28"
                   cy="28"
                   r="22"
-                  className={
-                    pomodoroConcluido
-                      ? 'text-emerald-950/60 stroke-current'
-                      : 'text-slate-700/60 stroke-current'
-                  }
+                  className="text-slate-200 dark:text-slate-700/60 stroke-current"
                   strokeWidth="4"
                   fill="transparent"
                 />
-                {/* Círculo de Progresso preenchido */}
                 <circle
                   cx="28"
                   cy="28"
                   r="22"
                   className={`transition-all duration-700 ${
                     pomodoroConcluido
-                      ? 'text-emerald-400 stroke-current'
+                      ? 'text-emerald-500 dark:text-emerald-400 stroke-current'
                       : pomodoroTipo === 'pausa'
-                      ? 'text-amber-400 stroke-current'
+                      ? 'text-amber-500 dark:text-amber-400 stroke-current'
                       : pomodoroModo === '25m'
-                      ? 'text-rose-400 stroke-current'
+                      ? 'text-rose-500 dark:text-rose-400 stroke-current'
                       : pomodoroRunning
-                      ? 'text-sky-400 stroke-current'
-                      : 'text-slate-400/80 stroke-current'
+                      ? 'text-[#0067c0] dark:text-sky-400 stroke-current'
+                      : 'text-slate-400 dark:text-slate-500 stroke-current'
                   }`}
                   strokeWidth="4.5"
                   strokeDasharray="138.23"
                   strokeDashoffset={pomodoroConcluido ? 0 : 138.23 * (1 - pomodoroProgresso)}
                   strokeLinecap="round"
                   fill="transparent"
-                  style={
-                    pomodoroConcluido
-                      ? { filter: 'drop-shadow(0 0 7px rgba(34, 197, 94, 0.95))' }
-                      : undefined
-                  }
                 />
               </svg>
-
-              {/* Ícone no Centro do Círculo */}
               <div className="absolute inset-0 flex items-center justify-center">
                 {pomodoroConcluido ? (
-                  <Check className="h-6 w-6 text-emerald-300 animate-bounce stroke-[3]" />
+                  <Check className="h-5 w-5 text-emerald-600 dark:text-emerald-300 animate-bounce stroke-[3]" />
                 ) : pomodoroRunning ? (
-                  <Sparkles
-                    className={`h-4 w-4 animate-pulse ${
-                      pomodoroTipo === 'pausa'
-                        ? 'text-amber-300'
-                        : pomodoroModo === '25m'
-                        ? 'text-rose-300'
-                        : 'text-sky-300'
-                    }`}
-                  />
+                  <Sparkles className={`h-3.5 w-3.5 animate-pulse ${
+                    pomodoroTipo === 'pausa' ? 'text-amber-500 dark:text-amber-300' : pomodoroModo === '25m' ? 'text-rose-500 dark:text-rose-300' : 'text-[#0067c0] dark:text-sky-300'
+                  }`} />
                 ) : (
-                  <span className="font-mono text-[10px] font-bold text-slate-300">
+                  <span className="font-mono text-[9.5px] font-bold text-slate-600 dark:text-slate-300">
                     {Math.round(pomodoroProgresso * 100)}%
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Display Numérico e Texto de Status */}
             <div className="flex-1 min-w-0">
-              <div
-                className={`font-mono text-2xl font-black tracking-wider transition-colors ${
-                  pomodoroConcluido
-                    ? 'text-emerald-300 drop-shadow-[0_0_10px_rgba(52,211,153,0.7)] animate-pulse'
-                    : pomodoroTipo === 'pausa'
-                    ? 'text-amber-300'
-                    : pomodoroModo === '25m'
-                    ? 'text-rose-200'
-                    : 'text-white'
-                }`}
-              >
+              <div className={`font-mono text-2xl font-bold tracking-wider ${
+                pomodoroConcluido
+                  ? 'text-emerald-600 dark:text-emerald-300'
+                  : pomodoroTipo === 'pausa'
+                  ? 'text-amber-600 dark:text-amber-300'
+                  : pomodoroModo === '25m'
+                  ? 'text-rose-600 dark:text-rose-200'
+                  : 'text-slate-900 dark:text-white'
+              }`}>
                 {formatTimer(pomodoroSecs)}
               </div>
-
-              <div className="text-[11px] leading-snug mt-0.5">
+              <div className="text-[11px] text-slate-500 dark:text-slate-300 truncate">
                 {pomodoroConcluido ? (
-                  <span className="text-emerald-200 font-bold flex items-center gap-1">
-                    🎉 {pomodoroTipo === 'pausa' ? 'Pausa concluída! Pronto pro foco?' : 'Bloco finalizado com sucesso!'}
-                  </span>
+                  <span className="text-emerald-600 dark:text-emerald-300 font-semibold">✓ Bloco Concluído!</span>
                 ) : pomodoroRunning ? (
-                  <span className={pomodoroTipo === 'pausa' ? 'text-amber-200' : 'text-sky-200'}>
-                    {pomodoroTipo === 'pausa' ? '☕ Pausa: ' : 'Faltam '}
-                    {Math.ceil(pomodoroSecs / 60)} min para concluir
-                  </span>
-                ) : pomodoroSecs < tempoTotalPomodoro ? (
-                  <span className="text-slate-300">
-                    Restam {formatTimer(pomodoroSecs)}
-                  </span>
+                  <span>{pomodoroTipo === 'pausa' ? 'Pausa curta...' : 'Foco em andamento...'}</span>
                 ) : (
-                  <span className="text-slate-300">
-                    {pomodoroModo === '25m'
-                      ? 'Meta: 25 min de foco + 5 min pausa'
-                      : 'Meta: 50 min de foco + 10 min pausa'}
-                  </span>
+                  <span className="text-slate-400">{pomodoroSecs === tempoTotalPomodoro ? 'Pronto para iniciar' : 'Pausado'}</span>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Barra de Ações do Pomodoro */}
-          {pomodoroConcluido ? (
-            <div className="space-y-1.5 pt-1">
-              {pomodoroTipo === 'foco' ? (
-                <>
+          {/* Ações Primárias do Timer */}
+          <div className="flex items-center gap-1.5 pt-1">
+            {pomodoroConcluido ? (
+              <div className="flex items-center gap-1.5 w-full">
+                {pomodoroTipo === 'foco' ? (
                   <button
                     onClick={iniciarPausaCurta}
-                    className="w-full rounded-full border border-amber-400/60 bg-amber-500 hover:bg-amber-400 px-3 py-1.5 text-xs font-bold text-slate-950 transition shadow-md inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="flex-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 px-2 py-1.5 text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1 shadow-xs"
                   >
-                    ☕ Iniciar Pausa Curta ({pomodoroModo === '25m' ? '5m' : '10m'})
+                    ☕ Iniciar Pausa ({pomodoroModo === '25m' ? '5m' : '10m'})
                   </button>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={iniciarNovoBlocoFoco}
-                      className="flex-1 rounded-full border border-emerald-400 bg-emerald-600 hover:bg-emerald-500 px-2.5 py-1 text-[11px] font-bold text-white transition cursor-pointer inline-flex items-center justify-center gap-1"
-                    >
-                      <Sparkles className="h-3 w-3" /> Novo Foco ({pomodoroModo === '25m' ? '25m' : '50m'})
-                    </button>
-                    <button
-                      onClick={() => reiniciarPomodoro()}
-                      className="rounded-full border border-slate-600 bg-[#1b232e] hover:bg-slate-800 px-2.5 py-1 text-xs text-slate-300 transition cursor-pointer"
-                      title="Reiniciar temporizador"
-                    >
-                      <RotateCcw className="h-3 w-3" />
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
+                ) : (
                   <button
                     onClick={iniciarNovoBlocoFoco}
-                    className="w-full rounded-full bg-emerald-500 hover:bg-emerald-400 px-3 py-1.5 text-xs font-bold text-slate-950 transition shadow-md inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="flex-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-2 py-1.5 text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1 shadow-xs"
                   >
                     🎯 Retomar Foco ({pomodoroModo === '25m' ? '25m' : '50m'})
                   </button>
-                  <button
-                    onClick={() => reiniciarPomodoro()}
-                    className="w-full rounded-full border border-slate-600 bg-[#1b232e] hover:bg-slate-800 px-2.5 py-1 text-xs text-slate-300 transition cursor-pointer inline-flex items-center justify-center gap-1"
-                  >
-                    <RotateCcw className="h-3 w-3" /> Reiniciar Pausa ({pomodoroModo === '25m' ? '5m' : '10m'})
-                  </button>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-1.5 pt-1">
-              <div className="flex items-center gap-1.5">
+                )}
+                <button
+                  onClick={() => reiniciarPomodoro()}
+                  className="rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-black/30 hover:bg-black/10 dark:hover:bg-white/10 px-2 py-1.5 text-xs text-slate-600 dark:text-slate-300 transition cursor-pointer"
+                  title="Reiniciar"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 w-full">
                 <button
                   onClick={() => {
                     if (pomodoroRunning) {
@@ -1852,71 +1933,198 @@ export default function App() {
                       iniciarPomodoro();
                     }
                   }}
-                  className={`flex-1 rounded-full px-3 py-1.5 text-xs font-semibold text-white transition shadow-sm inline-flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`flex-1 rounded-lg px-2.5 py-1.5 text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 shadow-xs ${
                     pomodoroRunning
-                      ? 'bg-amber-600 hover:bg-amber-500'
+                      ? 'bg-amber-500 hover:bg-amber-400 text-slate-950'
                       : pomodoroTipo === 'pausa'
-                      ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold'
+                      ? 'bg-amber-600 hover:bg-amber-500 text-white'
                       : pomodoroModo === '25m'
-                      ? 'bg-rose-600 hover:bg-rose-500'
-                      : 'bg-sky-600 hover:bg-sky-500'
+                      ? 'bg-rose-600 hover:bg-rose-500 text-white'
+                      : 'bg-[#0067c0] hover:bg-[#0055a4] text-white'
                   }`}
                 >
                   {pomodoroRunning ? (
                     <>
-                      <Clock className="h-3.5 w-3.5" /> Pausar
-                    </>
-                  ) : pomodoroSecs < tempoTotalPomodoro ? (
-                    <>
-                      <Play className="h-3.5 w-3.5 fill-current" /> Retomar
+                      <Pause className="h-3.5 w-3.5" />
+                      <span>Pausar</span>
                     </>
                   ) : (
                     <>
                       <Play className="h-3.5 w-3.5 fill-current" />
-                      <span>
-                        {pomodoroTipo === 'pausa'
-                          ? `Iniciar Pausa ${pomodoroModo === '25m' ? '5m' : '10m'}`
-                          : `Iniciar ${pomodoroModo === '25m' ? '25m' : '50m'}`}
-                      </span>
+                      <span>{pomodoroSecs < tempoTotalPomodoro ? 'Continuar' : 'Iniciar Foco'}</span>
                     </>
                   )}
                 </button>
 
+                {pomodoroTipo === 'foco' ? (
+                  <button
+                    type="button"
+                    onClick={iniciarPausaCurta}
+                    className="rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-black/25 hover:bg-black/10 dark:hover:bg-white/10 px-2 py-1.5 text-[11px] text-amber-600 dark:text-amber-300 transition cursor-pointer"
+                    title="Alternar para Pausa Curta"
+                  >
+                    ☕
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={iniciarNovoBlocoFoco}
+                    className="rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-black/25 hover:bg-black/10 dark:hover:bg-white/10 px-2 py-1.5 text-[11px] text-[#0067c0] dark:text-sky-300 transition cursor-pointer"
+                    title="Alternar para Modo Foco"
+                  >
+                    🎯
+                  </button>
+                )}
+
                 <button
                   onClick={() => reiniciarPomodoro()}
-                  className="rounded-full border border-slate-600 bg-slate-700/80 px-2.5 py-1.5 text-xs text-slate-300 hover:bg-slate-600 transition cursor-pointer"
+                  className="rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-black/25 hover:bg-black/10 dark:hover:bg-white/10 px-2 py-1.5 text-xs text-slate-600 dark:text-slate-300 transition cursor-pointer"
                   title="Reiniciar Timer"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
                 </button>
+              </div>
+            )}
+          </div>
 
-                {/* Botão de Teste Rápido para simular a conclusão imediatamente */}
-                <button
-                  onClick={simularConclusaoPomodoro}
-                  className="rounded-full border border-emerald-500/40 bg-[#1b232e] hover:bg-emerald-950/60 px-2 py-1.5 text-[10px] font-bold text-emerald-300 transition cursor-pointer"
-                  title="Testar animação visual de conclusão agora (00:00)"
-                >
-                  ⚡ 00:00
-                </button>
+          {/* Sub-Aba: Alternador Limpo entre [ Blocos Diários ] e [ Soundscape ] */}
+          <div className="flex items-center rounded-lg bg-black/[0.04] dark:bg-black/30 p-0.5 border border-black/[0.06] dark:border-white/5 mt-3 mb-2">
+            <button
+              type="button"
+              onClick={() => setPomodoroSubTab('blocos')}
+              className={`flex-1 py-1 text-[10.5px] rounded-md transition cursor-pointer flex items-center justify-center gap-1 ${
+                pomodoroSubTab === 'blocos'
+                  ? 'bg-white dark:bg-slate-700/80 text-slate-900 dark:text-white font-semibold shadow-xs'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <span>🍅 Blocos ({pomodoroBlocosHoje})</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPomodoroSubTab('soundscape')}
+              className={`flex-1 py-1 text-[10.5px] rounded-md transition cursor-pointer flex items-center justify-center gap-1 ${
+                pomodoroSubTab === 'soundscape'
+                  ? 'bg-white dark:bg-slate-700/80 text-slate-900 dark:text-white font-semibold shadow-xs'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Headphones className="h-3 w-3" />
+              <span>Som {soundscapeTipo !== 'nenhum' ? '•' : ''}</span>
+            </button>
+          </div>
+
+          {/* Conteúdo da Sub-Aba: Blocos Diários */}
+          {pomodoroSubTab === 'blocos' && (
+            <div className="space-y-1.5 pt-0.5">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-slate-700 dark:text-slate-300 font-medium">Meta: 4 blocos hoje</span>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => ajustarBlocosPomodoroHoje(1)}
+                    className="h-5 px-1.5 rounded bg-black/5 dark:bg-black/30 border border-black/10 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:bg-black/10 dark:hover:bg-white/10 text-xs font-bold transition cursor-pointer"
+                    title="+1 bloco concluído"
+                  >
+                    +1
+                  </button>
+                  {pomodoroBlocosHoje > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => ajustarBlocosPomodoroHoje(-1)}
+                      className="h-5 px-1 rounded bg-black/5 dark:bg-black/30 border border-black/10 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:bg-black/10 dark:hover:bg-white/10 text-xs font-bold transition cursor-pointer"
+                      title="-1 bloco"
+                    >
+                      -
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={resetarBlocosPomodoroHoje}
+                    className="h-5 px-1.5 rounded bg-rose-50 dark:bg-black/30 border border-rose-300 dark:border-rose-500/30 text-[9.5px] text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-950/50 transition cursor-pointer"
+                    title="Zerar (auto-reset às 00:00)"
+                  >
+                    Zerar
+                  </button>
+                </div>
               </div>
 
-              {/* Botão alternativo para trocar entre Foco e Pausa a qualquer momento */}
-              {pomodoroTipo === 'foco' ? (
-                <button
-                  type="button"
-                  onClick={iniciarPausaCurta}
-                  className="w-full text-center py-1 text-[10.5px] font-medium text-amber-300 hover:text-amber-200 hover:bg-amber-950/30 rounded-lg transition border border-amber-500/30 cursor-pointer flex items-center justify-center gap-1"
-                >
-                  <span>☕ Ir para Pausa Curta ({pomodoroModo === '25m' ? '5 min' : '10 min'})</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={iniciarNovoBlocoFoco}
-                  className="w-full text-center py-1 text-[10.5px] font-medium text-sky-300 hover:text-sky-200 hover:bg-sky-950/30 rounded-lg transition border border-sky-500/30 cursor-pointer flex items-center justify-center gap-1"
-                >
-                  <span>🎯 Voltar ao Modo Foco ({pomodoroModo === '25m' ? '25 min' : '50 min'})</span>
-                </button>
+              {/* 4 Barrinhas de Progresso Diário */}
+              <div className="grid grid-cols-4 gap-1 py-0.5">
+                {[0, 1, 2, 3].map(slotIdx => (
+                  <div
+                    key={slotIdx}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      pomodoroBlocosHoje > slotIdx
+                        ? 'bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.5)]'
+                        : 'bg-black/10 dark:bg-black/30 border border-black/5 dark:border-white/5'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400">
+                <span>{pomodoroBlocosHoje * (pomodoroModo === '25m' ? 25 : 50)} min de foco hoje</span>
+                <span className="font-mono text-slate-400 dark:text-slate-500">🌙 Auto-reset 00:00</span>
+              </div>
+            </div>
+          )}
+
+          {/* Conteúdo da Sub-Aba: Soundscape de Foco */}
+          {pomodoroSubTab === 'soundscape' && (
+            <div className="space-y-2 pt-0.5">
+              <div className="grid grid-cols-4 gap-1 bg-black/[0.04] dark:bg-black/30 p-1 rounded-lg border border-black/[0.06] dark:border-white/5">
+                {SOUNDSCAPE_OPCOES.map(opcao => {
+                  const isSelected = soundscapeTipo === opcao.id;
+                  return (
+                    <button
+                      key={opcao.id}
+                      type="button"
+                      onClick={() => alterarSoundscapeTipo(opcao.id)}
+                      className={`py-1 px-1 rounded text-[9.5px] font-medium transition cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
+                        isSelected
+                          ? 'bg-[#0067c0] dark:bg-sky-600 text-white font-bold shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                      title={`${opcao.nome}: ${opcao.descricao}`}
+                    >
+                      <span className="text-xs leading-none">{opcao.icone}</span>
+                      <span className="truncate max-w-full">{opcao.nome}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {soundscapeTipo !== 'nenhum' && (
+                <div className="flex items-center justify-between gap-2 pt-0.5">
+                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                    <Volume2 className="h-3 w-3 text-slate-400 shrink-0" />
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={soundscapeVolume}
+                      onChange={(e) => alterarVolumeSoundscape(parseFloat(e.target.value))}
+                      className="w-full accent-[#0067c0] dark:accent-sky-400 h-1 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer"
+                    />
+                    <span className="font-mono text-[9px] text-slate-600 dark:text-slate-300 w-6 text-right shrink-0">
+                      {Math.round(soundscapeVolume * 100)}%
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={alternarPreviewSoundscape}
+                    className={`text-[9.5px] font-semibold px-2 py-0.5 rounded border transition cursor-pointer ${
+                      soundscapePreviewManual
+                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'
+                        : 'border-black/10 dark:border-white/10 bg-black/5 dark:bg-black/30 text-slate-700 dark:text-slate-300 hover:bg-black/10'
+                    }`}
+                  >
+                    {soundscapePreviewManual ? '■ Parar' : '▶ Testar'}
+                  </button>
+                </div>
               )}
             </div>
           )}
@@ -1925,36 +2133,27 @@ export default function App() {
 
       {/* MAIN WRAPPER */}
       <div className="flex flex-1 min-w-0 flex-col h-full overflow-hidden">
-        {/* Sub Header */}
-        <header className="flex h-12 min-h-[48px] items-center justify-between border-b border-white/10 bg-[#1e2532]/75 backdrop-blur-md px-4 lg:px-6">
+        {/* WINDOWS 11 FLUENT COMMANDBAR (SUB HEADER) */}
+        <header className="win11-commandbar h-11 shrink-0 z-30 border-b border-black/[0.08] dark:border-white/[0.08] bg-white/85 dark:bg-[#232323]/85 backdrop-blur-xl px-4 lg:px-6">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="rounded-lg p-1.5 text-slate-300 hover:bg-slate-800 lg:hidden"
+              className="rounded-lg p-1.5 text-slate-600 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10 lg:hidden"
             >
               <Menu className="h-5 w-5" />
             </button>
-            <div className="flex items-center gap-2 text-xs font-medium text-emerald-400">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="hidden sm:inline">Banco de Dados Integral 100% Restaurado e Operacional</span>
-              <span className="sm:hidden font-semibold">TributaOAB Pro</span>
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+              <span className="opacity-75">TributaOAB</span>
+              <span className="text-slate-400">›</span>
+              <span className="opacity-75">Módulos</span>
+              <span className="text-slate-400">›</span>
+              <span className="font-semibold text-slate-900 dark:text-white">
+                {navItems.find(item => item.id === activeTab)?.label || 'Painel'}
+              </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
-            {/* Botão de Busca Global Integrada */}
-            <button
-              onClick={() => setBuscaGlobalAberta(true)}
-              className="flex items-center gap-2 rounded-full border border-sky-500/50 bg-[#222b38] px-3 py-1.5 text-xs text-sky-300 hover:border-sky-400 hover:bg-sky-950/40 transition shadow-sm"
-              title="Buscar em todas as abas (Ctrl+K ou /)"
-            >
-              <Search className="h-3.5 w-3.5 text-sky-400" />
-              <span className="hidden md:inline">Busca Global</span>
-              <kbd className="hidden md:inline rounded bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] text-slate-400">
-                Ctrl+K
-              </kbd>
-            </button>
-
+          <div className="flex items-center gap-2">
             {/* Widget Mini Temporizador Pomodoro no Subheader */}
             {(pomodoroRunning || pomodoroConcluido || pomodoroSecs < tempoTotalPomodoro) && (
               <button
@@ -1965,16 +2164,16 @@ export default function App() {
                     setSidebarOpen(true);
                   }
                 }}
-                className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition shadow-sm cursor-pointer ${
+                className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition shadow-xs cursor-pointer ${
                   pomodoroConcluido
-                    ? 'border-emerald-400 bg-emerald-500/25 text-emerald-300 ring-2 ring-emerald-400/50 animate-pulse shadow-[0_0_12px_rgba(34,197,94,0.4)]'
+                    ? 'border-emerald-500 bg-emerald-100/80 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-300 ring-2 ring-emerald-400/50 animate-pulse'
                     : pomodoroRunning
                     ? pomodoroTipo === 'pausa'
-                      ? 'border-amber-400/60 bg-amber-950/40 text-amber-200'
+                      ? 'border-amber-400/60 bg-amber-100/70 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200'
                       : pomodoroModo === '25m'
-                      ? 'border-rose-400/60 bg-rose-950/40 text-rose-200'
-                      : 'border-sky-400/60 bg-sky-950/40 text-sky-200'
-                    : 'border-slate-500/50 bg-slate-800 text-slate-300'
+                      ? 'border-rose-400/60 bg-rose-100/70 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200'
+                      : 'border-[#0067c0]/50 bg-sky-100/70 dark:bg-sky-950/40 text-sky-900 dark:text-sky-200'
+                    : 'border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                 }`}
                 title={
                   pomodoroConcluido
@@ -1987,14 +2186,14 @@ export default function App() {
                 <Clock
                   className={`h-3 w-3 ${
                     pomodoroConcluido
-                      ? 'text-emerald-300 animate-spin'
+                      ? 'text-emerald-600 dark:text-emerald-300 animate-spin'
                       : pomodoroRunning
                       ? pomodoroTipo === 'pausa'
-                        ? 'text-amber-300 animate-pulse'
+                        ? 'text-amber-600 dark:text-amber-300 animate-pulse'
                         : pomodoroModo === '25m'
-                        ? 'text-rose-300 animate-pulse'
-                        : 'text-sky-300 animate-pulse'
-                      : 'text-slate-300'
+                        ? 'text-rose-600 dark:text-rose-300 animate-pulse'
+                        : 'text-[#0067c0] dark:text-sky-300 animate-pulse'
+                      : 'text-slate-500 dark:text-slate-300'
                   }`}
                 />
                 <span className="font-mono font-bold">
@@ -2002,6 +2201,11 @@ export default function App() {
                     ? `🎉 ${pomodoroTipo === 'pausa' ? 'Pausa' : pomodoroModo === '25m' ? '25m' : '50m'} Concluído!`
                     : `${pomodoroTipo === 'pausa' ? '☕ ' : ''}${formatTimer(pomodoroSecs)}`}
                 </span>
+                {pomodoroBlocosHoje > 0 && (
+                  <span className="text-[10px] text-rose-600 dark:text-rose-300 font-mono font-bold ml-0.5" title={`${pomodoroBlocosHoje} blocos realizados hoje`}>
+                    ({pomodoroBlocosHoje}🍅)
+                  </span>
+                )}
               </button>
             )}
 
@@ -2011,44 +2215,44 @@ export default function App() {
                 setActiveTab('dashboard');
                 testarNotificacaoManual();
               }}
-              className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition shadow-sm ${
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition shadow-xs cursor-pointer ${
                 notifAtiva
-                  ? 'border-amber-500/60 bg-amber-950/30 text-amber-300 hover:bg-amber-900/40'
-                  : 'border-slate-600 bg-slate-800 text-slate-400'
+                  ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-300 hover:bg-amber-100'
+                  : 'border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
               }`}
               title="Notificação Diária de Estudo — Clique para testar ou configurar"
             >
-              <Bell className={`h-3 w-3 ${notifAtiva ? 'text-amber-400 animate-pulse' : 'text-slate-400'}`} />
-              <span className="font-mono font-bold text-amber-200">{notifHorario}</span>
+              <Bell className={`h-3 w-3 ${notifAtiva ? 'text-amber-500 animate-pulse' : 'text-slate-400'}`} />
+              <span className="font-mono font-bold text-amber-800 dark:text-amber-200">{notifHorario}</span>
               <span className="hidden sm:inline text-[10px]">({notifAtiva ? 'Alarme Ativo' : 'Pausado'})</span>
             </button>
 
-            {/* Alternador de Tema Rápido no Subheader */}
+            {/* Contador Dias Prova OAB */}
+            <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-slate-300 dark:border-slate-700/60 bg-white/70 dark:bg-slate-800/60 px-3 py-1 text-xs text-slate-700 dark:text-slate-300 font-medium">
+              <span>Prova 2ª Fase:</span>
+              <strong className="font-mono text-[#0067c0] dark:text-sky-400">{diasProva >= 0 ? `${diasProva} dias` : 'Hoje'}</strong>
+            </div>
+
+            {/* Botão Central de Leis & Banco Online */}
             <button
-              onClick={alternarTema}
-              className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition shadow-sm ${
-                tema === 'claro'
-                  ? 'border-amber-400 bg-amber-50 text-amber-900 hover:bg-amber-100'
-                  : 'border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
-              title="Alternar entre Tema Claro e Escuro"
+              onClick={() => setModalAtualizacoesAberta(true)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-semibold text-xs px-3 py-1.5 shadow-xs transition cursor-pointer"
+              title="Central de Atualizações de Leis Tributárias & Banco de Dados em Tempo Real"
             >
-              {tema === 'claro' ? (
-                <>
-                  <Sun className="h-3 w-3 text-amber-600" />
-                  <span className="font-semibold text-amber-900">Tema Claro</span>
-                </>
-              ) : (
-                <>
-                  <Moon className="h-3 w-3 text-sky-400" />
-                  <span className="font-semibold text-slate-200">Tema Escuro</span>
-                </>
-              )}
+              <RefreshCw className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 animate-spin" style={{ animationDuration: '10s' }} />
+              <span className="hidden lg:inline">Leis & Banco Online</span>
+              <span className="lg:hidden">Leis Online</span>
             </button>
 
-            <div className="hidden lg:flex items-center rounded-full border border-slate-300 dark:border-slate-600 bg-white/80 dark:bg-slate-800/80 px-3 py-1 text-xs text-slate-700 dark:text-slate-300">
-              Repescagem: <strong className="font-mono text-amber-600 dark:text-amber-300 ml-1">23/11 a 30/11</strong>
-            </div>
+            {/* Botão Ação Rápida: Simulado FGV */}
+            <button
+              onClick={() => setActiveTab('cronograma')}
+              className="inline-flex items-center gap-1.5 rounded-md bg-[#0067c0] hover:bg-[#0055a4] text-white font-semibold text-xs px-3.5 py-1.5 shadow-xs transition cursor-pointer"
+            >
+              <Calendar className="h-3.5 w-3.5" />
+              <span className="hidden md:inline">Simulado Semanal</span>
+              <span className="md:hidden">Simulado</span>
+            </button>
           </div>
         </header>
 
@@ -2056,809 +2260,718 @@ export default function App() {
         <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-6">
           {/* TAB 1: DASHBOARD */}
           {activeTab === 'dashboard' && (
-            <div className="space-y-5 win11-animate">
-              {/* Gráfico Recharts: Progresso do Cronograma de 8 Semanas */}
-              <CronogramaProgressoChart
-                tarefasConcluidas={tarefasConcluidas}
-                onNavigateToCronograma={() => setActiveTab('cronograma')}
-              />
-
-              {/* CARD: DICA DO DIA (DIREITO TRIBUTÁRIO FGV) */}
-              <DicaDoDiaCard
-                onNavigateToTab={(tab) => setActiveTab(tab as TabType)}
-                onMostrarToast={mostrarToast}
-              />
-
-              {/* CARD: METAS DIÁRIAS & TAREFAS RÁPIDAS (COM CHECKBOX E LIMPEZA AUTOMÁTICA ÀS 00:00) */}
-              <MetasDiariasCard
-                onNavigateToTab={(tab) => setActiveTab(tab as TabType)}
-                onMostrarToast={mostrarToast}
-              />
-
-              {/* CARD DE AÇÃO RÁPIDA: RELATÓRIO SEMANAL DE PROGRESSO EM PDF */}
-              <div className="win11-widget-card p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-l-4 border-l-sky-500 bg-gradient-to-r from-sky-950/40 via-[#232d3d] to-[#1e293b]">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-500/20 border border-sky-400 text-sky-300 shadow-sm">
-                    <FileText className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="badge b-AZUL text-[10px]">Exportação PDF</span>
-                      <span className="badge b-VERDE text-[10px]">Acompanhamento FGV</span>
-                    </div>
-                    <h3 className="text-sm font-bold text-white mt-0.5">
-                      Relatório Semanal de Progresso & Estudo
-                    </h3>
-                    <p className="text-xs text-slate-300 mt-0.5">
-                      Compila automaticamente sua taxa de acerto em Flashcards ({taxaAcertoEstimada}%), linhas redigidas no simulador ({totalLinhasSemana}/150L) e tarefas do cronograma ({tarefasConcluidas.length}/{totalTarefas}).
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={handleGerarRelatorioSemanalPdf}
-                  className="win11-btn-primary inline-flex items-center gap-2 px-4 py-2 text-xs font-bold shadow-md hover:scale-[1.02] active:scale-[0.98] transition cursor-pointer whitespace-nowrap self-stretch sm:self-auto justify-center"
-                  title="Exporta um arquivo PDF completo com taxa de flashcards, linhas do simulador e cronograma semanal"
-                >
-                  <Download className="h-4 w-4" />
-                  <span>Gerar Relatório Semanal de Progresso</span>
-                </button>
-              </div>
-
-              {/* BLOCO DE ESTATÍSTICAS DE DESEMPENHO (WINDOWS 11 WIDGET STYLE) */}
-              <div className="win11-widget-card p-5 space-y-4">
-                <div className="flex items-center justify-between flex-wrap gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-500/20 border border-sky-400 text-sky-300">
-                      <TrendingUp className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="badge b-AZUL text-[10px]">Windows 11 Widget</span>
-                        <span className="text-[11px] text-slate-400 font-mono">Ciclo Semanal OAB</span>
-                      </div>
-                      <h2 className="text-base font-bold text-white mt-0.5">
-                        Estatísticas de Desempenho
-                      </h2>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <button
-                      onClick={handleGerarRelatorioSemanalPdf}
-                      className="win11-btn-primary inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold shadow-sm hover:scale-[1.02] active:scale-[0.98] transition cursor-pointer"
-                      title="Exporta o Relatório Semanal compilado em PDF"
-                    >
-                      <Download className="h-3.5 w-3.5" />
-                      <span>Gerar Relatório Semanal de Progresso</span>
-                    </button>
-                    <span className="text-xs text-slate-300 bg-[#1b232e] px-3 py-1 rounded-full border border-[#455468]">
-                      Semana Atual • {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+            <div className="space-y-6 win11-animate">
+              {/* 1. HEADER DO PAINEL GERAL (WINDOWS 11 STYLE) */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-3 border-b border-black/[0.08] dark:border-white/[0.08]">
+                <div>
+                  <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                    <span>Painel do Candidato</span>
+                    <span className="text-xs font-normal px-2 py-0.5 rounded-md bg-[#0067c0]/10 text-[#0067c0] dark:bg-sky-500/10 dark:text-sky-400 border border-[#0067c0]/20 dark:border-sky-500/20 font-mono">
+                      2ª Fase OAB Tributário
                     </span>
-                  </div>
+                  </h1>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Acompanhamento integrado de redação no simulador, retenção em flashcards e disciplina diária.
+                  </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Card 1: Média de Acertos Estimada nos Flashcards */}
-                  <div className="win11-subcard p-4 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
-                          <Sparkles className="h-4 w-4 text-emerald-400" />
-                          Média de Acertos Estimada nos Flashcards
-                        </span>
-                        <span className="badge b-VERDE font-mono font-bold">
-                          {taxaAcertoEstimada >= 80 ? 'Nível Excelente' : taxaAcertoEstimada >= 65 ? 'Bom Desempenho' : 'Em Fortalecimento'}
-                        </span>
-                      </div>
-
-                      <div className="flex items-baseline gap-3 my-2">
-                        <span className="font-mono text-3xl font-extrabold text-white tracking-tight">
-                          {taxaAcertoEstimada}%
-                        </span>
-                        <span className="text-xs text-slate-300">
-                          ({flashStats.acertos} acertos em {flashStats.total} revisões)
-                        </span>
-                      </div>
-
-                      {/* Barra de Progresso com meta FGV (75%) */}
-                      <div className="space-y-1 mt-2">
-                        <div className="flex items-center justify-between text-[10px] text-slate-300">
-                          <span>Taxa de Retenção</span>
-                          <span>Meta recomendada FGV: 75%</span>
-                        </div>
-                        <div className="h-2.5 w-full overflow-hidden rounded-full border border-[#455468] bg-[#1b232e]">
-                          <div
-                            className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500"
-                            style={{ width: `${Math.min(100, taxaAcertoEstimada)}%` }}
-                          ></div>
-                        </div>
-                      </div>
-
-                      <p className="text-[11px] text-slate-300 mt-3 leading-relaxed">
-                        Média calculada com base na repetição espaçada das teses, súmulas e peças da 2ª Fase OAB.
-                      </p>
-                    </div>
-
-                    <div className="mt-4 pt-3 border-t border-[#455468]/60 flex items-center justify-between">
-                      <button
-                        onClick={() => setActiveTab('flashcards')}
-                        className="win11-btn-primary inline-flex items-center gap-1.5"
-                      >
-                        <Sparkles className="h-3.5 w-3.5" /> Praticar Flashcards Agora →
-                      </button>
-                      <button
-                        onClick={() => {
-                          const reset = { acertos: 0, total: 0 };
-                          setFlashStats(reset);
-                          SafeStorage.set('tributa_flash_stats', JSON.stringify(reset));
-                          mostrarToast('Contador de flashcards reiniciado!');
-                        }}
-                        className="text-[10px] text-slate-400 hover:text-slate-200 underline"
-                      >
-                        Zerar métricas
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Card 2: Quantidade Total de Linhas Redigidas no Simulador Esta Semana */}
-                  <div className="win11-subcard p-4 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold text-sky-300 flex items-center gap-1.5">
-                          <FileText className="h-4 w-4 text-sky-400" />
-                          Total de Linhas Redigidas no Simulador Esta Semana
-                        </span>
-                        <span
-                          onClick={() => {
-                            if (totalLinhasSemana >= 150) {
-                              dispararConfetesSuaves({ count: 65, originY: 0.35 });
-                              tocarAlarmeWebAudio('suave');
-                              mostrarToast('🎉 Meta semanal de 150 linhas no simulador atingida!');
-                            }
-                          }}
-                          className={`badge font-mono font-bold select-none ${
-                            totalLinhasSemana >= 150
-                              ? 'b-VERDE cursor-pointer hover:scale-105 active:scale-95 transition-transform'
-                              : 'b-AZUL'
-                          }`}
-                          title={totalLinhasSemana >= 150 ? 'Meta de 150L atingida! Clique para celebrar 🎉' : undefined}
-                        >
-                          {totalLinhasSemana >= 150 ? 'Meta Semanal Atingida! 🎯' : 'Em Andamento'}
-                        </span>
-                      </div>
-
-                      <div className="flex items-baseline gap-3 my-2">
-                        <span className="font-mono text-3xl font-extrabold text-white tracking-tight">
-                          {totalLinhasSemana} <span className="text-sm font-medium text-slate-300">linhas</span>
-                        </span>
-                        <span className="text-xs text-slate-300">
-                          (Meta semanal: 150 linhas • Folha Padrão FGV)
-                        </span>
-                      </div>
-
-                      {/* Barra de Progresso com meta semanal de 150 linhas */}
-                      <div className="space-y-1 mt-2">
-                        <div className="flex items-center justify-between text-[10px] text-slate-300">
-                          <span>Progresso da Meta Semanal</span>
-                          <span>{Math.round((totalLinhasSemana / 150) * 100)}% de 150L</span>
-                        </div>
-                        <div className="h-2.5 w-full overflow-hidden rounded-full border border-[#455468] bg-[#1b232e]">
-                          <div
-                            className="h-full bg-gradient-to-r from-sky-500 to-blue-400 transition-all duration-500"
-                            style={{ width: `${Math.min(100, Math.round((totalLinhasSemana / 150) * 100))}%` }}
-                          ></div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3 mt-3 text-[11px] text-slate-300">
-                        <span>📄 Páginas preenchidas: <strong>{Math.min(5, Math.ceil(totalLinhasSemana / 30))}/5</strong></span>
-                        <span>✍️ Redação ativa: <strong>{linhasCount} linhas</strong></span>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 pt-3 border-t border-[#455468]/60 flex items-center justify-between">
-                      <button
-                        onClick={() => setActiveTab('simulador')}
-                        className="win11-btn-primary inline-flex items-center gap-1.5"
-                      >
-                        <FileText className="h-3.5 w-3.5" /> Continuar Redigindo →
-                      </button>
-                      <button
-                        onClick={() => adicionarLinhasAoTotalSemana(30)}
-                        className="win11-btn-secondary text-[10px] py-1 px-2.5 inline-flex items-center gap-1"
-                        title="Adiciona 1 página simulada (30 linhas) ao total da semana"
-                      >
-                        <Plus className="h-3 w-3" /> 30 Linhas
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* GRÁFICO COMPARATIVO MENSAL (RECHARTS): ÚLTIMOS 4 MESES (TAXA DE FLASHCARDS & LINHAS REDIGIDAS) */}
-              <GraficoComparativoMensal
-                taxaAtualFlashcards={taxaAcertoEstimada}
-                linhasSemanaisSimulador={totalLinhasSemana}
-                onNavegarParaSimulador={() => setActiveTab('simulador')}
-                onNavegarParaFlashcards={() => setActiveTab('flashcards')}
-              />
-
-              {/* PAINEL DE NOTIFICAÇÃO DIÁRIA DE ESTUDO (LOCALSTORAGE) */}
-              <div className="rounded-2xl border border-amber-500/70 bg-[#2b3646] p-5 shadow-md">
-                <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 border border-amber-500 text-amber-300">
-                      <Bell className="h-5 w-5 animate-pulse" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="badge b-AMARELO text-[10px]">Alarme de Disciplina FGV</span>
-                        <span className="text-[11px] text-slate-400 font-mono">Salvo no LocalStorage</span>
-                      </div>
-                      <h2 className="text-base font-bold text-white mt-0.5">
-                        Notificação Diária de Estudo & Alarme de Horário Fixo
-                      </h2>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={testarNotificacaoManual}
-                      className="rounded-full border border-amber-400 bg-amber-600/90 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-amber-500 transition shadow-sm inline-flex items-center gap-1.5"
-                      title="Dispara o áudio e a janela de notificação para teste imediato"
-                    >
-                      <Volume2 className="h-3.5 w-3.5" /> Testar Notificação Agora
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                  {/* Seletor de Horário & Presets */}
-                  <div className="md:col-span-5 rounded-xl border border-[#455468] bg-[#344154] p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label htmlFor="horario-estudo-input" className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
-                        <Clock className="h-3.5 w-3.5" /> Horário Diário Programado:
-                      </label>
-                      <span className="font-mono text-sm font-bold text-white bg-[#1b232e] px-2.5 py-0.5 rounded-lg border border-[#455468]">
-                        {notifHorario}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <input
-                        id="horario-estudo-input"
-                        type="time"
-                        value={notifHorario}
-                        onChange={e => handleNotifHorarioChange(e.target.value)}
-                        className="rounded-xl border border-[#56677d] bg-[#1b232e] px-3 py-1.5 text-sm font-bold text-white focus:outline-none focus:border-amber-400 w-full"
-                      />
-                    </div>
-
-                    {/* Presets Rápidos */}
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] text-slate-400">Sugestões:</span>
-                      {['06:30', '08:00', '13:30', '19:00', '20:00', '21:30'].map(h => (
-                        <button
-                          key={h}
-                          type="button"
-                          onClick={() => handleNotifHorarioChange(h)}
-                          className={`rounded-lg px-2 py-0.5 font-mono text-[11px] font-semibold transition ${
-                            notifHorario === h
-                              ? 'bg-amber-500 text-slate-950 font-bold'
-                              : 'bg-[#1b232e] text-slate-300 hover:bg-slate-700 border border-[#455468]'
-                          }`}
-                        >
-                          {h}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Mensagem e Configurações */}
-                  <div className="md:col-span-7 rounded-xl border border-[#455468] bg-[#344154] p-4 space-y-3">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <label className="flex items-center gap-2 text-xs font-bold text-emerald-400 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={notifAtiva}
-                          onChange={e => handleNotifAtivaChange(e.target.checked)}
-                          className="h-4 w-4 rounded accent-emerald-500"
-                        />
-                        <span>Alarme Ativado Automaticamente</span>
-                      </label>
-
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className="text-slate-300">Frequência:</span>
-                        <select
-                          value={notifDias}
-                          onChange={e => handleNotifDiasChange(e.target.value)}
-                          className="rounded-lg border border-[#56677d] bg-[#1b232e] px-2 py-1 text-xs text-white"
-                        >
-                          <option value="todos">Todos os Dias</option>
-                          <option value="seg-sex">Segunda a Sexta</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="text-[11px] text-slate-300 mb-1">
-                        Mensagem de Incentivo / Meta Diária:
-                      </div>
-                      <input
-                        type="text"
-                        value={notifMensagem}
-                        onChange={e => handleNotifMensagemChange(e.target.value)}
-                        placeholder="Ex: Hora do Bloco Tributário FGV: 1 Peça + 5 Flashcards"
-                        className="w-full rounded-xl border border-[#56677d] bg-[#1b232e] px-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
-                      />
-                    </div>
-
-                    <div className="text-[11px] text-slate-300 flex items-center justify-between">
-                      <span className="flex items-center gap-1.5">
-                        <span className={`h-2 w-2 rounded-full ${notifAtiva ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'}`}></span>
-                        Status: <strong className="text-white">{notifAtiva ? `Ativo para hoje às ${notifHorario}` : 'Desativado'}</strong>
-                      </span>
-                      <span className="text-[10px] text-slate-400">Emite alarme sonoro Web Audio e voz</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* SELETOR DE TONS DO ALARME SONORO (WEB AUDIO API & LOCALSTORAGE) */}
-                <div className="mt-4 pt-4 border-t border-[#455468]/70 space-y-3">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <div className="flex items-center gap-2">
-                      <Volume2 className="h-4 w-4 text-amber-400" />
-                      <span className="text-xs font-bold text-white">
-                        Tom do Alarme Sonoro (Web Audio API):
-                      </span>
-                      <span className="badge b-AMARELO text-[10px]">
-                        Salvo no LocalStorage
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-slate-300">
-                      Tom ativo: <strong className="text-amber-300 font-semibold">{TONS_ALARME.find(t => t.id === tomAlarme)?.nome}</strong>
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {TONS_ALARME.map((t) => {
-                      const ativo = tomAlarme === t.id;
-                      return (
-                        <div
-                          key={t.id}
-                          onClick={() => handleTomAlarmeChange(t.id)}
-                          className={`cursor-pointer rounded-xl border p-3.5 transition flex flex-col justify-between ${
-                            ativo
-                              ? 'border-amber-400 bg-amber-500/20 shadow-md ring-1 ring-amber-400/50'
-                              : 'border-[#455468] bg-[#1b232e] hover:border-slate-400 hover:bg-[#222c3a]'
-                          }`}
-                        >
-                          <div className="space-y-1.5">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                                <span className="text-base">{t.icone}</span>
-                                <span>{t.nome}</span>
-                              </span>
-                              <span
-                                className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${t.corTag}`}
-                              >
-                                {ativo ? '✓ Ativo' : 'Selecionar'}
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-slate-300 leading-relaxed">
-                              {t.descricao}
-                            </p>
-                          </div>
-
-                          <div className="mt-3 pt-2 border-t border-[#455468]/50 flex items-center justify-between">
-                            <span className="text-[10px] text-slate-400 font-mono">
-                              {t.id === 'padrao'
-                                ? 'C5→C6 Triangular'
-                                : t.id === 'suave'
-                                ? 'Senoidal Zen'
-                                : 'Sawtooth Staccato'}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                tocarAlarmeWebAudio(t.id);
-                              }}
-                              className="text-[10px] font-bold text-amber-300 hover:text-amber-100 bg-amber-600/40 hover:bg-amber-600/70 px-2.5 py-1 rounded-md border border-amber-500/50 inline-flex items-center gap-1 transition"
-                              title={`Tocar prévia do tom ${t.nome}`}
-                            >
-                              <Volume2 className="h-3 w-3" /> Ouvir Tom
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* SEÇÃO INTEGRADA: LEMBRETE ESPECÍFICO DE EXPORTAÇÃO DA REDAÇÃO PARA WORD (FREQUÊNCIA SEMANAL) */}
-                <div className="mt-5 pt-5 border-t border-[#455468] space-y-4">
-                  <div className="flex items-center justify-between flex-wrap gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/20 border border-blue-500 text-blue-400">
-                        <Download className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="badge b-AZUL text-[10px]">Backup Semanal FGV</span>
-                          <span className="text-[11px] text-slate-400 font-mono">Salvo no LocalStorage</span>
-                        </div>
-                        <h3 className="text-sm font-bold text-white mt-0.5">
-                          Lembrete Específico: Exportação da Redação para Word (.doc)
-                        </h3>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={testarLembreteWordManual}
-                        className="rounded-full border border-blue-400 bg-blue-600/90 hover:bg-blue-500 px-3 py-1.5 text-xs font-bold text-white transition shadow-sm inline-flex items-center gap-1.5"
-                        title="Simula o alarme e abre a notificação com botão direto de download do Word"
-                      >
-                        <Volume2 className="h-3.5 w-3.5" /> Testar Lembrete Word
-                      </button>
-                      <button
-                        onClick={() => exportarRedacaoNoWord(textoRedacao)}
-                        className="rounded-full border border-slate-600 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-200 transition inline-flex items-center gap-1.5"
-                        title="Baixar redação no Word imediatamente"
-                      >
-                        <FileText className="h-3.5 w-3.5 text-sky-400" /> Baixar Word (.doc) Agora
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                    {/* Seletor de Frequência Semanal e Horário */}
-                    <div className="md:col-span-5 rounded-xl border border-[#455468] bg-[#344154] p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-blue-300 flex items-center gap-1.5">
-                          <Calendar className="h-3.5 w-3.5" /> Frequência Semanal:
-                        </label>
-                        <span className="font-mono text-xs font-bold text-white bg-[#1b232e] px-2 py-0.5 rounded-lg border border-[#455468]">
-                          {notifWordDia === '0' ? 'Domingo' : notifWordDia === '1' ? 'Segunda-feira' : notifWordDia === '2' ? 'Terça-feira' : notifWordDia === '3' ? 'Quarta-feira' : notifWordDia === '4' ? 'Quinta-feira' : notifWordDia === '5' ? 'Sexta-feira' : 'Sábado'} • {notifWordHora}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="text-[10px] text-slate-400 block mb-1">Dia da Semana:</label>
-                          <select
-                            value={notifWordDia}
-                            onChange={e => handleNotifWordDiaChange(e.target.value)}
-                            className="w-full rounded-xl border border-[#56677d] bg-[#1b232e] px-2.5 py-1.5 text-xs font-bold text-white focus:outline-none focus:border-blue-400"
-                          >
-                            <option value="5">Sexta-feira (Recomendado)</option>
-                            <option value="6">Sábado</option>
-                            <option value="0">Domingo</option>
-                            <option value="1">Segunda-feira</option>
-                            <option value="2">Terça-feira</option>
-                            <option value="3">Quarta-feira</option>
-                            <option value="4">Quinta-feira</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-[10px] text-slate-400 block mb-1">Horário (ex: Noite):</label>
-                          <input
-                            type="time"
-                            value={notifWordHora}
-                            onChange={e => handleNotifWordHoraChange(e.target.value)}
-                            className="w-full rounded-xl border border-[#56677d] bg-[#1b232e] px-2.5 py-1.5 text-xs font-bold text-white focus:outline-none focus:border-blue-400"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Presets Rápidos de Frequência */}
-                      <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                        <span className="text-[10px] text-slate-400">Sugestões:</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            handleNotifWordDiaChange('5');
-                            handleNotifWordHoraChange('20:00');
-                          }}
-                          className={`rounded-lg px-2 py-0.5 text-[10px] font-semibold transition ${
-                            notifWordDia === '5' && notifWordHora === '20:00'
-                              ? 'bg-blue-600 text-white font-bold'
-                              : 'bg-[#1b232e] text-slate-300 hover:bg-slate-700 border border-[#455468]'
-                          }`}
-                        >
-                          Sexta 20:00 (Noite)
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            handleNotifWordDiaChange('5');
-                            handleNotifWordHoraChange('22:00');
-                          }}
-                          className={`rounded-lg px-2 py-0.5 text-[10px] font-semibold transition ${
-                            notifWordDia === '5' && notifWordHora === '22:00'
-                              ? 'bg-blue-600 text-white font-bold'
-                              : 'bg-[#1b232e] text-slate-300 hover:bg-slate-700 border border-[#455468]'
-                          }`}
-                        >
-                          Sexta 22:00
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            handleNotifWordDiaChange('0');
-                            handleNotifWordHoraChange('19:00');
-                          }}
-                          className={`rounded-lg px-2 py-0.5 text-[10px] font-semibold transition ${
-                            notifWordDia === '0' && notifWordHora === '19:00'
-                              ? 'bg-blue-600 text-white font-bold'
-                              : 'bg-[#1b232e] text-slate-300 hover:bg-slate-700 border border-[#455468]'
-                          }`}
-                        >
-                          Domingo 19:00
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Checkbox de Ativação e Mensagem Customizada */}
-                    <div className="md:col-span-7 rounded-xl border border-[#455468] bg-[#344154] p-4 space-y-3">
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <label className="flex items-center gap-2 text-xs font-bold text-blue-400 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={notifWordAtivo}
-                            onChange={e => handleNotifWordAtivoChange(e.target.checked)}
-                            className="h-4 w-4 rounded accent-blue-500"
-                          />
-                          <span>Lembrete Semanal Ativado Automaticamente</span>
-                        </label>
-
-                        <span className="text-[11px] text-slate-400">
-                          {linhasCount} linhas ativas no editor
-                        </span>
-                      </div>
-
-                      <div>
-                        <div className="text-[11px] text-slate-300 mb-1">
-                          Mensagem do Alerta de Exportação Word:
-                        </div>
-                        <input
-                          type="text"
-                          value={notifWordMsg}
-                          onChange={e => handleNotifWordMsgChange(e.target.value)}
-                          placeholder="Ex: Hora de exportar sua peça prática para o Word (.doc) e manter seu backup das 150 linhas em dia!"
-                          className="w-full rounded-xl border border-[#56677d] bg-[#1b232e] px-3 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-blue-400"
-                        />
-                      </div>
-
-                      <div className="text-[11px] text-slate-300 flex items-center justify-between">
-                        <span className="flex items-center gap-1.5">
-                          <span className={`h-2 w-2 rounded-full ${notifWordAtivo ? 'bg-blue-400 animate-ping' : 'bg-slate-500'}`}></span>
-                          Programação: <strong className="text-white">{notifWordAtivo ? `Toda(o) ${notifWordDia === '0' ? 'Domingo' : notifWordDia === '1' ? 'Segunda-feira' : notifWordDia === '2' ? 'Terça-feira' : notifWordDia === '3' ? 'Quarta-feira' : notifWordDia === '4' ? 'Quinta-feira' : notifWordDia === '5' ? 'Sexta-feira' : 'Sábado'} às ${notifWordHora}` : 'Desativado'}</strong>
-                        </span>
-                        <span className="text-[10px] text-slate-400">Gera arquivo .doc oficial</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* CENTRAL DE INTEGRAÇÃO TOTAL DO SISTEMA */}
-              <div className="rounded-2xl border border-sky-500/50 bg-[#2b3646] p-5 shadow-sm space-y-3">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="badge b-AZUL text-[10px]">Ecossistema Conectado</span>
-                    <h3 className="text-sm font-bold text-white">Hub de Acesso e Integração Total Entre as Abas</h3>
-                  </div>
+                <div className="flex items-center gap-2 flex-wrap">
                   <button
-                    onClick={() => setBuscaGlobalAberta(true)}
-                    className="text-xs font-semibold text-sky-300 hover:text-sky-200 inline-flex items-center gap-1"
+                    onClick={() => setActiveTab('cronograma')}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[#0067c0] hover:bg-[#0055a4] text-white text-xs font-semibold shadow-xs transition cursor-pointer"
                   >
-                    Abrir Busca Geral (Ctrl+K) <ArrowRight className="h-3.5 w-3.5" />
+                    <Calendar className="h-3.5 w-3.5" />
+                    <span>Simulado Semanal FGV</span>
+                  </button>
+                  <button
+                    onClick={handleGerarRelatorioSemanalPdf}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-black/10 dark:border-white/10 bg-white dark:bg-[#2b2b2b] hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-medium shadow-xs transition cursor-pointer"
+                    title="Exporta relatório de desempenho compilado em PDF"
+                  >
+                    <Download className="h-3.5 w-3.5 text-[#0067c0] dark:text-sky-400" />
+                    <span>Relatório PDF</span>
+                  </button>
+                  <button
+                    onClick={() => exportarRedacaoNoWord(textoRedacao)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-black/10 dark:border-white/10 bg-white dark:bg-[#2b2b2b] hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-medium shadow-xs transition cursor-pointer"
+                    title="Exportar redação ativa para Word (.doc)"
+                  >
+                    <FileText className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
+                    <span>Backup Word (.doc)</span>
                   </button>
                 </div>
+              </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div
-                    onClick={() => setActiveTab('cronograma')}
-                    className="rounded-xl border border-[#455468] bg-[#344154] p-3 cursor-pointer hover:border-emerald-400 hover:bg-[#3d4d63] transition group"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[11px] font-bold text-emerald-400">Cronograma</span>
-                      <Calendar className="h-4 w-4 text-emerald-400" />
+              {/* 2. TRÊS CARDS DE KPI (MÉTRICAS CHAVE DE HOJE) */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* KPI 1: Linhas Redigidas no Simulador */}
+                <div className="win11-widget-card rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-[#272727] p-4 flex flex-col justify-between shadow-xs">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-[#0067c0] dark:text-sky-400 flex items-center gap-1.5">
+                        <FileText className="h-4 w-4" />
+                        Linhas no Simulador FGV
+                      </span>
+                      <span className="text-[10px] font-mono font-bold text-sky-800 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 border border-sky-300 dark:border-sky-500/30 px-2 py-0.5 rounded-full">
+                        {totalLinhasSemana >= 150 ? 'Meta 150L Atingida! 🎯' : 'Meta: 150 Linhas'}
+                      </span>
                     </div>
-                    <div className="font-mono text-base font-bold text-white">
-                      {tarefasConcluidas.length} / {totalTarefas}
+
+                    <div className="flex items-baseline gap-2 my-2">
+                      <span className="font-mono text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                        {totalLinhasSemana}
+                      </span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">/ 150 linhas</span>
                     </div>
-                    <div className="text-[10px] text-slate-400 mt-1 group-hover:text-emerald-300 transition">
-                      {Math.round((tarefasConcluidas.length / totalTarefas) * 100)}% das metas concluídas →
+
+                    {/* Barra de Progresso */}
+                    <div className="space-y-1 mt-2">
+                      <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                        <span>Progresso semanal</span>
+                        <span>{Math.round((totalLinhasSemana / 150) * 100)}%</span>
+                      </div>
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-black/40">
+                        <div
+                          className="h-full bg-gradient-to-r from-[#0067c0] to-blue-500 transition-all duration-500 rounded-full"
+                          style={{ width: `${Math.min(100, Math.round((totalLinhasSemana / 150) * 100))}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-3">
+                      Páginas: <strong className="text-slate-700 dark:text-slate-200">{Math.min(5, Math.ceil(totalLinhasSemana / 30))}/5</strong> · Redação ativa: <strong className="text-slate-700 dark:text-slate-200">{linhasCount}L</strong>
                     </div>
                   </div>
 
-                  <div
-                    onClick={() => setActiveTab('simulador')}
-                    className="rounded-xl border border-[#455468] bg-[#344154] p-3 cursor-pointer hover:border-sky-400 hover:bg-[#3d4d63] transition group"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[11px] font-bold text-sky-400">Simulador 150L</span>
-                      <FileText className="h-4 w-4 text-sky-400" />
+                  <div className="mt-4 pt-3 border-t border-black/[0.06] dark:border-white/10 flex items-center justify-between">
+                    <button
+                      onClick={() => setActiveTab('simulador')}
+                      className="text-xs font-bold text-[#0067c0] dark:text-sky-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>Abrir Folha Padrão</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => adicionarLinhasAoTotalSemana(30)}
+                      className="rounded-md border border-black/10 dark:border-white/10 bg-black/[0.04] dark:bg-black/30 hover:bg-black/10 dark:hover:bg-white/10 px-2 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300 transition cursor-pointer"
+                      title="Registrar 1 página (30 linhas) simulada"
+                    >
+                      +30L
+                    </button>
+                  </div>
+                </div>
+
+                {/* KPI 2: Retenção em Flashcards */}
+                <div className="win11-widget-card rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-[#272727] p-4 flex flex-col justify-between shadow-xs">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                        <Sparkles className="h-4 w-4" />
+                        Acertos nos Flashcards
+                      </span>
+                      <span className="text-[10px] font-mono font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/30 px-2 py-0.5 rounded-full">
+                        {taxaAcertoEstimada >= 75 ? 'Excelente ✓' : 'Meta: 75%'}
+                      </span>
                     </div>
-                    <div className="font-mono text-base font-bold text-white">
-                      {linhasCount} <span className="text-xs font-normal text-slate-400">linhas</span>
+
+                    <div className="flex items-baseline gap-2 my-2">
+                      <span className="font-mono text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                        {taxaAcertoEstimada}%
+                      </span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                        ({flashStats.acertos}/{flashStats.total} revisões)
+                      </span>
                     </div>
-                    <div className="text-[10px] text-slate-400 mt-1 group-hover:text-sky-300 transition">
-                      {palavrasCount} palavras redigidas →
+
+                    {/* Barra de Progresso */}
+                    <div className="space-y-1 mt-2">
+                      <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                        <span>Taxa de retenção</span>
+                        <span>Meta FGV: 75%</span>
+                      </div>
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-black/40">
+                        <div
+                          className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500 rounded-full"
+                          style={{ width: `${Math.min(100, taxaAcertoEstimada)}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-3 truncate">
+                      Repetição espaçada de teses, súmulas e peças da 2ª Fase.
                     </div>
                   </div>
 
-                  <div
-                    onClick={() => setActiveTab('vademecum')}
-                    className="rounded-xl border border-[#455468] bg-[#344154] p-3 cursor-pointer hover:border-amber-400 hover:bg-[#3d4d63] transition group"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[11px] font-bold text-amber-400">Vade Mecum</span>
-                      <Highlighter className="h-4 w-4 text-amber-400" />
+                  <div className="mt-4 pt-3 border-t border-black/[0.06] dark:border-white/10 flex items-center justify-between">
+                    <button
+                      onClick={() => setActiveTab('flashcards')}
+                      className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>Praticar Flashcards</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        const reset = { acertos: 0, total: 0 };
+                        setFlashStats(reset);
+                        SafeStorage.set('tributa_flash_stats', JSON.stringify(reset));
+                        mostrarToast('Contador de flashcards reiniciado!');
+                      }}
+                      className="text-[10px] text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                    >
+                      Zerar
+                    </button>
+                  </div>
+                </div>
+
+                {/* KPI 3: Blocos Pomodoro Diários */}
+                <div className="win11-widget-card rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-[#272727] p-4 flex flex-col justify-between shadow-xs">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                        <Clock className="h-4 w-4" />
+                        Blocos de Foco Hoje
+                      </span>
+                      <span className="text-[10px] font-mono font-bold text-rose-800 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-500/30 px-2 py-0.5 rounded-full">
+                        {pomodoroBlocosHoje >= 4 ? 'Meta Batida! 🔥' : 'Meta: 4 Blocos'}
+                      </span>
                     </div>
-                    <div className="font-mono text-base font-bold text-white">
-                      {vadeMarcados.length} / {VADE_DATA.length}
+
+                    <div className="flex items-baseline gap-2 my-2">
+                      <span className="font-mono text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                        {pomodoroBlocosHoje}
+                      </span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">/ 4 blocos</span>
+                      <span className="text-xs text-rose-600 dark:text-rose-300 ml-auto">
+                        ({pomodoroBlocosHoje * (pomodoroModo === '25m' ? 25 : 50)} min)
+                      </span>
                     </div>
-                    <div className="text-[10px] text-slate-400 mt-1 group-hover:text-amber-300 transition">
-                      Artigos e súmulas marcados →
+
+                    {/* Barra de Progresso */}
+                    <div className="space-y-1 mt-2">
+                      <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                        <span>Foco cumprido</span>
+                        <span>{Math.min(100, Math.round((pomodoroBlocosHoje / 4) * 100))}%</span>
+                      </div>
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-black/40">
+                        <div
+                          className="h-full bg-gradient-to-r from-rose-500 to-amber-500 transition-all duration-500 rounded-full"
+                          style={{ width: `${Math.min(100, Math.round((pomodoroBlocosHoje / 4) * 100))}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-3 flex items-center justify-between">
+                      <span>Modo: <strong className="text-slate-700 dark:text-slate-200">{pomodoroModo === '25m' ? '25m Clássico' : '50m Padrão'}</strong></span>
+                      <span className="text-slate-400 font-mono text-[10px]">🌙 Reset 00:00</span>
                     </div>
                   </div>
 
-                  <div
-                    onClick={() => setActiveTab('flashcards')}
-                    className="rounded-xl border border-[#455468] bg-[#344154] p-3 cursor-pointer hover:border-pink-400 hover:bg-[#3d4d63] transition group"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[11px] font-bold text-pink-400">Flashcards</span>
-                      <Sparkles className="h-4 w-4 text-pink-400" />
-                    </div>
-                    <div className="font-mono text-base font-bold text-white">
-                      {FLASHCARDS_DATA.length} <span className="text-xs font-normal text-slate-400">cartões</span>
-                    </div>
-                    <div className="text-[10px] text-slate-400 mt-1 group-hover:text-pink-300 transition">
-                      Repetição espaçada com voz →
-                    </div>
+                  <div className="mt-4 pt-3 border-t border-black/[0.06] dark:border-white/10 flex items-center justify-between">
+                    <button
+                      onClick={() => {
+                        if (pomodoroRunning) {
+                          pausarPomodoro();
+                        } else {
+                          iniciarPomodoro();
+                        }
+                      }}
+                      className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <Play className="h-3 w-3 fill-current" />
+                      <span>{pomodoroRunning ? 'Pausar Pomodoro' : 'Focar Agora'}</span>
+                    </button>
+                    <button
+                      onClick={() => ajustarBlocosPomodoroHoje(1)}
+                      className="rounded-md border border-black/10 dark:border-white/10 bg-black/[0.04] dark:bg-black/30 hover:bg-black/10 dark:hover:bg-white/10 px-2 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300 transition cursor-pointer"
+                      title="+1 bloco registrado manualmente"
+                    >
+                      +1 Bloco
+                    </button>
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                <div className="lg:col-span-6 space-y-5">
-                  <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-5 shadow-sm">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <span className="badge b-AMARELO">Calendário Oficial FGV</span>
-                        <h2 className="text-base font-semibold text-white mt-1">
-                          Radar da Repescagem & Prova
-                        </h2>
+              {/* 3. PREPARAÇÃO DO DIA (LADO A LADO: METAS DIÁRIAS + DICA ESTRATÉGICA) */}
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
+                <MetasDiariasCard
+                  onNavigateToTab={(tab) => setActiveTab(tab as TabType)}
+                  onMostrarToast={mostrarToast}
+                />
+                <DicaDoDiaCard
+                  onNavigateToTab={(tab) => setActiveTab(tab as TabType)}
+                  onMostrarToast={mostrarToast}
+                />
+              </div>
+
+              {/* 4. EVOLUÇÃO & ANÁLISE GRÁFICA (LADO A LADO: CRONOGRAMA 8 SEMANAS + EVOLUÇÃO MENSAL) */}
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
+                <CronogramaProgressoChart
+                  tarefasConcluidas={tarefasConcluidas}
+                  onNavigateToCronograma={() => setActiveTab('cronograma')}
+                />
+                <GraficoComparativoMensal
+                  taxaAtualFlashcards={taxaAcertoEstimada}
+                  linhasSemanaisSimulador={totalLinhasSemana}
+                  blocosHojePomodoro={pomodoroBlocosHoje}
+                  onNavegarParaSimulador={() => setActiveTab('simulador')}
+                  onNavegarParaFlashcards={() => setActiveTab('flashcards')}
+                />
+              </div>
+
+              {/* 5. DISCIPLINA & AUTOMAÇÕES (COM ABAS LIMPAS: ALARME DIÁRIO VS LEMBRETE WORD) */}
+              <div className="win11-widget-card rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-[#272727] p-5 shadow-xs space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <h2 className="text-base font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                      <Bell className="h-4 w-4 text-amber-500 dark:text-amber-400" />
+                      <span>Disciplina & Automações de Estudo</span>
+                    </h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Configure alarmes com Web Audio API e lembretes automáticos salvos no seu navegador.
+                    </p>
+                  </div>
+
+                  {/* Alternador Limpo entre Alarme Diário e Lembrete Word */}
+                  <div className="flex items-center rounded-lg bg-slate-100 dark:bg-black/30 p-1 border border-black/[0.06] dark:border-white/5 self-start sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => setDisciplinaTab('alarme')}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-md transition cursor-pointer flex items-center gap-1.5 ${
+                        disciplinaTab === 'alarme'
+                          ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold border border-amber-500/30 shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      <Clock className="h-3.5 w-3.5" />
+                      <span>Alarme Diário ({notifHorario})</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDisciplinaTab('word')}
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-md transition cursor-pointer flex items-center gap-1.5 ${
+                        disciplinaTab === 'word'
+                          ? 'bg-[#0067c0]/15 text-[#0067c0] dark:text-[#4cc2ff] font-bold border border-[#0067c0]/30 shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      <span>Lembrete Word (.doc)</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* CONTEÚDO DA ABA 1: ALARME DIÁRIO DE ESTUDO */}
+                {disciplinaTab === 'alarme' && (
+                  <div className="space-y-4 pt-1">
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                      {/* Horário & Presets */}
+                      <div className="md:col-span-5 rounded-xl border border-black/[0.08] dark:border-white/10 bg-slate-50 dark:bg-black/20 p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <label htmlFor="horario-estudo-input" className="text-xs font-bold text-amber-600 dark:text-amber-300 flex items-center gap-1.5">
+                            <Clock className="h-3.5 w-3.5" /> Horário Programado:
+                          </label>
+                          <span className="font-mono text-sm font-bold text-slate-800 dark:text-white bg-slate-200/70 dark:bg-black/40 px-2.5 py-0.5 rounded-lg border border-black/[0.08] dark:border-white/10">
+                            {notifHorario}
+                          </span>
+                        </div>
+
+                        <input
+                          id="horario-estudo-input"
+                          type="time"
+                          value={notifHorario}
+                          onChange={e => handleNotifHorarioChange(e.target.value)}
+                          className="rounded-lg border border-black/[0.12] dark:border-white/10 bg-white dark:bg-black/40 px-3 py-1.5 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 w-full"
+                        />
+
+                        {/* Presets Rápidos */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400">Sugestões:</span>
+                          {['06:30', '08:00', '13:30', '19:00', '20:00', '21:30'].map(h => (
+                            <button
+                              key={h}
+                              type="button"
+                              onClick={() => handleNotifHorarioChange(h)}
+                              className={`rounded-md px-2 py-0.5 font-mono text-[11px] font-semibold transition cursor-pointer ${
+                                notifHorario === h
+                                  ? 'bg-amber-500 text-slate-950 font-bold'
+                                  : 'bg-slate-200/70 dark:bg-black/30 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 border border-black/[0.06] dark:border-white/5'
+                              }`}
+                            >
+                              {h}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                      <button
-                        onClick={() => testarAlarmeSonoro(tomAlarme)}
-                        className="rounded-full border border-[#56677d] bg-[#3b495e] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-slate-600 transition inline-flex items-center gap-1.5"
-                      >
-                        <Volume2 className="h-3.5 w-3.5 text-amber-300" /> Testar Som
-                      </button>
+
+                      {/* Mensagem e Frequência */}
+                      <div className="md:col-span-7 rounded-xl border border-black/[0.08] dark:border-white/10 bg-slate-50 dark:bg-black/20 p-4 space-y-3">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <label className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={notifAtiva}
+                              onChange={e => handleNotifAtivaChange(e.target.checked)}
+                              className="h-4 w-4 rounded accent-emerald-500"
+                            />
+                            <span>Alarme Ativado Automaticamente</span>
+                          </label>
+
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="text-slate-500 dark:text-slate-400">Frequência:</span>
+                            <select
+                              value={notifDias}
+                              onChange={e => handleNotifDiasChange(e.target.value)}
+                              className="rounded-md border border-black/[0.12] dark:border-white/10 bg-white dark:bg-black/40 px-2 py-1 text-xs text-slate-800 dark:text-white"
+                            >
+                              <option value="todos">Todos os Dias</option>
+                              <option value="seg-sex">Segunda a Sexta</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 mb-1">
+                            Mensagem de Incentivo Diária:
+                          </div>
+                          <input
+                            type="text"
+                            value={notifMensagem}
+                            onChange={e => handleNotifMensagemChange(e.target.value)}
+                            placeholder="Ex: Hora do Bloco Tributário FGV: 1 Peça + 5 Flashcards"
+                            className="w-full rounded-lg border border-black/[0.12] dark:border-white/10 bg-white dark:bg-black/40 px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                          />
+                        </div>
+
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                          <span className="flex items-center gap-1.5">
+                            <span className={`h-2 w-2 rounded-full ${notifAtiva ? 'bg-emerald-500 animate-ping' : 'bg-slate-400 dark:bg-slate-600'}`}></span>
+                            Status: <strong className="text-slate-800 dark:text-white">{notifAtiva ? `Ativo às ${notifHorario}` : 'Desativado'}</strong>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={testarNotificacaoManual}
+                            className="text-xs font-bold text-amber-600 dark:text-amber-300 hover:text-amber-500 dark:hover:text-amber-200 underline cursor-pointer"
+                          >
+                            Testar Notificação Agora →
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Repescagem Card */}
-                      <div className="rounded-xl border border-amber-500/60 bg-[#344154] p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <strong className="text-xs text-amber-300 font-bold">Inscrição Repescagem</strong>
-                          <span className="badge b-AMARELO font-mono">
-                            {repescagemPaga ? 'Inscrito ✓' : diasRepescagem >= 0 ? `Faltam ${diasRepescagem} dias` : 'Verificar'}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-2 mt-3 text-xs text-slate-300">
-                          <span>Data Alarme:</span>
-                          <input
-                            type="date"
-                            value={dataRepescagem}
-                            onChange={e => handleRepescagemDateChange(e.target.value)}
-                            className="rounded-lg border border-[#56677d] bg-[#1b232e] px-2 py-1 text-xs text-white"
-                          />
-                        </div>
-                        <label className="flex items-center gap-2.5 mt-3 text-xs font-semibold text-emerald-400 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={repescagemPaga}
-                            onChange={e => handleRepescagemPagaChange(e.target.checked)}
-                            className="h-4 w-4 rounded accent-emerald-500"
-                          />
-                          <span>Inscrito e Boleto Pago</span>
-                        </label>
+                    {/* Seletor dos 3 Tons do Alarme */}
+                    <div className="pt-2">
+                      <div className="text-xs font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-1.5">
+                        <Volume2 className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
+                        <span>Tom do Alarme Sonoro (Web Audio API):</span>
                       </div>
-
-                      {/* Prova 5h Card */}
-                      <div className="rounded-xl border border-sky-500/60 bg-[#344154] p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <strong className="text-xs text-sky-300 font-bold">Dia da Prova (5h)</strong>
-                          <span className="badge b-AZUL font-mono">
-                            {diasProva >= 0 ? `Faltam ${diasProva} dias` : 'Hoje'}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-2 mt-3 text-xs text-slate-300">
-                          <span>Data da Prova:</span>
-                          <input
-                            type="date"
-                            value={dataProva}
-                            onChange={e => handleProvaDateChange(e.target.value)}
-                            className="rounded-lg border border-[#56677d] bg-[#1b232e] px-2 py-1 text-xs text-white"
-                          />
-                        </div>
-                        <p className="mt-3 text-[11px] text-slate-400">
-                          Horário oficial FGV: 13h00 às 18h00 (5 horas de prova).
-                        </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {TONS_ALARME.map((t) => {
+                          const ativo = tomAlarme === t.id;
+                          return (
+                            <div
+                              key={t.id}
+                              onClick={() => handleTomAlarmeChange(t.id)}
+                              className={`cursor-pointer rounded-xl border p-3 transition flex flex-col justify-between ${
+                                ativo
+                                  ? 'border-amber-500 dark:border-amber-400 bg-amber-500/10 dark:bg-amber-500/15 shadow-xs'
+                                  : 'border-black/[0.08] dark:border-white/10 bg-slate-50 dark:bg-black/20 hover:bg-slate-100 dark:hover:bg-black/30'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                                  <span>{t.icone}</span>
+                                  <span>{t.nome}</span>
+                                </span>
+                                {ativo && (
+                                  <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">✓ Ativo</span>
+                                )}
+                              </div>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 mb-2 leading-relaxed">
+                                {t.descricao}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  tocarAlarmeWebAudio(t.id);
+                                }}
+                                className="text-[10px] font-bold text-amber-700 dark:text-amber-300 hover:text-amber-600 dark:hover:text-amber-200 bg-slate-200/80 dark:bg-black/40 hover:bg-slate-300 dark:hover:bg-black/60 px-2 py-1 rounded border border-black/[0.06] dark:border-white/10 inline-flex items-center justify-center gap-1 transition self-start"
+                              >
+                                <Volume2 className="h-3 w-3" /> Ouvir tom
+                              </button>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
+                )}
 
-                  {/* Quick actions panel */}
-                  <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-5 shadow-sm">
-                    <h3 className="text-sm font-semibold text-white mb-3">Atalhos de Alta Produtividade</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      <button
-                        onClick={() => setActiveTab('simulador')}
-                        className="rounded-xl border border-[#455468] bg-[#344154] p-3 text-left hover:border-sky-400 hover:bg-[#3d4d63] transition"
-                      >
-                        <FileText className="h-5 w-5 text-sky-400 mb-2" />
-                        <div className="text-xs font-bold text-white">Simulador 150L</div>
-                        <div className="text-[11px] text-slate-400">Treinar folha FGV</div>
-                      </button>
-                      <button
-                        onClick={() => setActiveTab('pecas')}
-                        className="rounded-xl border border-[#455468] bg-[#344154] p-3 text-left hover:border-emerald-400 hover:bg-[#3d4d63] transition"
-                      >
-                        <Compass className="h-5 w-5 text-emerald-400 mb-2" />
-                        <div className="text-xs font-bold text-white">Peçômetro</div>
-                        <div className="text-[11px] text-slate-400">Descobrir a peça</div>
-                      </button>
-                      <button
-                        onClick={() => setActiveTab('flashcards')}
-                        className="rounded-xl border border-[#455468] bg-[#344154] p-3 text-left hover:border-amber-400 hover:bg-[#3d4d63] transition"
-                      >
-                        <Sparkles className="h-5 w-5 text-amber-400 mb-2" />
-                        <div className="text-xs font-bold text-white">Flashcards</div>
-                        <div className="text-[11px] text-slate-400">Repetição espaçada</div>
-                      </button>
+                {/* CONTEÚDO DA ABA 2: LEMBRETE SEMANAL DE EXPORTAÇÃO WORD */}
+                {disciplinaTab === 'word' && (
+                  <div className="space-y-4 pt-1">
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                      <div className="md:col-span-5 rounded-xl border border-black/[0.08] dark:border-white/10 bg-slate-50 dark:bg-black/20 p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-bold text-[#0067c0] dark:text-blue-300 flex items-center gap-1.5">
+                            <Calendar className="h-3.5 w-3.5" /> Frequência Semanal:
+                          </label>
+                          <span className="font-mono text-xs font-bold text-slate-800 dark:text-white bg-slate-200/70 dark:bg-black/40 px-2 py-0.5 rounded-lg border border-black/[0.08] dark:border-white/10">
+                            {notifWordDia === '0' ? 'Dom' : notifWordDia === '1' ? 'Seg' : notifWordDia === '2' ? 'Ter' : notifWordDia === '3' ? 'Qua' : notifWordDia === '4' ? 'Qui' : notifWordDia === '5' ? 'Sex' : 'Sáb'} • {notifWordHora}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1">Dia da Semana:</label>
+                            <select
+                              value={notifWordDia}
+                              onChange={e => handleNotifWordDiaChange(e.target.value)}
+                              className="w-full rounded-md border border-black/[0.12] dark:border-white/10 bg-white dark:bg-black/40 px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#0067c0]"
+                            >
+                              <option value="5">Sexta-feira (Recomendado)</option>
+                              <option value="6">Sábado</option>
+                              <option value="0">Domingo</option>
+                              <option value="1">Segunda-feira</option>
+                              <option value="2">Terça-feira</option>
+                              <option value="3">Quarta-feira</option>
+                              <option value="4">Quinta-feira</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1">Horário:</label>
+                            <input
+                              type="time"
+                              value={notifWordHora}
+                              onChange={e => handleNotifWordHoraChange(e.target.value)}
+                              className="w-full rounded-md border border-black/[0.12] dark:border-white/10 bg-white dark:bg-black/40 px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#0067c0]"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Presets Rápidos */}
+                        <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400">Sugestões:</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleNotifWordDiaChange('5');
+                              handleNotifWordHoraChange('20:00');
+                            }}
+                            className={`rounded-md px-2 py-0.5 text-[10px] font-semibold transition cursor-pointer ${
+                              notifWordDia === '5' && notifWordHora === '20:00'
+                                ? 'bg-[#0067c0] text-white font-bold'
+                                : 'bg-slate-200/70 dark:bg-black/30 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 border border-black/[0.06] dark:border-white/5'
+                            }`}
+                          >
+                            Sexta 20h
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleNotifWordDiaChange('5');
+                              handleNotifWordHoraChange('22:00');
+                            }}
+                            className={`rounded-md px-2 py-0.5 text-[10px] font-semibold transition cursor-pointer ${
+                              notifWordDia === '5' && notifWordHora === '22:00'
+                                ? 'bg-[#0067c0] text-white font-bold'
+                                : 'bg-slate-200/70 dark:bg-black/30 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 border border-black/[0.06] dark:border-white/5'
+                            }`}
+                          >
+                            Sexta 22h
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleNotifWordDiaChange('0');
+                              handleNotifWordHoraChange('19:00');
+                            }}
+                            className={`rounded-md px-2 py-0.5 text-[10px] font-semibold transition cursor-pointer ${
+                              notifWordDia === '0' && notifWordHora === '19:00'
+                                ? 'bg-[#0067c0] text-white font-bold'
+                                : 'bg-slate-200/70 dark:bg-black/30 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 border border-black/[0.06] dark:border-white/5'
+                            }`}
+                          >
+                            Domingo 19h
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="md:col-span-7 rounded-xl border border-black/[0.08] dark:border-white/10 bg-slate-50 dark:bg-black/20 p-4 space-y-3">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <label className="flex items-center gap-2 text-xs font-bold text-[#0067c0] dark:text-blue-400 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={notifWordAtivo}
+                              onChange={e => handleNotifWordAtivoChange(e.target.checked)}
+                              className="h-4 w-4 rounded accent-[#0067c0]"
+                            />
+                            <span>Lembrete Semanal Ativado</span>
+                          </label>
+
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                            {linhasCount} linhas no editor
+                          </span>
+                        </div>
+
+                        <div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 mb-1">
+                            Mensagem do Alerta de Exportação Word:
+                          </div>
+                          <input
+                            type="text"
+                            value={notifWordMsg}
+                            onChange={e => handleNotifWordMsgChange(e.target.value)}
+                            placeholder="Ex: Hora de exportar sua peça prática para o Word (.doc) e manter seu backup em dia!"
+                            className="w-full rounded-md border border-black/[0.12] dark:border-white/10 bg-white dark:bg-black/40 px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-[#0067c0]"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={testarLembreteWordManual}
+                            className="text-xs font-bold text-[#0067c0] dark:text-blue-300 hover:underline cursor-pointer"
+                          >
+                            Testar Lembrete Word →
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => exportarRedacaoNoWord(textoRedacao)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#0067c0] hover:bg-[#005fb8] text-white text-xs font-bold transition cursor-pointer shadow-xs"
+                          >
+                            <Download className="h-3 w-3" />
+                            <span>Baixar Word (.doc) Agora</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 6. RADAR DA PROVA & RANKING HISTÓRICO DE PEÇAS FGV */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                {/* Radar da Prova & Repescagem */}
+                <div className="win11-widget-card lg:col-span-6 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-[#272727] p-5 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-amber-500 dark:text-amber-400" />
+                        <span>Radar da Prova FGV & Repescagem</span>
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        Cronograma oficial do Exame de Ordem Unificado.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => testarAlarmeSonoro(tomAlarme)}
+                      className="rounded-md border border-black/10 dark:border-white/10 bg-black/[0.04] dark:bg-black/30 hover:bg-black/10 dark:hover:bg-white/10 px-2.5 py-1 text-xs text-slate-700 dark:text-slate-300 transition inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <Volume2 className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
+                      <span>Som</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Inscrição Repescagem */}
+                    <div className="rounded-lg border border-black/[0.06] dark:border-white/10 bg-slate-50 dark:bg-black/20 p-3.5 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-amber-800 dark:text-amber-300">Inscrição Repescagem</span>
+                        <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-bold">
+                          {repescagemPaga ? 'Inscrito ✓' : diasRepescagem >= 0 ? `${diasRepescagem}d` : 'Verificar'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400">Data limite:</span>
+                        <input
+                          type="date"
+                          value={dataRepescagem}
+                          onChange={e => handleRepescagemDateChange(e.target.value)}
+                          className="rounded-md border border-black/15 dark:border-white/10 bg-white dark:bg-black/40 px-2 py-0.5 text-xs text-slate-800 dark:text-white"
+                        />
+                      </div>
+                      <label className="flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400 cursor-pointer pt-1">
+                        <input
+                          type="checkbox"
+                          checked={repescagemPaga}
+                          onChange={e => handleRepescagemPagaChange(e.target.checked)}
+                          className="h-3.5 w-3.5 rounded accent-emerald-500"
+                        />
+                        <span>Inscrito e Boleto Pago</span>
+                      </label>
+                    </div>
+
+                    {/* Prova 5h */}
+                    <div className="rounded-lg border border-black/[0.06] dark:border-white/10 bg-slate-50 dark:bg-black/20 p-3.5 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-[#0067c0] dark:text-sky-300">Dia da Prova (5h)</span>
+                        <span className="text-[10px] font-mono text-[#0067c0] dark:text-sky-400 font-bold">
+                          {diasProva >= 0 ? `Faltam ${diasProva} dias` : 'Hoje'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400">Data da prova:</span>
+                        <input
+                          type="date"
+                          value={dataProva}
+                          onChange={e => handleProvaDateChange(e.target.value)}
+                          className="rounded-md border border-black/15 dark:border-white/10 bg-white dark:bg-black/40 px-2 py-0.5 text-xs text-slate-800 dark:text-white"
+                        />
+                      </div>
+                      <p className="text-[10.5px] text-slate-500 dark:text-slate-400 pt-1">
+                        Horário FGV: 13h às 18h (5 horas corridas).
+                      </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Ranking Histórico de Peças */}
-                <div className="lg:col-span-6">
-                  <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-5 shadow-sm">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-semibold text-white">Ranking Histórico de Peças FGV</h3>
-                      <span className="text-[11px] text-slate-400">Exames Unificados OAB</span>
+                {/* Ranking Histórico de Peças FGV */}
+                <div className="win11-widget-card lg:col-span-6 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-[#272727] p-5 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                        <Award className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                        <span>Ranking Histórico de Peças FGV</span>
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        Frequência oficial nos Exames Unificados da OAB.
+                      </p>
                     </div>
-                    <div className="flex flex-col gap-2.5 text-xs">
-                      <div className="flex items-center justify-between rounded-xl border border-[#455468] bg-[#344154] p-3">
-                        <span>1º <strong>Mandado de Segurança</strong> (IV, VII, IX, X, XI, XIV, XIX, XXIX, 40º, 45º)</span>
-                        <span className="badge b-VERDE">10 Vezes</span>
-                      </div>
-                      <div className="flex items-center justify-between rounded-xl border border-[#455468] bg-[#344154] p-3">
-                        <span>2º <strong>Recurso de Apelação</strong> (X, XVI, XX, XXV, XXX, XXXII, 35º, 41º, 43º)</span>
-                        <span className="badge b-VERDE">9 Vezes</span>
-                      </div>
-                      <div className="flex items-center justify-between rounded-xl border border-[#455468] bg-[#344154] p-3">
-                        <span>3º <strong>Agravo de Instrumento</strong> (VIII, X, XII, XVII, XXVI, XXXIII, 38º)</span>
-                        <span className="badge b-AZUL">7 Vezes</span>
-                      </div>
-                      <div className="flex items-center justify-between rounded-xl border border-[#455468] bg-[#344154] p-3">
-                        <span>4º <strong>Ação Anulatória</strong> (IV, IX, XXX, XXXI, XXXIV, 39º, 42º)</span>
-                        <span className="badge b-AMARELO">7 Vezes</span>
-                      </div>
-                      <div className="flex items-center justify-between rounded-xl border border-[#455468] bg-[#344154] p-3">
-                        <span>5º <strong>Repetição de Indébito</strong> (VI, X, XXI, XXIII, XXIV, 37º)</span>
-                        <span className="badge b-AMARELO">6 Vezes</span>
-                      </div>
-                      <div className="flex items-center justify-between rounded-xl border border-[#455468] bg-[#344154] p-3">
-                        <span>6º <strong>Embargos e Exceção de Pré-Executividade</strong> (36º, 44º)</span>
-                        <span className="badge b-ROSA">Execução (4x)</span>
-                      </div>
+                    <button
+                      onClick={() => setActiveTab('pecas')}
+                      className="text-xs font-bold text-[#0067c0] dark:text-sky-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>Ver modelos</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <div className="flex items-center justify-between rounded-lg border border-black/[0.06] dark:border-white/5 bg-slate-50 dark:bg-black/20 p-2.5">
+                      <span className="text-slate-800 dark:text-slate-200">1º <strong>Mandado de Segurança</strong></span>
+                      <span className="font-mono text-[11px] font-bold text-emerald-600 dark:text-emerald-400">10x</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border border-black/[0.06] dark:border-white/5 bg-slate-50 dark:bg-black/20 p-2.5">
+                      <span className="text-slate-800 dark:text-slate-200">2º <strong>Recurso de Apelação</strong></span>
+                      <span className="font-mono text-[11px] font-bold text-emerald-600 dark:text-emerald-400">9x</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border border-black/[0.06] dark:border-white/5 bg-slate-50 dark:bg-black/20 p-2.5">
+                      <span className="text-slate-800 dark:text-slate-200">3º <strong>Agravo de Instrumento</strong></span>
+                      <span className="font-mono text-[11px] font-bold text-[#0067c0] dark:text-sky-400">7x</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border border-black/[0.06] dark:border-white/5 bg-slate-50 dark:bg-black/20 p-2.5">
+                      <span className="text-slate-800 dark:text-slate-200">4º <strong>Ação Anulatória</strong></span>
+                      <span className="font-mono text-[11px] font-bold text-amber-600 dark:text-amber-400">7x</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border border-black/[0.06] dark:border-white/5 bg-slate-50 dark:bg-black/20 p-2.5">
+                      <span className="text-slate-800 dark:text-slate-200">5º <strong>Repetição de Indébito</strong></span>
+                      <span className="font-mono text-[11px] font-bold text-amber-600 dark:text-amber-400">6x</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border border-black/[0.06] dark:border-white/5 bg-slate-50 dark:bg-black/20 p-2.5">
+                      <span className="text-slate-800 dark:text-slate-200">6º <strong>Embargos à Execução</strong></span>
+                      <span className="font-mono text-[11px] font-bold text-purple-600 dark:text-purple-400">4x</span>
                     </div>
                   </div>
                 </div>
@@ -3875,7 +3988,16 @@ export default function App() {
                               ✨ {sintaxeResultado.stats.total} termos destacados {tooltipsAtivos ? '(passe o mouse)' : ''}
                             </span>
                           )}
-                          {totalLinhasSemana >= 150 && (
+                          {linhasCount >= 150 ? (
+                            <button
+                              type="button"
+                              onClick={() => setModalFimSimuladoAberto(true)}
+                              className="inline-flex items-center gap-1 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-400 px-2.5 py-0.5 text-[10px] font-bold cursor-pointer active:scale-95 transition shadow-xs"
+                              title="150 Linhas concluídas! Clique para ver a notificação de fim de simulado e iniciar pausa de 15 minutos."
+                            >
+                              ☕ 150L Concluídas • Pausa 15m
+                            </button>
+                          ) : totalLinhasSemana >= 150 ? (
                             <button
                               onClick={() => {
                                 dispararConfetesSuaves({ count: 60, originY: 0.35 });
@@ -3887,7 +4009,7 @@ export default function App() {
                             >
                               🎯 Meta 150L Atingida!
                             </button>
-                          )}
+                          ) : null}
                           <div className="font-mono text-xs font-bold text-slate-700">
                             Linha {linhasCount} / 150 • {palavrasCount} palavras
                           </div>
@@ -3975,13 +4097,11 @@ export default function App() {
                         <button
                           onClick={() => {
                             if (linhasCount >= 150) {
-                              dispararMegaConfetes150L();
-                              tocarAlarmeWebAudio('suave');
-                              mostrarToast('🏆 150 Linhas concluídas na íntegra! Abrindo avaliação oficial FGV...');
+                              setModalFimSimuladoAberto(true);
                             } else {
                               mostrarToast('Finalizando simulado! Avaliando no espelho oficial da banca FGV...');
+                              setActiveTab('cronograma');
                             }
-                            setActiveTab('cronograma');
                           }}
                           className="rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-emerald-500 transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer active:scale-95"
                           title="Finalizar simulado e receber a nota oficial da banca FGV (0 a 5.00)"
@@ -4912,6 +5032,61 @@ export default function App() {
       </div>
       </div>
 
+      {/* WINDOWS 11 FLUENT DESKTOP STATUS BAR */}
+      <footer className="win11-statusbar shrink-0">
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => setModalAtualizacoesAberta(true)}
+            className="flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-300 hover:text-[#0067c0] dark:hover:text-[#4cc2ff] transition cursor-pointer"
+            title="Clique para abrir a Central de Atualizações de Leis & Banco de Dados"
+          >
+            <span
+              className={`h-2 w-2 rounded-full ${
+                statusConexao.online ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'
+              }`}
+            />
+            <span>
+              {statusConexao.online
+                ? `Sempre Online (${statusConexao.latenciaMs}ms)`
+                : 'Modo Offline (Cache Seguro)'}
+            </span>
+          </button>
+          <span className="hidden md:inline text-slate-300 dark:text-slate-700">|</span>
+          <button
+            type="button"
+            onClick={() => setModalAtualizacoesAberta(true)}
+            className="hidden md:flex items-center gap-1 text-[11px] text-[#0067c0] dark:text-[#4cc2ff] hover:underline cursor-pointer"
+            title="Varredura contínua de leis tributárias, súmulas e banco de dados ativa"
+          >
+            <RefreshCw className="h-3 w-3 animate-spin" style={{ animationDuration: '8s' }} />
+            <span>Varredura de Leis Ativa ({statusConexao.totalVerificacoes} checagens)</span>
+          </button>
+          <span className="hidden lg:inline text-slate-300 dark:text-slate-700">|</span>
+          <span className="hidden lg:inline text-slate-600 dark:text-slate-400">Folha FGV: {linhasCount}/150 linhas</span>
+        </div>
+
+        <div className="hidden sm:flex items-center gap-2 font-mono text-[10.5px]">
+          <span className="text-slate-500 dark:text-slate-400">🍅 Foco:</span>
+          <strong className="text-rose-600 dark:text-rose-400 font-bold">{pomodoroBlocosHoje}/4 blocos hoje</strong>
+          <span className="text-slate-400">({pomodoroModo === '25m' ? '25m' : '50m'})</span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setModalAtualizacoesAberta(true)}
+            className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-bold hover:bg-emerald-500/20 transition cursor-pointer"
+          >
+            <Database className="h-2.5 w-2.5" />
+            <span>Banco de Leis v3.5</span>
+          </button>
+          <span className="hidden sm:inline text-slate-600 dark:text-slate-400">
+            Prova: <strong className="text-[#0067c0] dark:text-sky-400 font-mono">{diasProva >= 0 ? `${diasProva}d` : 'Hoje'}</strong>
+          </span>
+        </div>
+      </footer>
+
       {/* MODAL DE NOTIFICAÇÃO DIÁRIA DE ESTUDO & LEMBRETE WORD */}
       <NotificacaoEstudoModal
         aberta={notifModalAberta}
@@ -4939,6 +5114,38 @@ export default function App() {
         onSalvarVersao={salvarNovaVersaoRedacao}
         onRestaurarVersao={restaurarVersaoRedacao}
         onExcluirVersao={excluirVersaoRedacao}
+      />
+
+      {/* MODAL DE NOTIFICAÇÃO DE FIM DE SIMULADO (150 LINHAS) E PAUSA DE 15 MINUTOS COM RELAXAMENTO */}
+      <NotificacaoFimSimuladoModal
+        aberto={modalFimSimuladoAberto}
+        onFechar={() => setModalFimSimuladoAberto(false)}
+        linhasCount={linhasCount}
+        palavrasCount={palavrasCount}
+        casoTitulo={CASOS_SIMULADO[casoIndex]?.titulo || 'Simulado Oficial FGV'}
+        onExportarWord={() => exportarRedacaoNoWord(textoRedacao)}
+        onIrParaEspelhoCorrecao={() => {
+          setActiveTab('cronograma');
+          mostrarToast('Abrindo espelho oficial da banca FGV para correção!');
+        }}
+        onIniciarPausaPomodoro={(minutos) => {
+          setPomodoroTipo('pausa');
+          setPomodoroSecs(minutos * 60);
+          setPomodoroRunning(true);
+          mostrarToast(`☕ Pausa de ${minutos} minutos sincronizada com o temporizador Pomodoro!`);
+        }}
+      />
+
+      {/* CENTRAL DE ATUALIZAÇÕES DE LEIS & BANCO DE DADOS (SEMPRE ONLINE) */}
+      <CentralAtualizacoesModal
+        aberto={modalAtualizacoesAberta}
+        onFechar={() => setModalAtualizacoesAberta(false)}
+        onNavegarParaAba={(aba) => setActiveTab(aba as TabType)}
+        onInserirTextoSimulador={(texto) => {
+          inserirTextoNaRedacao(texto, false);
+          setActiveTab('simulador');
+        }}
+        linhasRedacaoCount={linhasCount}
       />
 
       {/* MODAL DE BUSCA GLOBAL INTEGRADA (CTRL+K / '/') */}

@@ -33,24 +33,27 @@ interface MesDesempenho {
   taxaAcerto: number;
   flashcardsRevisados: number;
   pecasCompletas: number;
+  blocosPomodoro: number;
 }
 
 interface GraficoComparativoMensalProps {
   taxaAtualFlashcards: number;
   linhasSemanaisSimulador: number;
+  blocosHojePomodoro?: number;
   onNavegarParaSimulador?: () => void;
   onNavegarParaFlashcards?: () => void;
 }
 
-const STORAGE_KEY = 'tributa_historico_mensal_v2';
+const STORAGE_KEY = 'tributa_historico_mensal_v3';
 
 export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> = ({
   taxaAtualFlashcards,
   linhasSemanaisSimulador,
+  blocosHojePomodoro = 0,
   onNavegarParaSimulador,
   onNavegarParaFlashcards
 }) => {
-  const [tipoGrafico, setTipoGrafico] = useState<'combinado' | 'linhas' | 'flashcards'>('combinado');
+  const [tipoGrafico, setTipoGrafico] = useState<'combinado' | 'linhas' | 'flashcards' | 'pomodoro'>('combinado');
 
   // Gera os últimos 4 meses retroativos com base na data do sistema
   const mesesBase = useMemo(() => {
@@ -95,7 +98,8 @@ export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> =
         linhas: 270,
         taxaAcerto: 64,
         flashcardsRevisados: 120,
-        pecasCompletas: 2
+        pecasCompletas: 2,
+        blocosPomodoro: 36
       },
       {
         mesId: 'm-2',
@@ -105,7 +109,8 @@ export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> =
         linhas: 420,
         taxaAcerto: 72,
         flashcardsRevisados: 210,
-        pecasCompletas: 4
+        pecasCompletas: 4,
+        blocosPomodoro: 52
       },
       {
         mesId: 'm-1',
@@ -115,7 +120,8 @@ export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> =
         linhas: 570,
         taxaAcerto: 79,
         flashcardsRevisados: 280,
-        pecasCompletas: 6
+        pecasCompletas: 6,
+        blocosPomodoro: 70
       },
       {
         mesId: 'm-0',
@@ -125,7 +131,8 @@ export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> =
         linhas: Math.max(340, linhasSemanaisSimulador * 4),
         taxaAcerto: taxaAtualFlashcards > 0 ? taxaAtualFlashcards : 85,
         flashcardsRevisados: 340,
-        pecasCompletas: 8
+        pecasCompletas: 8,
+        blocosPomodoro: Math.max(68, 58 + blocosHojePomodoro * 3)
       }
     ];
   });
@@ -137,12 +144,14 @@ export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> =
         // Mês atual sincronizado com os dados em tempo real
         const linhasEstimadasMes = Math.max(item.linhas, linhasSemanaisSimulador * 3);
         const taxaSincronizada = taxaAtualFlashcards > 0 ? taxaAtualFlashcards : item.taxaAcerto;
+        const blocosSincronizados = Math.max(item.blocosPomodoro || 58, 58 + (blocosHojePomodoro || 0) * 3);
         return {
           ...item,
           mesNome: mesesBase[3].nome,
           mesAbrev: `${mesesBase[3].abrev} (Atual)`,
           linhas: linhasEstimadasMes,
           taxaAcerto: taxaSincronizada,
+          blocosPomodoro: blocosSincronizados,
           paginasEquivalentes: Number((linhasEstimadasMes / 30).toFixed(1))
         };
       }
@@ -153,11 +162,12 @@ export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> =
         paginasEquivalentes: Number((item.linhas / 30).toFixed(1))
       };
     });
-  }, [historicoMensal, mesesBase, taxaAtualFlashcards, linhasSemanaisSimulador]);
+  }, [historicoMensal, mesesBase, taxaAtualFlashcards, linhasSemanaisSimulador, blocosHojePomodoro]);
 
   // Cálculos de evolução comparativa (Mês 1 vs Mês 4)
   const primeiroMes = dadosGrafico[0];
   const mesAtual = dadosGrafico[3];
+  const evolucaoBlocos = mesAtual.blocosPomodoro - primeiroMes.blocosPomodoro;
 
   const evolucaoTaxa = mesAtual.taxaAcerto - primeiroMes.taxaAcerto;
   const evolucaoLinhas = mesAtual.linhas - primeiroMes.linhas;
@@ -181,7 +191,8 @@ export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> =
         linhas: 270,
         taxaAcerto: 64,
         flashcardsRevisados: 120,
-        pecasCompletas: 2
+        pecasCompletas: 2,
+        blocosPomodoro: 36
       },
       {
         mesId: 'm-2',
@@ -191,7 +202,8 @@ export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> =
         linhas: 420,
         taxaAcerto: 72,
         flashcardsRevisados: 210,
-        pecasCompletas: 4
+        pecasCompletas: 4,
+        blocosPomodoro: 52
       },
       {
         mesId: 'm-1',
@@ -201,7 +213,8 @@ export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> =
         linhas: 570,
         taxaAcerto: 79,
         flashcardsRevisados: 280,
-        pecasCompletas: 6
+        pecasCompletas: 6,
+        blocosPomodoro: 70
       },
       {
         mesId: 'm-0',
@@ -211,7 +224,8 @@ export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> =
         linhas: Math.max(340, linhasSemanaisSimulador * 4),
         taxaAcerto: taxaAtualFlashcards > 0 ? taxaAtualFlashcards : 85,
         flashcardsRevisados: 340,
-        pecasCompletas: 8
+        pecasCompletas: 8,
+        blocosPomodoro: Math.max(68, 58 + blocosHojePomodoro * 3)
       }
     ];
     setHistoricoMensal(padrao);
@@ -253,6 +267,15 @@ export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> =
               </span>
             </div>
 
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-rose-300 font-semibold">
+                🍅 Blocos Pomodoro:
+              </span>
+              <span className="font-mono text-sm font-bold text-white">
+                {data.blocosPomodoro} blocos <span className="text-[10px] text-slate-400">({Math.round(data.blocosPomodoro * 0.8)}h de foco)</span>
+              </span>
+            </div>
+
             <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-700/60">
               <span>Flashcards revisados:</span>
               <span className="text-slate-200 font-mono font-medium">{data.flashcardsRevisados} cards</span>
@@ -288,10 +311,10 @@ export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> =
           </div>
           <h3 className="text-base font-bold text-white mt-1 flex items-center gap-2">
             <Award className="h-4 w-4 text-emerald-400" />
-            Evolução Comparativa: Flashcards & Produtividade de Redação
+            Evolução Comparativa: Flashcards, Pomodoro & Produtividade
           </h3>
           <p className="text-xs text-slate-300 mt-0.5">
-            Acompanhe o ganho de retenção memorizada vs. a velocidade de escrita na folha de 150 linhas da FGV.
+            Acompanhe a retenção memorizada, blocos de foco Pomodoro e o ritmo de escrita na folha de 150 linhas da FGV.
           </p>
         </div>
 
@@ -305,9 +328,26 @@ export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> =
                 ? 'bg-gradient-to-r from-sky-600 to-indigo-600 text-white shadow-sm'
                 : 'text-slate-400 hover:text-white'
             }`}
-            title="Exibir gráfico combinado com barras de linhas e curva de taxa de acerto"
+            title="Exibir visão combinada com Linhas, Taxa % e Blocos Pomodoro"
           >
             Dual (Linhas + %)
+          </button>
+          <button
+            type="button"
+            onClick={() => setTipoGrafico('pomodoro')}
+            className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition cursor-pointer flex items-center gap-1 ${
+              tipoGrafico === 'pomodoro'
+                ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow-sm'
+                : 'text-slate-400 hover:text-white'
+            }`}
+            title="Focar na evolução mensal dos blocos Pomodoro e foco diário"
+          >
+            <span>🍅 Pomodoro</span>
+            {blocosHojePomodoro > 0 && (
+              <span className="text-[9.5px] px-1 py-0.2 rounded-full bg-rose-500/30 text-rose-200 font-mono font-bold">
+                {blocosHojePomodoro} hoje
+              </span>
+            )}
           </button>
           <button
             type="button"
@@ -337,7 +377,7 @@ export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> =
       </div>
 
       {/* KPI Cards dos 4 Meses */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {/* KPI 1: Evolução da Taxa de Acerto */}
         <div className="rounded-xl border border-[#455468] bg-[#344154] p-3.5 flex flex-col justify-between">
           <span className="text-[11px] text-slate-400 font-medium flex items-center justify-between">
@@ -376,7 +416,27 @@ export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> =
           </div>
         </div>
 
-        {/* KPI 3: Total de Linhas e Páginas */}
+        {/* KPI 3: Blocos Pomodoro (NOVO) */}
+        <div className="rounded-xl border border-rose-500/40 bg-gradient-to-br from-[#3b2730] to-[#344154] p-3.5 flex flex-col justify-between">
+          <span className="text-[11px] text-rose-300 font-medium flex items-center justify-between">
+            <span>Blocos Pomodoro</span>
+            <span className="text-xs">🍅</span>
+          </span>
+          <div className="mt-1 flex items-baseline gap-1.5">
+            <span className="text-xl font-extrabold font-mono text-rose-300">
+              {evolucaoBlocos >= 0 ? `+${evolucaoBlocos}` : `${evolucaoBlocos}`}
+            </span>
+            <span className="text-[10px] text-slate-300">
+              ({primeiroMes.blocosPomodoro} → {mesAtual.blocosPomodoro} blk)
+            </span>
+          </div>
+          <div className="mt-1.5 flex items-center justify-between text-[10px]">
+            <span className="text-rose-200 font-bold">Hoje: {blocosHojePomodoro} concluídos</span>
+            <span className="text-[9px] text-slate-400">Reset 00:00</span>
+          </div>
+        </div>
+
+        {/* KPI 4: Total de Linhas e Páginas */}
         <div className="rounded-xl border border-[#455468] bg-[#344154] p-3.5 flex flex-col justify-between">
           <span className="text-[11px] text-slate-400 font-medium flex items-center justify-between">
             <span>Acumulado 4 Meses</span>
@@ -393,8 +453,8 @@ export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> =
           </span>
         </div>
 
-        {/* KPI 4: Média de Aproveitamento */}
-        <div className="rounded-xl border border-[#455468] bg-[#344154] p-3.5 flex flex-col justify-between">
+        {/* KPI 5: Média de Aproveitamento */}
+        <div className="rounded-xl border border-[#455468] bg-[#344154] p-3.5 flex flex-col justify-between col-span-2 sm:col-span-1">
           <span className="text-[11px] text-slate-400 font-medium flex items-center justify-between">
             <span>Média do Período</span>
             <Award className="w-3.5 h-3.5 text-amber-400" />
@@ -443,6 +503,20 @@ export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> =
               />
             )}
 
+            {/* Eixo Y da Esquerda Exclusivo para Pomodoro */}
+            {tipoGrafico === 'pomodoro' && (
+              <YAxis
+                yAxisId="pomodoroAxis"
+                orientation="left"
+                stroke="#f43f5e"
+                fontSize={11}
+                tickLine={false}
+                axisLine={{ stroke: '#f43f5e' }}
+                domain={[0, (dataMax: number) => Math.max(80, Math.ceil((dataMax + 15) / 10) * 10)]}
+                unit=" blk"
+              />
+            )}
+
             {/* Eixo Y da Direita: Taxa de Acerto (%) */}
             {(tipoGrafico === 'combinado' || tipoGrafico === 'flashcards') && (
               <YAxis
@@ -485,6 +559,22 @@ export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> =
               />
             )}
 
+            {/* Linha de Referência Meta Mensal Pomodoro (60 blocos) */}
+            {tipoGrafico === 'pomodoro' && (
+              <ReferenceLine
+                yAxisId="pomodoroAxis"
+                y={60}
+                stroke="#fb923c"
+                strokeDasharray="4 4"
+                label={{
+                  value: 'Meta Mensal (60 blocos)',
+                  fill: '#fb923c',
+                  fontSize: 10,
+                  position: 'insideTopRight'
+                }}
+              />
+            )}
+
             {/* Série 1: Linhas Escritas (Barras em Azul Sky) */}
             {(tipoGrafico === 'combinado' || tipoGrafico === 'linhas') && (
               <Bar
@@ -494,6 +584,18 @@ export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> =
                 fill="#0ea5e9"
                 radius={[6, 6, 0, 0]}
                 maxBarSize={48}
+              />
+            )}
+
+            {/* Série Pomodoro no modo dedicado */}
+            {tipoGrafico === 'pomodoro' && (
+              <Bar
+                yAxisId="pomodoroAxis"
+                dataKey="blocosPomodoro"
+                name="Blocos Pomodoro de Foco (Mês)"
+                fill="#f43f5e"
+                radius={[6, 6, 0, 0]}
+                maxBarSize={52}
               />
             )}
 
@@ -510,19 +612,37 @@ export const GraficoComparativoMensal: React.FC<GraficoComparativoMensalProps> =
                 activeDot={{ r: 7, stroke: '#ecfdf5', strokeWidth: 2 }}
               />
             )}
+
+            {/* Curva de Blocos Pomodoro no modo combinado */}
+            {tipoGrafico === 'combinado' && (
+              <Line
+                yAxisId="taxaAxis"
+                type="monotone"
+                dataKey="blocosPomodoro"
+                name="Blocos Pomodoro (Mês)"
+                stroke="#f43f5e"
+                strokeWidth={2.5}
+                strokeDasharray="4 3"
+                dot={{ r: 4, fill: '#f43f5e', stroke: '#881337', strokeWidth: 1.5 }}
+                activeDot={{ r: 6, stroke: '#ffe4e6', strokeWidth: 2 }}
+              />
+            )}
           </ComposedChart>
         </ResponsiveContainer>
       </div>
 
       {/* Footer com Ações Rápidas Integradas */}
       <div className="pt-3 border-t border-[#455468]/60 flex items-center justify-between flex-wrap gap-2 text-xs">
-        <div className="flex items-center gap-2 text-slate-400 text-[11px]">
+        <div className="flex items-center gap-3 text-slate-400 text-[11px] flex-wrap">
           <span>Legenda:</span>
           <span className="flex items-center gap-1 text-sky-300">
             <span className="w-2.5 h-2.5 rounded-sm bg-sky-500 inline-block"></span> Linhas 150L
           </span>
           <span className="flex items-center gap-1 text-emerald-400">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> Taxa de Acerto %
+          </span>
+          <span className="flex items-center gap-1 text-rose-300">
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span> Blocos Pomodoro ({blocosHojePomodoro} hoje)
           </span>
         </div>
 

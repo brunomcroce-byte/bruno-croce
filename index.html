@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f8fafc" />
-    <title>Remix Remix TributaOAB Desktop Pro</title>
+    <title>Remix Remix Remix Remix TributaOAB Desktop Pro</title>
     <meta name="description" content="Plataforma de preparação para OAB 2ª Fase em Direito Tributário com simulador de folha FGV de 150 linhas, peças práticas, súmulas, precedentes, flashcards, vade mecum e planner." />
-    <meta property="og:title" content="Remix Remix TributaOAB Desktop Pro" />
+    <meta property="og:title" content="Remix Remix Remix Remix TributaOAB Desktop Pro" />
     <meta property="og:description" content="Plataforma de preparação para OAB 2ª Fase em Direito Tributário com simulador de folha FGV de 150 linhas, peças práticas, súmulas, precedentes, flashcards, vade mecum e planner." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -28,14 +28,14 @@
           }
           if (isDark) {
             document.documentElement.classList.remove('theme-light');
-            document.documentElement.classList.add('theme-dark');
+            document.documentElement.classList.add('theme-dark', 'dark');
             var metaTheme = document.querySelector('meta[name="theme-color"]');
-            if (metaTheme) metaTheme.setAttribute('content', '#181c24');
+            if (metaTheme) metaTheme.setAttribute('content', '#202020');
           } else {
-            document.documentElement.classList.remove('theme-dark');
+            document.documentElement.classList.remove('theme-dark', 'dark');
             document.documentElement.classList.add('theme-light');
             var metaTheme = document.querySelector('meta[name="theme-color"]');
-            if (metaTheme) metaTheme.setAttribute('content', '#f8fafc');
+            if (metaTheme) metaTheme.setAttribute('content', '#f3f3f3');
           }
         } catch (e) {}
       })();

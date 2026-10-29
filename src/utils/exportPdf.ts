@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
 import { PecaCatalogo, ROTEIROS, CRONOGRAMA_DATA } from '../data/tributarioData';
+import { SimuladoSemanalCompleto } from '../data/simuladoSemanalCompletoData';
 
 /**
  * Remove caracteres especiais conflitantes com fontes padrão do jsPDF,
@@ -496,6 +497,7 @@ export interface RelatorioSemanalDados {
   dataRepescagem?: string;
   repescagemPaga?: boolean;
   vadeMarcadosCount?: number;
+  pomodoroBlocosHoje?: number;
 }
 
 /**
@@ -871,6 +873,300 @@ export function exportarRelatorioSemanalPdf(dados: RelatorioSemanalDados): void 
   const mes = String(agora.getMonth() + 1).padStart(2, '0');
   const dia = String(agora.getDate()).padStart(2, '0');
   const nomeArquivo = `Relatorio_Semanal_Progresso_OAB_${ano}${mes}${dia}.pdf`;
+  doc.save(nomeArquivo);
+}
+
+/**
+ * Exporta o Caderno Oficial de Prova FGV completo (Peça Prático-Profissional + 4 Questões Discursivas)
+ * em formato PDF idêntico ao modelo da banca FGV, com instruções, enunciados e folhas pautadas.
+ */
+export function exportarCadernoSimuladoCompletoPdf(
+  simulado: SimuladoSemanalCompleto,
+  respostasCandidato?: {
+    peca?: string;
+    q1?: string;
+    q2?: string;
+    q3?: string;
+    q4?: string;
+  }
+): void {
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+
+  const pageWidth = 210;
+  const pageHeight = 297;
+  const marginX = 14;
+  const marginY = 14;
+  const contentWidth = pageWidth - marginX * 2;
+  const bottomLimit = pageHeight - marginY - 10;
+  let cursorY = marginY;
+
+  const checarQuebra = (altura: number) => {
+    if (cursorY + altura > bottomLimit) {
+      doc.addPage();
+      cursorY = marginY;
+    }
+  };
+
+  // --- CAPA OFICIAL FGV ---
+  doc.setFillColor(15, 23, 42); // Navy Dark
+  doc.rect(0, 0, pageWidth, 28, 'F');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(255, 255, 255);
+  doc.text('ORDEM DOS ADVOGADOS DO BRASIL - CONSELHO FEDERAL', pageWidth / 2, 10, { align: 'center' });
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(186, 230, 253);
+  doc.text(`EXAME DE ORDEM UNIFICADO - 2ª FASE - DIREITO TRIBUTÁRIO`, pageWidth / 2, 16, { align: 'center' });
+  doc.text(sanitizarTextoPdf(simulado.titulo), pageWidth / 2, 22, { align: 'center' });
+
+  cursorY = 36;
+
+  // Box de Dados do Candidato
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(203, 213, 225);
+  doc.roundedRect(marginX, cursorY, contentWidth, 32, 2, 2, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(15, 23, 42);
+  doc.text('DADOS DE IDENTIFICAÇÃO DO(A) EXAMINANDO(A)', marginX + 4, cursorY + 6);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(71, 85, 105);
+  doc.text('Nome do Candidato: ___________________________________________________________', marginX + 4, cursorY + 13);
+  doc.text('Inscrição / CPF: __________________________________   Seccional OAB: _________________', marginX + 4, cursorY + 20);
+  doc.text('Data de Realização: ______/______/2026   Tempo Utilizado: ____________________________', marginX + 4, cursorY + 27);
+
+  cursorY += 38;
+
+  // Instruções Oficiais da FGV
+  doc.setFillColor(241, 245, 249);
+  doc.setDrawColor(148, 163, 184);
+  doc.roundedRect(marginX, cursorY, contentWidth, 54, 2, 2, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(30, 41, 59);
+  doc.text('INSTRUÇÕES GERAIS DE PROVA (PADRÃO OFICIAL BANCA FGV)', marginX + 4, cursorY + 6);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.8);
+  doc.setTextColor(51, 65, 85);
+
+  const instrucoes = [
+    '1. Este caderno contém a Prova Prático-Profissional com 1 (uma) Peça e 4 (quatro) Questões Discursivas.',
+    '2. Duração máxima oficial da prova: 5 (cinco) horas ininterruptas (300 minutos).',
+    '3. Pontuação: A Peça Prática vale até 5,00 pontos. Cada Questão vale até 1,25 pontos (Total = 10,00 pontos).',
+    '4. Critério de Aprovação: Será considerado aprovado o examinando que obtiver nota final igual ou superior a 6,00.',
+    '5. Extensão máxima de linhas: Até 150 linhas para a Peça Prático-Profissional e até 30 linhas para cada Questão.',
+    '6. Identificação pessoal é terminantemente proibida (assinar apenas como Advogado... / OAB...).',
+    '7. A fundamentação deve conter expressamente o artigo, parágrafo, inciso ou súmula vinculado à respectiva tese.'
+  ];
+
+  instrucoes.forEach((inst, idx) => {
+    doc.text(sanitizarTextoPdf(inst), marginX + 4, cursorY + 12 + idx * 5.8);
+  });
+
+  cursorY += 60;
+
+  // Box de Resumo da Estrutura de Pontuação
+  doc.setFillColor(254, 252, 232);
+  doc.setDrawColor(250, 204, 21);
+  doc.roundedRect(marginX, cursorY, contentWidth, 22, 2, 2, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(133, 77, 14);
+  doc.text('COMPOSIÇÃO OFICIAL DA NOTA FGV (0,00 A 10,00 PONTOS)', marginX + 4, cursorY + 6);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(113, 63, 18);
+  doc.text('• Peça Prática: 5,00 pts (Folha FGV de 150 linhas)', marginX + 4, cursorY + 12);
+  doc.text('• Questões 1 a 4: 1,25 pts cada (Folhas FGV de 30 linhas)', marginX + 75, cursorY + 12);
+  doc.text('• Nota de Corte: 6,00 pontos para Aprovação Definitiva na 2ª Fase OAB', marginX + 4, cursorY + 17);
+
+  // --- SEÇÃO 1: PEÇA PRÁTICO-PROFISSIONAL ---
+  doc.addPage();
+  cursorY = marginY;
+
+  doc.setFillColor(30, 41, 59);
+  doc.rect(marginX, cursorY, contentWidth, 8, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(255, 255, 255);
+  doc.text('CADERNO DE TEXTOS • PARTE I: PEÇA PRÁTICO-PROFISSIONAL (VALOR: 5,00 PONTOS)', marginX + 3, cursorY + 5.5);
+
+  cursorY += 13;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(15, 23, 42);
+  doc.text(sanitizarTextoPdf(`Enunciado da Peça - ${simulado.peca.exame} (${simulado.peca.peca})`), marginX, cursorY);
+  cursorY += 5;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(30, 41, 59);
+  const splitEnunciadoPeca = doc.splitTextToSize(sanitizarTextoPdf(simulado.peca.enunciado), contentWidth);
+  doc.text(splitEnunciadoPeca, marginX, cursorY);
+  cursorY += splitEnunciadoPeca.length * 4.5 + 6;
+
+  // Dica da Banca
+  doc.setFillColor(240, 253, 244);
+  doc.setDrawColor(187, 247, 208);
+  doc.roundedRect(marginX, cursorY, contentWidth, 12, 1.5, 1.5, 'FD');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(22, 101, 52);
+  doc.text('DICA DA BANCA FGV:', marginX + 3, cursorY + 4.5);
+  doc.setFont('helvetica', 'normal');
+  doc.text(sanitizarTextoPdf(simulado.peca.dicaBanca), marginX + 3, cursorY + 9);
+
+  cursorY += 18;
+
+  // Folha de Resposta Pautada para a Peça (Amostra de 30 linhas com indicação de continuidade)
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(15, 23, 42);
+  doc.text('FOLHA OFICIAL DE RESPOSTA DA PEÇA (PÁGINA 1 DE 5 - LINHAS 1 A 30)', marginX, cursorY);
+  cursorY += 4;
+
+  const linhasPeca = respostasCandidato?.peca ? respostasCandidato.peca.split('\n') : [];
+  for (let l = 1; l <= 30; l++) {
+    doc.setDrawColor(226, 232, 240);
+    doc.line(marginX, cursorY, marginX + contentWidth, cursorY);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(148, 163, 184);
+    doc.text(String(l).padStart(3, '0'), marginX - 1, cursorY - 1, { align: 'right' });
+
+    if (linhasPeca[l - 1]) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(15, 23, 42);
+      doc.text(sanitizarTextoPdf(linhasPeca[l - 1].slice(0, 85)), marginX + 3, cursorY - 1);
+    }
+    cursorY += 6.2;
+  }
+
+  // --- SEÇÃO 2: AS 4 QUESTÕES PRÁTICAS DISCURSIVAS ---
+  simulado.questoes.forEach(q => {
+    doc.addPage();
+    cursorY = marginY;
+
+    doc.setFillColor(30, 41, 59);
+    doc.rect(marginX, cursorY, contentWidth, 8, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(255, 255, 255);
+    doc.text(`CADERNO DE TEXTOS • QUESTÃO ${q.numero} (VALOR TOTAL: 1,25 PONTOS)`, marginX + 3, cursorY + 5.5);
+
+    cursorY += 13;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(15, 23, 42);
+    doc.text(sanitizarTextoPdf(q.titulo), marginX, cursorY);
+    cursorY += 5;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.2);
+    doc.setTextColor(30, 41, 59);
+    const splitEnunciado = doc.splitTextToSize(sanitizarTextoPdf(q.enunciado), contentWidth);
+    doc.text(splitEnunciado, marginX, cursorY);
+    cursorY += splitEnunciado.length * 4.2 + 4;
+
+    // Item A
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(203, 213, 225);
+    doc.roundedRect(marginX, cursorY, contentWidth, 14, 1.5, 1.5, 'FD');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(3, 105, 161);
+    doc.text(`A) [Valor: ${q.itemA.pontos.toFixed(2)} pt]`, marginX + 3, cursorY + 4.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(15, 23, 42);
+    const splitItemA = doc.splitTextToSize(sanitizarTextoPdf(q.itemA.pergunta), contentWidth - 6);
+    doc.text(splitItemA, marginX + 3, cursorY + 8.5);
+    cursorY += 17;
+
+    // Item B
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(203, 213, 225);
+    doc.roundedRect(marginX, cursorY, contentWidth, 14, 1.5, 1.5, 'FD');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(3, 105, 161);
+    doc.text(`B) [Valor: ${q.itemB.pontos.toFixed(2)} pt]`, marginX + 3, cursorY + 4.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(15, 23, 42);
+    const splitItemB = doc.splitTextToSize(sanitizarTextoPdf(q.itemB.pergunta), contentWidth - 6);
+    doc.text(splitItemB, marginX + 3, cursorY + 8.5);
+    cursorY += 18;
+
+    // Folha de Resposta Pautada de 30 linhas para a Questão
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(15, 23, 42);
+    doc.text(`FOLHA DE RESPOSTA DA QUESTÃO ${q.numero} (MÁXIMO DE 30 LINHAS)`, marginX, cursorY);
+    cursorY += 4;
+
+    const textoQuestao =
+      q.numero === 1
+        ? respostasCandidato?.q1
+        : q.numero === 2
+        ? respostasCandidato?.q2
+        : q.numero === 3
+        ? respostasCandidato?.q3
+        : respostasCandidato?.q4;
+
+    const linhasQuestao = textoQuestao ? textoQuestao.split('\n') : [];
+
+    for (let l = 1; l <= 30; l++) {
+      doc.setDrawColor(226, 232, 240);
+      doc.line(marginX, cursorY, marginX + contentWidth, cursorY);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6.5);
+      doc.setTextColor(148, 163, 184);
+      doc.text(String(l).padStart(2, '0'), marginX - 1, cursorY - 1, { align: 'right' });
+
+      if (linhasQuestao[l - 1]) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(15, 23, 42);
+        doc.text(sanitizarTextoPdf(linhasQuestao[l - 1].slice(0, 85)), marginX + 3, cursorY - 1);
+      }
+      cursorY += 5.5;
+    }
+  });
+
+  // --- RODAPÉ EM TODAS AS PÁGINAS ---
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.2);
+    doc.line(marginX, pageHeight - marginY + 2, pageWidth - marginX, pageHeight - marginY + 2);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(148, 163, 184);
+    doc.text('OAB 2ª Fase Direito Tributário • Caderno Oficial de Prova FGV (Peça + 4 Questões)', marginX, pageHeight - marginY + 6);
+    doc.text(`Página ${i} de ${totalPages}`, pageWidth - marginX, pageHeight - marginY + 6, { align: 'right' });
+  }
+
+  const nomeArquivo = `Caderno_Oficial_FGV_Simulado_Semanal_${simulado.id}.pdf`;
   doc.save(nomeArquivo);
 }
 

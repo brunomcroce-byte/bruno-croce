@@ -27,6 +27,7 @@ import {
   Trophy
 } from 'lucide-react';
 import { GerenciadorSimulados } from './GerenciadorSimulados';
+import { SimuladoOficialCompletoView } from './SimuladoOficialCompletoView';
 
 interface ResultadoCorrecao {
   simuladoId: number;
@@ -71,7 +72,7 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
   onNavegarParaFlashcards,
   onNavegarParaVade
 }) => {
-  const [subAba, setSubAba] = useState<'gerenciador' | 'simulados' | 'cronograma'>('gerenciador');
+  const [subAba, setSubAba] = useState<'oficial_fgv' | 'gerenciador' | 'simulados' | 'cronograma'>('oficial_fgv');
   const [busca, setBusca] = useState('');
   const [filtroPeca, setFiltroPeca] = useState('TODAS');
   const [simuladoSelecionadoId, setSimuladoSelecionadoId] = useState<number>(1);
@@ -322,9 +323,20 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
           </div>
         </div>
 
-        {/* Sub-Aba Toggle: Gerenciador vs. Banco de 32 Provas FGV vs. Cronograma */}
+        {/* Sub-Aba Toggle: Simulado Oficial FGV (Peça + 4Q) vs. Gerenciador vs. Banco de 32 Provas FGV vs. Cronograma */}
         <div className="flex items-center justify-between border-t border-[#455468] pt-3 flex-wrap gap-3">
           <div className="flex items-center gap-1.5 bg-[#1b232e] p-1 rounded-xl border border-[#455468] flex-wrap">
+            <button
+              onClick={() => setSubAba('oficial_fgv')}
+              className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer flex items-center gap-2 ${
+                subAba === 'oficial_fgv'
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm font-bold'
+                  : 'text-slate-300 hover:text-white'
+              }`}
+            >
+              <Award className="h-3.5 w-3.5 text-amber-300" />
+              🎯 Simulado Semanal FGV (Peça + 4 Questões)
+            </button>
             <button
               onClick={() => setSubAba('gerenciador')}
               className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer flex items-center gap-2 ${
@@ -334,7 +346,7 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
               }`}
             >
               <Sparkles className="h-3.5 w-3.5 text-amber-300" />
-              ⚡ Gerenciador de Simulados (Ciclo & Folha 150L)
+              ⚡ Ciclos & Folha 150L
             </button>
             <button
               onClick={() => setSubAba('simulados')}
@@ -377,7 +389,17 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
         </div>
       </div>
 
-      {/* SUB-ABA 0: GERENCIADOR DE SIMULADOS (CICLO, ESQUELETO 150L & CORREÇÃO IA) */}
+      {/* SUB-ABA 0: SIMULADO SEMANAL COMPLETO FGV (PEÇA + 4 QUESTÕES OFICIAIS = 10,00 PTS) */}
+      {subAba === 'oficial_fgv' && (
+        <SimuladoOficialCompletoView
+          textoRedacaoPrincipal={textoRedacao}
+          onCarregarEsqueletoNaFolha={onCarregarEsqueletoNaFolha}
+          onNavegarParaSimulador={onNavegarParaSimulador}
+          mostrarToast={mostrarToast}
+        />
+      )}
+
+      {/* SUB-ABA 1: GERENCIADOR DE SIMULADOS (CICLO, ESQUELETO 150L & CORREÇÃO IA) */}
       {subAba === 'gerenciador' && (
         <GerenciadorSimulados
           onSincronizarComFolhaPrincipal={(texto) =>
