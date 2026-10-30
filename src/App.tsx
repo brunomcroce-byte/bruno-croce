@@ -1528,6 +1528,21 @@ export default function App() {
       if (achada) {
         setPecaSelecionada(achada);
         setPecometroResultado(achada.nome);
+        dispararConfetesSuaves({ count: 50, originY: 0.4 });
+        tocarAlarmeWebAudio('suave');
+        mostrarToast(`🎯 Peça Identificada: ${achada.nome}!`);
+      } else {
+        const fallbackNomes: Record<string, string> = {
+          EPE: 'Exceção de Pré-Executividade (EPE)',
+          ROC: 'Recurso Ordinário Constitucional (ROC)',
+          AGRAVO_INT: 'Agravo Interno',
+          DECLARATORIA: 'Ação Declaratória de Inexistência de Relação Jurídico-Tributária'
+        };
+        const nomeFinal = fallbackNomes[dest] || dest;
+        setPecometroResultado(nomeFinal);
+        dispararConfetesSuaves({ count: 40, originY: 0.4 });
+        tocarAlarmeWebAudio('suave');
+        mostrarToast(`🎯 Peça Identificada: ${nomeFinal}!`);
       }
     }
   };
@@ -2565,47 +2580,72 @@ export default function App() {
             />
           )}
 
-          {/* TAB 3: PEÇAS E QUESITOS */}
+          {/* TAB 3: PEÇAS E QUESITOS FGV (MODERNO MAC OS SEQUOIA) */}
           {activeTab === 'pecas' && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
               {/* Left Column: Peçômetro & Catalogo */}
               <div className="lg:col-span-4 space-y-4">
-                {/* Peçômetro */}
-                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-4 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="badge b-VERDE">🎯 Descobridor de Peça</span>
+                {/* Peçômetro (Bússola de Identificação FGV) */}
+                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800/90 text-zinc-900 dark:text-zinc-100 p-4.5 shadow-sm space-y-3.5 backdrop-blur-md">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="badge b-VERDE text-[10.5px] font-bold">🎯 Bússola de Peças FGV</span>
+                    </div>
                     <button
+                      type="button"
                       onClick={resetPecometro}
-                      className="rounded-full border border-slate-600 bg-slate-700/60 px-2.5 py-1 text-[11px] text-slate-300 hover:bg-slate-600"
+                      className="rounded-full border border-black/10 dark:border-white/10 bg-slate-100 dark:bg-zinc-700/60 px-2.5 py-1 text-[11px] font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-zinc-600 transition cursor-pointer"
                     >
                       Reiniciar
                     </button>
                   </div>
 
                   {pecometroResultado ? (
-                    <div className="rounded-xl border border-emerald-500/60 bg-emerald-950/30 p-3.5 text-xs">
-                      <div className="text-slate-300 mb-1">Peça cabível identificada:</div>
-                      <div className="text-sm font-bold text-emerald-300">{pecometroResultado}</div>
-                      <button
-                        onClick={resetPecometro}
-                        className="mt-3 inline-block text-[11px] text-sky-400 underline"
-                      >
-                        Fazer nova consulta
-                      </button>
+                    <div className="rounded-xl border border-emerald-500/50 bg-emerald-50 dark:bg-emerald-950/30 p-4 text-xs space-y-2">
+                      <div className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                        <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                        Peça cabível diagnosticada:
+                      </div>
+                      <div className="text-sm font-bold text-emerald-900 dark:text-emerald-100">
+                        {pecometroResultado}
+                      </div>
+                      <div className="pt-2 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveTab('simulador');
+                            inserirEsqueletoNaRedacao();
+                          }}
+                          className="flex-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 text-[11px] font-bold text-white transition shadow-xs text-center cursor-pointer"
+                        >
+                          ⚡ Treinar no Simulador 150L
+                        </button>
+                        <button
+                          type="button"
+                          onClick={resetPecometro}
+                          className="rounded-lg border border-emerald-500/40 px-2.5 py-1.5 text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition cursor-pointer"
+                        >
+                          Nova Busca
+                        </button>
+                      </div>
                     </div>
                   ) : (
-                    <div>
-                      <p className="text-xs font-semibold text-white mb-2.5">
-                        {PECOMETRO_DATA[pecometroNode]?.q}
-                      </p>
+                    <div className="space-y-2.5">
+                      <div className="p-2 rounded-xl bg-slate-50 dark:bg-zinc-900/60 border border-black/5 dark:border-white/5">
+                        <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                          {PECOMETRO_DATA[pecometroNode]?.q}
+                        </p>
+                      </div>
                       <div className="space-y-1.5">
                         {PECOMETRO_DATA[pecometroNode]?.o.map(([rotulo, destino], idx) => (
                           <button
                             key={idx}
+                            type="button"
                             onClick={() => handlePecometroEscolha(destino)}
-                            className="w-full text-left rounded-xl border border-[#475569] bg-slate-50 dark:bg-zinc-900/60 text-zinc-800 dark:text-zinc-100 px-3 py-2 text-xs font-medium text-sky-300 hover:border-sky-400 hover:bg-[#334155] transition"
+                            className="w-full text-left rounded-xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-900/50 hover:bg-white dark:hover:bg-zinc-700/60 px-3 py-2.5 text-xs font-medium text-zinc-800 dark:text-zinc-200 hover:text-sky-600 dark:hover:text-sky-300 hover:border-sky-400 dark:hover:border-sky-500 transition shadow-xs flex items-center justify-between group cursor-pointer"
                           >
-                            {rotulo}
+                            <span className="leading-snug">{rotulo}</span>
+                            <ChevronRight className="h-3.5 w-3.5 text-zinc-400 group-hover:text-sky-500 transition-transform group-hover:translate-x-1 shrink-0 ml-2" />
                           </button>
                         ))}
                       </div>
@@ -2614,31 +2654,33 @@ export default function App() {
                 </div>
 
                 {/* Lista de Peças com Favoritos no Topo */}
-                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-4 shadow-sm space-y-3">
-                  <div className="flex items-center justify-between">
+                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800/90 text-zinc-900 dark:text-zinc-100 p-4.5 shadow-sm space-y-3.5 backdrop-blur-md">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
                     <div>
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
                         Modelos Oficiais FGV
                       </h3>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
                         {pecasFavoritas.length} {pecasFavoritas.length === 1 ? 'favorita fixada no topo' : 'favoritas fixadas no topo'}
                       </p>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <button
+                        type="button"
                         onClick={() => {
                           exportarEsqueletoParaPdf(pecaSelecionada);
                           tocarAlarmeWebAudio('suave');
                           mostrarToast(`📄 PDF de "${pecaSelecionada.nome}" gerado para estudo offline!`);
                         }}
-                        className="rounded-full border border-rose-400/80 bg-rose-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-rose-500 shadow-sm inline-flex items-center gap-1 transition cursor-pointer"
+                        className="rounded-full border border-rose-400 bg-rose-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-rose-500 shadow-xs inline-flex items-center gap-1 transition cursor-pointer"
                         title="Baixar arquivo PDF consolidado com o esqueleto da peça selecionada para estudo offline"
                       >
                         <Download className="w-3 h-3" /> PDF
                       </button>
                       <button
+                        type="button"
                         onClick={() => baixarTodasPecasNoWord(CATALOGO_PECAS)}
-                        className="rounded-full border border-blue-400 bg-blue-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-blue-500 shadow-sm inline-flex items-center gap-1 transition cursor-pointer"
+                        className="rounded-full border border-sky-400 bg-sky-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-sky-500 shadow-xs inline-flex items-center gap-1 transition cursor-pointer"
                         title="Baixar catálogo completo de peças no Word (.doc)"
                       >
                         📚 Word
@@ -2647,23 +2689,25 @@ export default function App() {
                   </div>
 
                   {/* Filtro: Todas vs Apenas Favoritas */}
-                  <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-50 dark:bg-zinc-900/60 text-zinc-800 dark:text-zinc-100 border border-black/10 dark:border-white/10/60">
+                  <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-zinc-900/70 border border-black/10 dark:border-white/10">
                     <button
+                      type="button"
                       onClick={() => setFiltroApenasFavoritasPecas(false)}
-                      className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-semibold transition text-center ${
+                      className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-semibold transition text-center cursor-pointer ${
                         !filtroApenasFavoritasPecas
                           ? 'bg-sky-600 text-white shadow-xs'
-                          : 'text-slate-300 hover:text-white'
+                          : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                       }`}
                     >
                       Todas ({CATALOGO_PECAS.length})
                     </button>
                     <button
+                      type="button"
                       onClick={() => setFiltroApenasFavoritasPecas(true)}
-                      className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-semibold transition inline-flex items-center justify-center gap-1.5 ${
+                      className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-semibold transition inline-flex items-center justify-center gap-1.5 cursor-pointer ${
                         filtroApenasFavoritasPecas
                           ? 'bg-amber-600 text-white shadow-xs'
-                          : 'text-amber-300 hover:text-amber-200'
+                          : 'text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300'
                       }`}
                     >
                       <Star className="w-3.5 h-3.5 fill-current" />
@@ -2671,23 +2715,23 @@ export default function App() {
                     </button>
                   </div>
 
-                  {/* Informação visual amigável */}
-                  <div className="text-[10.5px] text-slate-400 flex items-center gap-1 px-1">
-                    <Star className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
-                    <span>Clique na estrela para fixar ou desfixar peças no topo.</span>
+                  <div className="text-[10.5px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1 px-1">
+                    <Star className="w-3 h-3 text-amber-500 fill-amber-500 shrink-0" />
+                    <span>Clique na estrela para fixar ou desfixar modelos no topo.</span>
                   </div>
 
                   <div className="space-y-1.5">
                     {pecasOrdenadas.length === 0 ? (
-                      <div className="rounded-xl border border-dashed border-black/10 dark:border-white/10 p-4 text-center">
-                        <Star className="w-6 h-6 text-slate-500 mx-auto mb-2" />
-                        <p className="text-xs text-slate-300 font-medium">Nenhuma peça favoritada no momento.</p>
-                        <p className="text-[11px] text-slate-400 mt-1">
+                      <div className="rounded-xl border border-dashed border-black/15 dark:border-white/15 p-4 text-center">
+                        <Star className="w-6 h-6 text-zinc-400 mx-auto mb-2" />
+                        <p className="text-xs text-zinc-700 dark:text-zinc-300 font-medium">Nenhuma peça favoritada no momento.</p>
+                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
                           Marque os modelos mais recorrentes para acessá-los rapidamente no topo da lista.
                         </p>
                         <button
+                          type="button"
                           onClick={() => setFiltroApenasFavoritasPecas(false)}
-                          className="mt-3 text-xs text-sky-400 hover:underline font-semibold"
+                          className="mt-3 text-xs text-sky-600 dark:text-sky-400 hover:underline font-semibold cursor-pointer"
                         >
                           Ver todos os modelos
                         </button>
@@ -2704,40 +2748,40 @@ export default function App() {
                         return (
                           <React.Fragment key={p.codigo}>
                             {isFirstNonFav && (
-                              <div className="pt-2 pb-1 border-t border-black/10 dark:border-white/10/60 flex items-center justify-between text-[10px] uppercase tracking-wider text-slate-400 px-1 font-semibold">
+                              <div className="pt-2 pb-1 border-t border-black/10 dark:border-white/10 flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400 px-1 font-semibold">
                                 <span>Demais Modelos de Peça</span>
                                 <span>{CATALOGO_PECAS.length - pecasFavoritas.length}</span>
                               </div>
                             )}
                             <div
                               onClick={() => setPecaSelecionada(p)}
-                              className={`w-full text-left rounded-xl px-3 py-2 text-xs font-medium transition flex items-center justify-between cursor-pointer group ${
+                              className={`w-full text-left rounded-xl px-3 py-2 text-xs font-medium transition flex items-center justify-between cursor-pointer group hover:scale-[1.01] active:scale-[0.99] ${
                                 pecaSelecionada.codigo === p.codigo
                                   ? 'bg-sky-600 text-white font-semibold border border-sky-400 shadow-sm'
                                   : isFav
-                                  ? 'border border-amber-500/40 bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100 text-slate-100 hover:bg-slate-600'
-                                  : 'border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100 text-slate-200 hover:bg-slate-600'
+                                  ? 'border border-amber-500/40 bg-amber-50/40 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 hover:bg-amber-50 dark:hover:bg-zinc-700'
+                                  : 'border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-white dark:hover:bg-zinc-700'
                               }`}
                             >
                               <div className="flex items-center gap-2 min-w-0 pr-2">
                                 <button
                                   type="button"
                                   onClick={(e) => toggleFavoritoPeca(p.codigo, e)}
-                                  className="p-1 -ml-1 rounded-md transition hover:bg-slate-500/30 text-amber-400 focus:outline-none"
+                                  className="p-1 -ml-1 rounded-md transition hover:bg-black/5 dark:hover:bg-white/10 text-amber-500 focus:outline-none cursor-pointer"
                                   title={isFav ? 'Remover dos favoritos' : 'Favoritar e fixar no topo'}
                                   aria-label={isFav ? 'Remover dos favoritos' : 'Favoritar e fixar no topo'}
                                 >
                                   <Star
                                     className={`w-4 h-4 transition-transform group-hover:scale-110 ${
                                       isFav
-                                        ? 'fill-amber-400 text-amber-400'
-                                        : 'text-slate-400 hover:text-amber-300'
+                                        ? 'fill-amber-500 text-amber-500'
+                                        : 'text-zinc-400 hover:text-amber-400'
                                     }`}
                                   />
                                 </button>
                                 <span className="truncate">{p.nome}</span>
                                 {isFav && (
-                                  <span className="text-[10px] font-bold text-amber-300 bg-amber-400/15 border border-amber-400/30 px-1.5 py-0.5 rounded-sm shrink-0">
+                                  <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 border border-amber-400/30 px-1.5 py-0.2 rounded-sm shrink-0">
                                     ★ Topo
                                   </span>
                                 )}
@@ -2754,28 +2798,30 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Right Column: Detalhe da Peça */}
+              {/* Right Column: Detalhe da Peça Selecionada */}
               <div className="lg:col-span-8 space-y-4">
-                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-5 shadow-sm">
+                {/* Header da Peça com Ações */}
+                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800/90 text-zinc-900 dark:text-zinc-100 p-5 shadow-sm space-y-3 backdrop-blur-md">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="badge b-VERDE">
+                      <span className="badge b-VERDE text-xs">
                         {pecaSelecionada.tipo} • {pecaSelecionada.examesCobrados}
                       </span>
                       {pecasFavoritas.includes(pecaSelecionada.codigo) && (
-                        <span className="badge inline-flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold">
-                          <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> Peça Favorita (Fixada no Topo)
+                        <span className="badge inline-flex items-center gap-1 bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-500/40 font-semibold text-[11px]">
+                          <Star className="w-3 h-3 fill-amber-500 text-amber-500" /> Modelo Favorito (Topo)
                         </span>
                       )}
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <button
+                        type="button"
                         onClick={() => {
                           exportarEsqueletoParaPdf(pecaSelecionada);
                           tocarAlarmeWebAudio('suave');
                           mostrarToast(`📄 PDF de "${pecaSelecionada.nome}" gerado com sucesso para estudo offline!`);
                         }}
-                        className="rounded-full border border-rose-400 bg-rose-600 hover:bg-rose-500 px-3.5 py-1 text-xs font-semibold text-white transition inline-flex items-center gap-1.5 shadow-sm cursor-pointer"
+                        className="rounded-xl border border-rose-400 bg-rose-600 hover:bg-rose-500 px-3 py-1.5 text-xs font-semibold text-white transition inline-flex items-center gap-1.5 shadow-xs cursor-pointer"
                         title="Gerar e baixar arquivo PDF consolidado com o esqueleto e quesitos da peça para impressão e estudo offline"
                       >
                         <Download className="w-3.5 h-3.5" />
@@ -2783,55 +2829,67 @@ export default function App() {
                       </button>
 
                       <button
+                        type="button"
                         onClick={() => {
                           imprimirEsqueletoPeca(pecaSelecionada);
                           mostrarToast('🖨️ Caixa de diálogo de impressão iniciada. Selecione sua impressora ou "Salvar como PDF".');
                         }}
-                        className="rounded-full border border-slate-500 bg-slate-700/70 hover:bg-slate-600 px-3 py-1 text-xs font-semibold text-slate-200 hover:text-white transition inline-flex items-center gap-1.5 shadow-sm cursor-pointer"
+                        className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-100 dark:bg-zinc-700/70 hover:bg-slate-200 dark:hover:bg-zinc-600 px-3 py-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 transition inline-flex items-center gap-1.5 shadow-xs cursor-pointer"
                         title="Abrir layout otimizado para impressão direta em papel A4 ou salvar como PDF nativo"
                       >
-                        <Printer className="w-3.5 h-3.5 text-sky-400" />
+                        <Printer className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
                         <span className="hidden sm:inline">Imprimir A4</span>
                       </button>
 
                       <button
+                        type="button"
                         onClick={(e) => toggleFavoritoPeca(pecaSelecionada.codigo, e)}
-                        className={`rounded-full border px-3.5 py-1 text-xs font-semibold transition inline-flex items-center gap-1.5 shadow-sm cursor-pointer ${
+                        className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition inline-flex items-center gap-1.5 shadow-xs cursor-pointer ${
                           pecasFavoritas.includes(pecaSelecionada.codigo)
-                            ? 'border-amber-400 bg-amber-500/20 text-amber-300 hover:bg-amber-500/30'
-                            : 'border-slate-500 bg-slate-700/60 text-slate-200 hover:bg-slate-600 hover:text-white'
+                            ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300'
+                            : 'border-black/10 dark:border-white/10 bg-slate-100 dark:bg-zinc-700/60 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white'
                         }`}
                         title={pecasFavoritas.includes(pecaSelecionada.codigo) ? 'Remover dos favoritos' : 'Favoritar e fixar no topo'}
                       >
-                        <Star className={`w-3.5 h-3.5 ${pecasFavoritas.includes(pecaSelecionada.codigo) ? 'fill-amber-400 text-amber-400' : 'text-slate-400'}`} />
+                        <Star className={`w-3.5 h-3.5 ${pecasFavoritas.includes(pecaSelecionada.codigo) ? 'fill-amber-500 text-amber-500' : 'text-zinc-400'}`} />
                         {pecasFavoritas.includes(pecaSelecionada.codigo) ? '★ Favorita' : '☆ Favoritar'}
                       </button>
 
                       <button
+                        type="button"
                         onClick={() => {
                           setActiveTab('simulador');
                           inserirEsqueletoNaRedacao();
                         }}
-                        className="rounded-full border border-emerald-400 bg-emerald-600 px-3.5 py-1 text-xs font-semibold text-white hover:bg-emerald-500 transition shadow-sm cursor-pointer"
+                        className="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 px-3.5 py-1.5 text-xs font-bold text-white transition shadow-xs cursor-pointer inline-flex items-center gap-1.5"
                       >
-                        ⚡ Treinar no Simulador 150L
+                        <span>⚡ Treinar no Simulador 150L</span>
                       </button>
                     </div>
                   </div>
-                  <h2 className="text-lg font-bold text-white mt-2">{pecaSelecionada.nome}</h2>
-                  <p className="text-xs text-[#cbd5e1] mt-1">Base legal: {pecaSelecionada.baseLegal}</p>
+                  <div>
+                    <h2 className="text-lg font-bold text-zinc-900 dark:text-white mt-1">{pecaSelecionada.nome}</h2>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-300 mt-0.5">
+                      <strong>Base legal:</strong> {pecaSelecionada.baseLegal}
+                    </p>
+                  </div>
                 </div>
 
-                {/* Quesitos da Prova */}
-                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-5 shadow-sm">
-                  <h3 className="text-sm font-semibold text-white mb-3">Quesitos Exigidos no Espelho FGV</h3>
-                  <div className="divide-y divide-[#455468]">
+                {/* Quesitos da Prova (Espelho Oficial FGV) */}
+                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800/90 text-zinc-900 dark:text-zinc-100 p-5 shadow-sm space-y-3 backdrop-blur-md">
+                  <h3 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center justify-between">
+                    <span>Quesitos Exigidos no Espelho FGV</span>
+                    <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
+                      Total: 5,00 pontos
+                    </span>
+                  </h3>
+                  <div className="divide-y divide-black/10 dark:divide-white/10">
                     {pecaSelecionada.quesitosFGV.map((q, qIdx) => (
                       <div key={qIdx} className="flex items-center justify-between py-2 text-xs gap-3">
-                        <span className="text-slate-200">{q.item}</span>
+                        <span className="text-zinc-800 dark:text-zinc-200">{q.item}</span>
                         <span className="flex items-center gap-2 shrink-0">
                           <span className={`badge b-${q.cor}`}>{q.cor}</span>
-                          <strong className="font-mono text-emerald-400">{q.pts} pt</strong>
+                          <strong className="font-mono text-emerald-600 dark:text-emerald-400">{q.pts} pt</strong>
                         </span>
                       </div>
                     ))}
@@ -2843,16 +2901,16 @@ export default function App() {
                   {pecaSelecionada.blocos.map((bloco, bIdx) => (
                     <div
                       key={bIdx}
-                      className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100 p-4 shadow-sm"
+                      className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800/90 text-zinc-900 dark:text-zinc-100 p-4.5 shadow-sm space-y-2.5 backdrop-blur-md"
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-xs font-bold text-sky-300">{bloco.titulo}</h4>
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-bold text-sky-700 dark:text-sky-300">{bloco.titulo}</h4>
                         <span className={`badge b-${bloco.cor}`}>{bloco.cor}</span>
                       </div>
-                      <div className="rounded-lg bg-slate-50 dark:bg-zinc-900/60 text-zinc-800 dark:text-zinc-100 border border-black/10 dark:border-white/10/60 p-2.5 text-[11px] text-slate-300 mb-3">
+                      <div className="rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-500/30 p-2.5 text-[11px] text-amber-900 dark:text-amber-200">
                         💡 <strong>Como pontuar na FGV:</strong> {bloco.dica}
                       </div>
-                      <pre className="whitespace-pre-wrap font-sans text-xs leading-relaxed text-slate-100">
+                      <pre className="whitespace-pre-wrap font-sans text-xs leading-relaxed text-zinc-800 dark:text-zinc-200 p-3 rounded-xl bg-slate-50 dark:bg-zinc-900/60 border border-black/5 dark:border-white/5">
                         {bloco.texto}
                       </pre>
                     </div>
@@ -2861,11 +2919,11 @@ export default function App() {
 
                 {/* Roteiro especial (se houver) */}
                 {ROTEIROS[pecaSelecionada.codigo] && (
-                  <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-5 shadow-sm">
-                    <h3 className="text-sm font-semibold text-white mb-3">
+                  <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800/90 text-zinc-900 dark:text-zinc-100 p-5 shadow-sm space-y-3 backdrop-blur-md">
+                    <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
                       🧭 Roteiro Passo a Passo (Oficina de Recursos)
                     </h3>
-                    <ol className="list-decimal pl-5 space-y-1.5 text-xs text-slate-200">
+                    <ol className="list-decimal pl-5 space-y-1.5 text-xs text-zinc-800 dark:text-zinc-200">
                       {ROTEIROS[pecaSelecionada.codigo].map((step, sIdx) => (
                         <li key={sIdx}>{step}</li>
                       ))}

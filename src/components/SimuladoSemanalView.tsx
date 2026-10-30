@@ -285,105 +285,344 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
 
   const totalTarefas = CRONOGRAMA_DATA.reduce((acc, curr) => acc + curr.tarefas.length, 0);
 
+  // Status em tempo real das conquistas para o simulado ativo
+  const gateAtivoDesbloqueado = useMemo(() => {
+    return SafeStorage.get(`tributa_simulado_gate_unlocked_${simuladoSelecionadoId}`, 'false') === 'true';
+  }, [simuladoSelecionadoId]);
+
+  const questoesRespondidasCount = useMemo(() => {
+    let count = 0;
+    ['q1', 'q2', 'q3', 'q4'].forEach(q => {
+      const resp = SafeStorage.get(`tributa_simulado_comp_${simuladoSelecionadoId}_${q}`, '');
+      if (resp && resp.trim().length > 15) count++;
+    });
+    return count;
+  }, [simuladoSelecionadoId]);
+
+  const linhasPecaAtual = useMemo(() => {
+    const salvo = SafeStorage.get(`tributa_simulado_comp_${simuladoSelecionadoId}_peca`, '');
+    const texto = salvo || textoRedacao || '';
+    return texto.trim() ? texto.split('\n').length : 0;
+  }, [simuladoSelecionadoId, textoRedacao]);
+
+  const notaSimuladoAtual = notasHistorico[simuladoSelecionadoId] ?? null;
+
+  // Cálculo percentual geral da trilha de conquistas do simulado
+  const percentualTrilhaAtiva = useMemo(() => {
+    const p1 = gateAtivoDesbloqueado ? 25 : 0;
+    const p2 = (questoesRespondidasCount / 4) * 25;
+    const p3 = Math.min(25, Math.round((linhasPecaAtual / 150) * 25));
+    const p4 = notaSimuladoAtual !== null ? 25 : 0;
+    return Math.round(p1 + p2 + p3 + p4);
+  }, [gateAtivoDesbloqueado, questoesRespondidasCount, linhasPecaAtual, notaSimuladoAtual]);
+
   return (
     <div className="space-y-5">
-      {/* Top Header Card */}
-      <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 p-5 shadow-sm space-y-4">
+      {/* ============================================================== */}
+      {/* PAINEL CENTRAL: TRILHA DE CONQUISTAS OFICIAL FGV (5 HORAS)     */}
+      {/* ============================================================== */}
+      <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800/90 backdrop-blur-md p-5 shadow-sm space-y-4.5 text-zinc-900 dark:text-zinc-100 transition-all">
         <div className="flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="badge b-AZUL font-mono font-bold">Simulado Semanal OAB</span>
-              <span className="badge b-AMARELO text-[10px]">32 Provas FGV Reais</span>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="badge b-AZUL font-mono font-bold text-[10.5px]">
+                🏆 Trilha de Conquistas FGV
+              </span>
+              <span className="badge b-VERDE text-[10px]">
+                Fluxo Oficial: Identificação ➔ 4 Questões ➔ Folha 150L (5h)
+              </span>
+              <span className="badge b-AMARELO text-[10px]">
+                32 Provas Oficiais
+              </span>
             </div>
-            <h2 className="text-lg font-bold text-zinc-900 dark:text-white mt-1.5 flex items-center gap-2">
-              <Award className="h-5 w-5 text-amber-500 dark:text-amber-400" />
-              Simulados Oficiais FGV com Esqueleto de Memorização & Correção
+            <h2 className="text-lg font-bold text-zinc-900 dark:text-white mt-1 flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-amber-500 shrink-0" />
+              <span>Jornada da Aprovação na 2ª Fase OAB (Direito Tributário)</span>
             </h2>
-            <p className="text-xs text-zinc-600 dark:text-slate-300 mt-1 max-w-2xl leading-relaxed">
-              Treine com as 32 provas históricas da FGV. O esqueleto carrega na folha de 150 linhas com o endereçamento, teses e fundamentos normativos estruturados para você memorizar a peça e desenvolver a fundamentação jurídica.
+            <p className="text-xs text-zinc-600 dark:text-zinc-300 max-w-3xl leading-relaxed">
+              Percorra a trilha pedagógica oficial: <strong>1º Identifique a peça</strong> (gate eliminatório); <strong>2º Estruture as 4 questões discursivas</strong> (itens A e B em 30 linhas); e <strong>3º Redija a petição na folha padrão de 150 linhas</strong> sob o cronômetro oficial de 5 horas.
             </p>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
             <button
+              type="button"
               onClick={sortearSimuladoSurpresa}
-              className="rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2 text-xs font-bold text-white hover:from-amber-400 hover:to-amber-500 transition shadow-md inline-flex items-center gap-2 cursor-pointer active:scale-95"
+              className="rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2 text-xs font-bold text-white hover:from-amber-400 hover:to-amber-500 transition shadow-sm inline-flex items-center gap-2 cursor-pointer active:scale-95"
               title="Sorteia uma prova oficial surpresa entre os 32 exames FGV"
             >
               <Shuffle className="h-4 w-4" /> 🎲 Sortear Simulado Surpresa
             </button>
 
             <button
+              type="button"
               onClick={() => setAnexoInfoAberto(true)}
-              className="rounded-full border border-sky-400/70 bg-sky-50 dark:bg-sky-950/60 px-3.5 py-2 text-xs font-semibold text-sky-700 dark:text-sky-200 hover:bg-sky-100 dark:hover:bg-sky-900 transition inline-flex items-center gap-1.5 cursor-pointer"
-              title="Informações sobre como importar ou enviar seus 32 arquivos específicos"
+              className="rounded-xl border border-sky-400/50 bg-sky-50 dark:bg-sky-950/40 px-3.5 py-2 text-xs font-semibold text-sky-800 dark:text-sky-200 hover:bg-sky-100 dark:hover:bg-sky-900/60 transition inline-flex items-center gap-1.5 cursor-pointer"
+              title="Informações sobre os 32 arquivos específicos"
             >
               <Upload className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" /> Meus 32 Arquivos
             </button>
           </div>
         </div>
 
-        {/* Sub-Aba Toggle: Simulado Oficial FGV (Peça + 4Q) vs. Gerenciador vs. Banco de 32 Provas FGV vs. Cronograma */}
+        {/* ============================================================== */}
+        {/* CARDS DAS 4 ETAPAS DA TRILHA DE CONQUISTAS COM PROGRESSO VIVO */}
+        {/* ============================================================== */}
+        <div className="pt-2 border-t border-black/10 dark:border-white/10 space-y-3">
+          <div className="flex items-center justify-between text-xs flex-wrap gap-2">
+            <div className="flex items-center gap-2 font-bold text-zinc-900 dark:text-white">
+              <span>Status da Trilha no {simuladoAtivo.exame}:</span>
+              <span className="font-mono text-xs text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/60 border border-sky-500/30 px-2 py-0.5 rounded-full">
+                {percentualTrilhaAtiva}% Concluído
+              </span>
+            </div>
+            <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+              {Object.keys(notasHistorico).length} de 32 Provas FGV já finalizadas
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Conquista 1: Identificação da Peça */}
+            <div
+              onClick={() => setSubAba('oficial_fgv')}
+              className={`p-3.5 rounded-2xl border transition-all cursor-pointer group hover:scale-[1.01] ${
+                gateAtivoDesbloqueado
+                  ? 'border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-950/20'
+                  : 'border-amber-500/40 bg-amber-50/40 dark:bg-amber-950/20'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Etapa 1
+                </span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  gateAtivoDesbloqueado
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-amber-500 text-slate-950 animate-pulse'
+                }`}>
+                  {gateAtivoDesbloqueado ? 'Conquistada ✓' : 'Pendente 🔒'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <div className={`p-2 rounded-xl shrink-0 ${
+                  gateAtivoDesbloqueado
+                    ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                    : 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                }`}>
+                  <Scale className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-xs font-bold text-zinc-900 dark:text-white truncate">
+                    1. Identificação da Peça
+                  </h4>
+                  <p className="text-[11px] text-zinc-600 dark:text-zinc-400 truncate">
+                    {gateAtivoDesbloqueado ? 'Peça correta validada' : 'Descobrimento obrigatório'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Conquista 2: 4 Questões Discursivas */}
+            <div
+              onClick={() => setSubAba('oficial_fgv')}
+              className={`p-3.5 rounded-2xl border transition-all cursor-pointer group hover:scale-[1.01] ${
+                questoesRespondidasCount === 4
+                  ? 'border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-950/20'
+                  : questoesRespondidasCount > 0
+                  ? 'border-sky-500/40 bg-sky-50/40 dark:bg-sky-950/20'
+                  : 'border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-900/40'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Etapa 2
+                </span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  questoesRespondidasCount === 4
+                    ? 'bg-emerald-600 text-white'
+                    : questoesRespondidasCount > 0
+                    ? 'bg-sky-600 text-white'
+                    : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
+                }`}>
+                  {questoesRespondidasCount}/4 Concluídas
+                </span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <div className={`p-2 rounded-xl shrink-0 ${
+                  questoesRespondidasCount === 4
+                    ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                    : 'bg-sky-500/20 text-sky-600 dark:text-sky-400'
+                }`}>
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-xs font-bold text-zinc-900 dark:text-white truncate">
+                    2. 4 Questões Discursivas
+                  </h4>
+                  <p className="text-[11px] text-zinc-600 dark:text-zinc-400 truncate">
+                    Itens A e B (5,00 pts • 30L)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Conquista 3: Redação na Folha Padrão 150L (5h) */}
+            <div
+              onClick={() => setSubAba('oficial_fgv')}
+              className={`p-3.5 rounded-2xl border transition-all cursor-pointer group hover:scale-[1.01] ${
+                linhasPecaAtual >= 150
+                  ? 'border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-950/20'
+                  : linhasPecaAtual >= 30
+                  ? 'border-amber-500/40 bg-amber-50/40 dark:bg-amber-950/20'
+                  : 'border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-900/40'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Etapa 3
+                </span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  linhasPecaAtual >= 150
+                    ? 'bg-amber-400 text-slate-950 font-black'
+                    : linhasPecaAtual >= 30
+                    ? 'bg-sky-600 text-white'
+                    : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
+                }`}>
+                  {linhasPecaAtual}/150 Linhas
+                </span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <div className={`p-2 rounded-xl shrink-0 ${
+                  linhasPecaAtual >= 150
+                    ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                    : 'bg-teal-500/20 text-teal-600 dark:text-teal-400'
+                }`}>
+                  <Clock className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-xs font-bold text-zinc-900 dark:text-white truncate">
+                    3. Folha Padrão (5 Horas)
+                  </h4>
+                  <p className="text-[11px] text-zinc-600 dark:text-zinc-400 truncate">
+                    150 linhas pautadas FGV (5,0 pts)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Conquista 4: Espelho FGV & Aprovação Final */}
+            <div
+              onClick={() => setSubAba('oficial_fgv')}
+              className={`p-3.5 rounded-2xl border transition-all cursor-pointer group hover:scale-[1.01] ${
+                notaSimuladoAtual !== null && notaSimuladoAtual >= 6.0
+                  ? 'border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-950/20'
+                  : notaSimuladoAtual !== null
+                  ? 'border-rose-500/40 bg-rose-50/40 dark:bg-rose-950/20'
+                  : 'border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-900/40'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Etapa 4
+                </span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  notaSimuladoAtual !== null && notaSimuladoAtual >= 6.0
+                    ? 'bg-emerald-600 text-white'
+                    : notaSimuladoAtual !== null
+                    ? 'bg-rose-600 text-white'
+                    : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
+                }`}>
+                  {notaSimuladoAtual !== null ? `${notaSimuladoAtual.toFixed(2)}/10,00` : 'Ponto de Corte: 6,00'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <div className={`p-2 rounded-xl shrink-0 ${
+                  notaSimuladoAtual !== null && notaSimuladoAtual >= 6.0
+                    ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                    : 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                }`}>
+                  <Award className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-xs font-bold text-zinc-900 dark:text-white truncate">
+                    4. Espelho & Aprovação
+                  </h4>
+                  <p className="text-[11px] text-zinc-600 dark:text-zinc-400 truncate">
+                    {notaSimuladoAtual !== null
+                      ? notaSimuladoAtual >= 6.0
+                        ? '🏆 Aprovado na 2ª Fase!'
+                        : 'Necessita reforço'
+                      : 'Avaliação Integral (10,0 pts)'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Sub-Aba Toggle: Simulado Oficial FGV (Trilha de Conquistas) vs. Gerenciador vs. Banco de 32 Provas FGV vs. Cronograma */}
         <div className="flex items-center justify-between border-t border-black/10 dark:border-white/10 pt-3 flex-wrap gap-3">
-          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-zinc-900 p-1 rounded-xl border border-black/10 dark:border-white/10 flex-wrap">
+          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-zinc-900/90 p-1 rounded-xl border border-black/10 dark:border-white/10 flex-wrap">
             <button
               onClick={() => setSubAba('oficial_fgv')}
               className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer flex items-center gap-2 ${
                 subAba === 'oficial_fgv'
                   ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm font-bold'
-                  : 'text-slate-300 hover:text-white'
+                  : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-zinc-800/60'
               }`}
             >
-              <Award className="h-3.5 w-3.5 text-amber-300" />
-              🎯 Simulado Semanal FGV (Peça + 4 Questões)
+              <Award className="h-3.5 w-3.5 text-amber-500 dark:text-amber-300" />
+              <span>🎯 Trilha de Conquistas (Oficial FGV 5h)</span>
             </button>
             <button
               onClick={() => setSubAba('gerenciador')}
               className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer flex items-center gap-2 ${
                 subAba === 'gerenciador'
                   ? 'bg-amber-600 text-white shadow-sm font-bold'
-                  : 'text-slate-300 hover:text-white'
+                  : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-zinc-800/60'
               }`}
             >
-              <Sparkles className="h-3.5 w-3.5 text-amber-300" />
-              ⚡ Ciclos & Folha 150L
+              <Sparkles className="h-3.5 w-3.5 text-amber-500 dark:text-amber-300" />
+              <span>⚡ Ciclos & Folha 150L</span>
             </button>
             <button
               onClick={() => setSubAba('simulados')}
               className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer flex items-center gap-2 ${
                 subAba === 'simulados'
                   ? 'bg-sky-600 text-white shadow-sm font-bold'
-                  : 'text-slate-300 hover:text-white'
+                  : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-zinc-800/60'
               }`}
             >
-              <FileText className="h-3.5 w-3.5" /> 32 Provas FGV (Casos & Espelhos)
+              <FileText className="h-3.5 w-3.5" />
+              <span>32 Provas FGV (Casos)</span>
             </button>
             <button
               onClick={() => setSubAba('cronograma')}
               className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer flex items-center gap-2 ${
                 subAba === 'cronograma'
                   ? 'bg-sky-600 text-white shadow-sm font-bold'
-                  : 'text-slate-300 hover:text-white'
+                  : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-zinc-800/60'
               }`}
             >
-              <Calendar className="h-3.5 w-3.5" /> Cronograma de Metas (8 Semanas)
+              <Calendar className="h-3.5 w-3.5" />
+              <span>Cronograma (8 Semanas)</span>
             </button>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-300">
+            <span className="text-xs text-zinc-600 dark:text-zinc-300 font-medium">
               Simulados Concluídos:{' '}
-              <strong className="text-emerald-400 font-mono">
+              <strong className="text-emerald-600 dark:text-emerald-400 font-mono font-bold">
                 {Object.keys(notasHistorico).length} / 32
               </strong>
             </span>
             <button
               onClick={finalizarECorrigirSimulado}
               disabled={corrigindo}
-              className="rounded-full bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-emerald-500 transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="rounded-xl bg-emerald-600 hover:bg-emerald-500 px-4 py-1.5 text-xs font-bold text-white transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               <CheckCircle2 className="h-3.5 w-3.5" />
-              {corrigindo ? 'Avaliando com Banca FGV...' : '🏁 Finalizar Simulado & Corrigir'}
+              <span>{corrigindo ? 'Avaliando com Banca FGV...' : '🏁 Corrigir com Espelho FGV'}</span>
             </button>
           </div>
         </div>
