@@ -61,6 +61,8 @@ import {
   SoundscapeTipo,
   SOUNDSCAPE_OPCOES
 } from './utils/soundscapes';
+import { analisarPecaEmTempoReal } from './utils/pecaAnalyzer';
+import { SimuladorAnalisePecaCard } from './components/SimuladorAnalisePecaCard';
 import {
   BookOpen,
   Calendar,
@@ -595,6 +597,7 @@ export default function App() {
 
   // Aba ativa na seção de Disciplina & Automações do Dashboard (Alarme Diário vs Lembrete Word)
   const [disciplinaTab, setDisciplinaTab] = useState<'alarme' | 'word'>('alarme');
+  const [painelAutomacoesAberto, setPainelAutomacoesAberto] = useState(false);
 
   // Sub-aba no Card Pomodoro da Sidebar (Blocos Diários vs Soundscape de Foco)
   const [pomodoroSubTab, setPomodoroSubTab] = useState<'blocos' | 'soundscape'>('blocos');
@@ -1377,6 +1380,22 @@ export default function App() {
     return textoRedacao.split('\n').length;
   }, [textoRedacao]);
 
+  // Análise Heurística de Peça em Tempo Real no Simulador FGV (Grounded em 32+ Exames e Teses)
+  const analisePecaAtual = useMemo(() => {
+    const caso = CASOS_SIMULADO[casoIndex];
+    return analisarPecaEmTempoReal(caso?.enunciado || '', textoRedacao);
+  }, [casoIndex, textoRedacao]);
+
+  const aplicarEsqueletoPecaSugerida = (esqueleto: string) => {
+    if (textoRedacao.trim() !== '' && !window.confirm('Substituir a redação da folha pelo esqueleto da peça identificada?')) {
+      return;
+    }
+    setTextoRedacao(esqueleto);
+    SafeStorage.set('tributa_redacao', esqueleto);
+    tocarAlarmeWebAudio('suave');
+    mostrarToast('⚡ Esqueleto padrão da FGV aplicado na folha de 150 linhas!');
+  };
+
   const totalLinhasSemana = useMemo(() => {
     return linhasAcumuladasSemana + Math.max(0, linhasCount);
   }, [linhasAcumuladasSemana, linhasCount]);
@@ -1584,46 +1603,79 @@ export default function App() {
   const totalTarefas = CRONOGRAMA_DATA.reduce((acc, curr) => acc + curr.tarefas.length, 0);
 
   return (
-    <div className={`flex h-screen w-screen flex-col overflow-hidden select-none ${tema === 'claro' ? 'theme-light bg-[#f3f3f3] text-[#1e1e1e]' : 'theme-dark dark bg-[#202020] text-[#f1f5f9]'}`}>
-      {/* WINDOWS 11 TITLEBAR CHROME */}
-      <header className="win11-titlebar shrink-0 z-50">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-[#0067c0] to-[#0078d4] font-bold text-[10px] text-white shadow-sm">
-            §
+    <div className={`flex h-screen w-screen flex-col overflow-hidden select-none ${tema === 'claro' ? 'theme-light bg-[#f6f6f7] text-[#1d1d1f]' : 'theme-dark dark bg-[#18181b] text-[#f4f4f5]'}`}>
+      {/* macOS SEQUOIA TITLEBAR CHROME */}
+      <header className="macos-titlebar shrink-0 z-50">
+        {/* Left: macOS Traffic Lights & Window Title */}
+        <div className="flex items-center gap-3">
+          <div className="macos-traffic-lights flex items-center gap-2">
+            <button
+              className="macos-traffic-btn close cursor-pointer"
+              title="Fechar (Cmd+W)"
+              onClick={() => mostrarToast('Janela fechada (Cmd+W)')}
+            >
+              <span>✕</span>
+            </button>
+            <button
+              className="macos-traffic-btn minimize cursor-pointer"
+              title="Minimizar (Cmd+M)"
+              onClick={() => mostrarToast('Janela minimizada para o Dock')}
+            >
+              <span>―</span>
+            </button>
+            <button
+              className="macos-traffic-btn zoom cursor-pointer"
+              title="Maximizar / Tela Cheia"
+              onClick={() => {
+                if (!document.fullscreenElement) {
+                  document.documentElement.requestFullscreen().catch(() => {});
+                } else {
+                  document.exitFullscreen().catch(() => {});
+                }
+              }}
+            >
+              <span>+</span>
+            </button>
           </div>
-          <span className="font-semibold tracking-tight text-xs flex items-center gap-1.5 text-slate-900 dark:text-white">
-            TributaOAB Desktop Pro
-            <span className="hidden sm:inline text-[9.5px] font-normal border border-black/10 dark:border-white/15 px-1.5 py-0.2 rounded bg-black/[0.04] dark:bg-white/[0.06] text-slate-600 dark:text-slate-300">
-              Windows 11 Fluent
+
+          <div className="flex items-center gap-2 ml-1">
+            <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 font-bold text-[10px] text-white shadow-xs">
+              §
+            </div>
+            <span className="font-semibold tracking-tight text-xs flex items-center gap-1.5 text-zinc-900 dark:text-zinc-100">
+              TributaOAB Pro
+              <span className="hidden sm:inline text-[9.5px] font-medium border border-black/10 dark:border-white/10 px-1.5 py-0.2 rounded-full bg-black/5 dark:bg-white/10 text-zinc-600 dark:text-zinc-300">
+                macOS Sequoia
+              </span>
             </span>
-          </span>
+          </div>
         </div>
 
-        {/* Windows 11 Centered Search Bar */}
+        {/* Center: macOS Spotlight Style Unified Search Bar */}
         <button
           onClick={() => setBuscaGlobalAberta(true)}
-          className="hidden md:flex items-center justify-between w-72 lg:w-96 rounded-md border border-black/10 dark:border-white/10 bg-black/[0.04] dark:bg-white/[0.06] hover:bg-black/[0.07] dark:hover:bg-white/[0.09] px-3 py-1 text-xs text-slate-700 dark:text-slate-300 transition cursor-pointer"
-          title="Pesquisar em todas as abas (Ctrl+K ou /)"
+          className="hidden md:flex items-center justify-between w-72 lg:w-96 rounded-full border border-black/10 dark:border-white/10 bg-black/[0.04] dark:bg-white/[0.08] hover:bg-black/[0.07] dark:hover:bg-white/[0.12] px-3.5 py-1 text-xs text-zinc-700 dark:text-zinc-300 transition cursor-pointer backdrop-blur-md shadow-xs"
+          title="Pesquisar em todas as abas (Cmd+K ou /)"
         >
           <span className="flex items-center gap-2">
-            <Search className="h-3.5 w-3.5 text-[#0067c0] dark:text-[#4cc2ff]" />
-            <span className="text-[11.5px] text-slate-500 dark:text-slate-400">Pesquisar peças, teses, súmulas, vade...</span>
+            <Search className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
+            <span className="text-[11.5px] text-zinc-500 dark:text-zinc-400">Spotlight: Peças, teses, súmulas, vade...</span>
           </span>
-          <kbd className="rounded bg-black/10 dark:bg-black/40 border border-black/10 dark:border-white/10 px-1.5 py-0.2 font-mono text-[9px] text-slate-600 dark:text-slate-400">
-            Ctrl+K
+          <kbd className="rounded-md bg-black/10 dark:bg-black/50 border border-black/10 dark:border-white/10 px-1.5 py-0.2 font-mono text-[9px] text-zinc-700 dark:text-zinc-300">
+            ⌘K
           </kbd>
         </button>
 
-        {/* Right Controls & Caption Buttons */}
+        {/* Right: Theme Toggle & Online Legal Sync Pill */}
         <div className="flex items-center gap-2 h-full">
-          {/* Botão de Alternar Tema Claro / Escuro & Sincronização com SO */}
+          {/* Alternar Tema Claro / Escuro & Sincronização com SO */}
           <div className="flex items-center gap-1">
             <button
               onClick={alternarTema}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition cursor-pointer ${
                 tema === 'claro'
                   ? 'bg-amber-100/90 text-amber-900 border border-amber-300 hover:bg-amber-200 shadow-xs'
-                  : 'bg-white/10 text-slate-200 border border-white/10 hover:bg-white/20'
+                  : 'bg-zinc-800 text-zinc-200 border border-white/10 hover:bg-zinc-700 shadow-xs'
               }`}
               title={
                 tema === 'claro'
@@ -1634,20 +1686,20 @@ export default function App() {
               {tema === 'claro' ? (
                 <>
                   <Sun className="h-3.5 w-3.5 text-amber-600 fill-amber-500/30" />
-                  <span className="hidden sm:inline">Tema Claro</span>
+                  <span className="hidden sm:inline">Claro</span>
                 </>
               ) : (
                 <>
-                  <Moon className="h-3.5 w-3.5 text-sky-400 fill-sky-400/30" />
-                  <span className="hidden sm:inline">Tema Escuro</span>
+                  <Moon className="h-3.5 w-3.5 text-blue-400 fill-blue-400/30" />
+                  <span className="hidden sm:inline">Escuro</span>
                 </>
               )}
               {!temaManual && (
                 <span
-                  className="text-[9.5px] font-bold px-1.5 py-0.2 rounded bg-black/10 dark:bg-white/15 opacity-80"
+                  className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-black/10 dark:bg-white/15 opacity-80"
                   title="Detectado automaticamente a partir do Sistema Operacional (prefers-color-scheme)"
                 >
-                  SO
+                  Auto
                 </span>
               )}
             </button>
@@ -1655,11 +1707,11 @@ export default function App() {
             {temaManual && (
               <button
                 onClick={sincronizarComTemaSO}
-                className="flex items-center gap-1 px-1.5 py-1 rounded-md text-[11px] font-medium border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-sky-500/10 hover:text-sky-500 dark:hover:text-sky-400 transition cursor-pointer"
+                className="flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-blue-500/10 hover:text-blue-500 dark:hover:text-blue-400 transition cursor-pointer"
                 title="Sincronizar com o tema do Sistema Operacional (prefers-color-scheme)"
               >
                 <Monitor className="h-3 w-3" />
-                <span className="hidden md:inline text-[10px]">Seguir SO</span>
+                <span className="hidden md:inline text-[10px]">SO</span>
               </button>
             )}
           </div>
@@ -1668,7 +1720,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setModalAtualizacoesAberta(true)}
-            className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 transition cursor-pointer"
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 transition cursor-pointer text-xs"
             title="Sempre Online: Sincronização contínua de Leis e Banco de Dados ativada (Clique para abrir a Central)"
           >
             <span
@@ -1676,44 +1728,13 @@ export default function App() {
                 statusConexao.online ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'
               }`}
             />
-            <span className="font-medium text-slate-800 dark:text-slate-200">
+            <span className="font-medium text-zinc-800 dark:text-zinc-200">
               {statusConexao.online ? `Online (${statusConexao.latenciaMs}ms)` : 'Offline'}
             </span>
-            <span className="text-[10px] text-[#0067c0] dark:text-[#4cc2ff] font-bold">
+            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">
               • Leis v3.5
             </span>
           </button>
-
-          {/* Windows 11 Caption Controls */}
-          <div className="win11-window-controls">
-            <button
-              className="win11-caption-btn"
-              title="Minimizar"
-              onClick={() => mostrarToast('Janela minimizada para a barra de tarefas')}
-            >
-              <span className="text-sm font-mono leading-none">─</span>
-            </button>
-            <button
-              className="win11-caption-btn"
-              title="Maximizar / Restaurar"
-              onClick={() => {
-                if (!document.fullscreenElement) {
-                  document.documentElement.requestFullscreen().catch(() => {});
-                } else {
-                  document.exitFullscreen().catch(() => {});
-                }
-              }}
-            >
-              <span className="text-[11px] font-mono leading-none">▢</span>
-            </button>
-            <button
-              className="win11-caption-btn close"
-              title="Fechar"
-              onClick={() => mostrarToast('Atalho: use Alt+F4 para fechar no Windows')}
-            >
-              <span className="text-xs font-mono leading-none">✕</span>
-            </button>
-          </div>
         </div>
       </header>
 
@@ -2258,111 +2279,192 @@ export default function App() {
 
         {/* Content Body */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-6">
-          {/* TAB 1: DASHBOARD */}
+          {/* TAB 1: DASHBOARD (FLUIDO, INTUITIVO & LIMPO - macOS SEQUOIA) */}
           {activeTab === 'dashboard' && (
-            <div className="space-y-6 win11-animate">
-              {/* 1. HEADER DO PAINEL GERAL (WINDOWS 11 STYLE) */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-3 border-b border-black/[0.08] dark:border-white/[0.08]">
+            <div className="space-y-6 macos-animate">
+              {/* 1. HERO HEADER: GREETING & STATUS ESSENCIAL */}
+              <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-800/80 p-5 lg:p-6 backdrop-blur-xl shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                  <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                    <span>Painel do Candidato</span>
-                    <span className="text-xs font-normal px-2 py-0.5 rounded-md bg-[#0067c0]/10 text-[#0067c0] dark:bg-sky-500/10 dark:text-sky-400 border border-[#0067c0]/20 dark:border-sky-500/20 font-mono">
-                      2ª Fase OAB Tributário
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 font-mono">
+                      2ª Fase OAB • Direito Tributário
                     </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                      {statusConexao.online ? 'Base FGV Online' : 'Offline'}
+                    </span>
+                  </div>
+                  <h1 className="text-xl lg:text-2xl font-bold text-zinc-900 dark:text-white tracking-tight">
+                    Painel de Preparação Estratégica
                   </h1>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Acompanhamento integrado de redação no simulador, retenção em flashcards e disciplina diária.
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-xl">
+                    Visão unificada do seu ciclo de estudos: redação das 150 linhas com análise de peça em tempo real, sessões de foco e retenção das teses da FGV.
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
                     onClick={() => setActiveTab('cronograma')}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[#0067c0] hover:bg-[#0055a4] text-white text-xs font-semibold shadow-xs transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-xs transition cursor-pointer active:scale-95"
                   >
                     <Calendar className="h-3.5 w-3.5" />
                     <span>Simulado Semanal FGV</span>
                   </button>
                   <button
                     onClick={handleGerarRelatorioSemanalPdf}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-black/10 dark:border-white/10 bg-white dark:bg-[#2b2b2b] hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-medium shadow-xs transition cursor-pointer"
-                    title="Exporta relatório de desempenho compilado em PDF"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-200 text-xs font-medium shadow-xs transition cursor-pointer"
+                    title="Exportar relatório completo em PDF"
                   >
-                    <Download className="h-3.5 w-3.5 text-[#0067c0] dark:text-sky-400" />
+                    <Download className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
                     <span>Relatório PDF</span>
                   </button>
                   <button
                     onClick={() => exportarRedacaoNoWord(textoRedacao)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-black/10 dark:border-white/10 bg-white dark:bg-[#2b2b2b] hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-medium shadow-xs transition cursor-pointer"
-                    title="Exportar redação ativa para Word (.doc)"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-200 text-xs font-medium shadow-xs transition cursor-pointer"
+                    title="Backup da redação no Word (.doc)"
                   >
                     <FileText className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
-                    <span>Backup Word (.doc)</span>
+                    <span>Backup Word</span>
                   </button>
                 </div>
               </div>
 
-              {/* 2. TRÊS CARDS DE KPI (MÉTRICAS CHAVE DE HOJE) */}
+              {/* 2. TRÊS CARDS DE KPI DE ALTO IMPACTO (FLUIDOS & REATIVOS) */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* KPI 1: Linhas Redigidas no Simulador */}
-                <div className="win11-widget-card rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-[#272727] p-4 flex flex-col justify-between shadow-xs">
+                {/* KPI 1: Folha Padrão 150L & Análise Heurística da Peça */}
+                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-800/80 p-4.5 flex flex-col justify-between backdrop-blur-xl shadow-xs transition-all hover:shadow-md">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-[#0067c0] dark:text-sky-400 flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
                         <FileText className="h-4 w-4" />
-                        Linhas no Simulador FGV
+                        Simulador 150 Linhas
                       </span>
-                      <span className="text-[10px] font-mono font-bold text-sky-800 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 border border-sky-300 dark:border-sky-500/30 px-2 py-0.5 rounded-full">
-                        {totalLinhasSemana >= 150 ? 'Meta 150L Atingida! 🎯' : 'Meta: 150 Linhas'}
+                      <span className="text-[10px] font-mono font-bold text-blue-800 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border border-blue-300 dark:border-blue-500/30 px-2 py-0.5 rounded-full">
+                        {totalLinhasSemana >= 150 ? 'Meta 150L Concluída! 🎯' : 'Meta: 150L'}
                       </span>
                     </div>
 
-                    <div className="flex items-baseline gap-2 my-2">
-                      <span className="font-mono text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                    <div className="flex items-baseline gap-2 my-1.5">
+                      <span className="font-mono text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
                         {totalLinhasSemana}
                       </span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">/ 150 linhas</span>
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">/ 150 linhas</span>
+                      <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold ml-auto">
+                        {linhasCount}L no editor
+                      </span>
                     </div>
 
-                    {/* Barra de Progresso */}
-                    <div className="space-y-1 mt-2">
-                      <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
-                        <span>Progresso semanal</span>
-                        <span>{Math.round((totalLinhasSemana / 150) * 100)}%</span>
-                      </div>
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-black/40">
+                    {/* Barra de Progresso Fluida */}
+                    <div className="space-y-1 my-2">
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/10">
                         <div
-                          className="h-full bg-gradient-to-r from-[#0067c0] to-blue-500 transition-all duration-500 rounded-full"
+                          className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-500 rounded-full"
                           style={{ width: `${Math.min(100, Math.round((totalLinhasSemana / 150) * 100))}%` }}
                         />
                       </div>
                     </div>
 
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-3">
-                      Páginas: <strong className="text-slate-700 dark:text-slate-200">{Math.min(5, Math.ceil(totalLinhasSemana / 30))}/5</strong> · Redação ativa: <strong className="text-slate-700 dark:text-slate-200">{linhasCount}L</strong>
+                    {/* Chip de Análise em Tempo Real no Simulador */}
+                    <div className="mt-2.5 p-2 rounded-xl border border-blue-500/20 bg-blue-50/50 dark:bg-blue-950/30 text-[11px] text-zinc-700 dark:text-zinc-300 flex items-center justify-between gap-2">
+                      <span className="truncate">
+                        🎯 Peça Provável: <strong className="text-blue-600 dark:text-blue-400">{analisePecaAtual.pecaMaisProvavel?.nome || 'Analisando...'}</strong>
+                      </span>
+                      <span className="font-mono text-[10px] font-bold text-blue-700 dark:text-blue-300 shrink-0">
+                        {analisePecaAtual.pecaMaisProvavel?.probabilidade || 0}%
+                      </span>
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-black/[0.06] dark:border-white/10 flex items-center justify-between">
+                  <div className="mt-4 pt-3 border-t border-black/5 dark:border-white/10 flex items-center justify-between">
                     <button
                       onClick={() => setActiveTab('simulador')}
-                      className="text-xs font-bold text-[#0067c0] dark:text-sky-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                      className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
                     >
-                      <span>Abrir Folha Padrão</span>
+                      <span>Abrir Simulador</span>
                       <ArrowRight className="h-3.5 w-3.5" />
                     </button>
                     <button
                       onClick={() => adicionarLinhasAoTotalSemana(30)}
-                      className="rounded-md border border-black/10 dark:border-white/10 bg-black/[0.04] dark:bg-black/30 hover:bg-black/10 dark:hover:bg-white/10 px-2 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300 transition cursor-pointer"
-                      title="Registrar 1 página (30 linhas) simulada"
+                      className="rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 px-2 py-1 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
+                      title="Registrar +1 página (30 linhas) no histórico semanal"
                     >
                       +30L
                     </button>
                   </div>
                 </div>
 
-                {/* KPI 2: Retenção em Flashcards */}
-                <div className="win11-widget-card rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-[#272727] p-4 flex flex-col justify-between shadow-xs">
+                {/* KPI 2: Pomodoro & Blocos Diários */}
+                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-800/80 p-4.5 flex flex-col justify-between backdrop-blur-xl shadow-xs transition-all hover:shadow-md">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                        <Clock className="h-4 w-4" />
+                        Sessão de Foco Pomodoro
+                      </span>
+                      <span className="text-[10px] font-mono font-bold text-rose-800 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-500/30 px-2 py-0.5 rounded-full">
+                        {pomodoroBlocosHoje >= 4 ? 'Meta Cumprida! 🔥' : 'Meta: 4 Blocos'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-baseline gap-2 my-1.5">
+                      <span className="font-mono text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
+                        {pomodoroBlocosHoje}
+                      </span>
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">/ 4 blocos</span>
+                      <span className="text-xs text-rose-600 dark:text-rose-400 font-semibold ml-auto">
+                        {pomodoroBlocosHoje * (pomodoroModo === '25m' ? 25 : 50)} min de foco
+                      </span>
+                    </div>
+
+                    {/* 4 Blocos em Pill Slots Elegantes */}
+                    <div className="grid grid-cols-4 gap-1.5 my-2">
+                      {[0, 1, 2, 3].map(slotIdx => (
+                        <div
+                          key={slotIdx}
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            pomodoroBlocosHoje > slotIdx
+                              ? 'bg-rose-500 shadow-xs'
+                              : 'bg-black/5 dark:bg-white/10'
+                          }`}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Chip de Soundscape Ativo */}
+                    <div className="mt-2.5 p-2 rounded-xl border border-rose-500/20 bg-rose-50/50 dark:bg-rose-950/30 text-[11px] text-zinc-700 dark:text-zinc-300 flex items-center justify-between gap-2">
+                      <span className="truncate flex items-center gap-1">
+                        <Headphones className="h-3 w-3 text-rose-500 shrink-0" />
+                        <span>Soundscape: <strong className="text-rose-600 dark:text-rose-400">{SOUNDSCAPE_OPCOES.find(o => o.id === soundscapeTipo)?.nome || 'Silencioso'}</strong></span>
+                      </span>
+                      <span className="text-[10px] text-zinc-400 font-mono">🌙 Auto-reset 00h</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-black/5 dark:border-white/10 flex items-center justify-between">
+                    <button
+                      onClick={() => {
+                        if (pomodoroRunning) {
+                          pausarPomodoro();
+                        } else {
+                          iniciarPomodoro();
+                        }
+                      }}
+                      className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <Play className="h-3 w-3 fill-current" />
+                      <span>{pomodoroRunning ? 'Pausar Timer' : 'Focar Agora'}</span>
+                    </button>
+                    <button
+                      onClick={() => ajustarBlocosPomodoroHoje(1)}
+                      className="rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 px-2 py-1 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
+                      title="+1 bloco concluído"
+                    >
+                      +1 Bloco
+                    </button>
+                  </div>
+                </div>
+
+                {/* KPI 3: Retenção em Flashcards & Teses */}
+                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-800/80 p-4.5 flex flex-col justify-between backdrop-blur-xl shadow-xs transition-all hover:shadow-md">
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
@@ -2374,22 +2476,18 @@ export default function App() {
                       </span>
                     </div>
 
-                    <div className="flex items-baseline gap-2 my-2">
-                      <span className="font-mono text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                    <div className="flex items-baseline gap-2 my-1.5">
+                      <span className="font-mono text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
                         {taxaAcertoEstimada}%
                       </span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">
                         ({flashStats.acertos}/{flashStats.total} revisões)
                       </span>
                     </div>
 
-                    {/* Barra de Progresso */}
-                    <div className="space-y-1 mt-2">
-                      <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
-                        <span>Taxa de retenção</span>
-                        <span>Meta FGV: 75%</span>
-                      </div>
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-black/40">
+                    {/* Barra de Progresso Fluida */}
+                    <div className="space-y-1 my-2">
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/10">
                         <div
                           className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500 rounded-full"
                           style={{ width: `${Math.min(100, taxaAcertoEstimada)}%` }}
@@ -2397,12 +2495,16 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-3 truncate">
-                      Repetição espaçada de teses, súmulas e peças da 2ª Fase.
+                    {/* Chip de Memorização Espaçada */}
+                    <div className="mt-2.5 p-2 rounded-xl border border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/30 text-[11px] text-zinc-700 dark:text-zinc-300 flex items-center justify-between gap-2">
+                      <span className="truncate">
+                        ⚡ 36 Flashcards com teses da 2ª Fase
+                      </span>
+                      <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Ativo</span>
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-black/[0.06] dark:border-white/10 flex items-center justify-between">
+                  <div className="mt-4 pt-3 border-t border-black/5 dark:border-white/10 flex items-center justify-between">
                     <button
                       onClick={() => setActiveTab('flashcards')}
                       className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
@@ -2417,82 +2519,15 @@ export default function App() {
                         SafeStorage.set('tributa_flash_stats', JSON.stringify(reset));
                         mostrarToast('Contador de flashcards reiniciado!');
                       }}
-                      className="text-[10px] text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                      className="text-[10px] text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 cursor-pointer"
                     >
                       Zerar
                     </button>
                   </div>
                 </div>
-
-                {/* KPI 3: Blocos Pomodoro Diários */}
-                <div className="win11-widget-card rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-[#272727] p-4 flex flex-col justify-between shadow-xs">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
-                        <Clock className="h-4 w-4" />
-                        Blocos de Foco Hoje
-                      </span>
-                      <span className="text-[10px] font-mono font-bold text-rose-800 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-500/30 px-2 py-0.5 rounded-full">
-                        {pomodoroBlocosHoje >= 4 ? 'Meta Batida! 🔥' : 'Meta: 4 Blocos'}
-                      </span>
-                    </div>
-
-                    <div className="flex items-baseline gap-2 my-2">
-                      <span className="font-mono text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                        {pomodoroBlocosHoje}
-                      </span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">/ 4 blocos</span>
-                      <span className="text-xs text-rose-600 dark:text-rose-300 ml-auto">
-                        ({pomodoroBlocosHoje * (pomodoroModo === '25m' ? 25 : 50)} min)
-                      </span>
-                    </div>
-
-                    {/* Barra de Progresso */}
-                    <div className="space-y-1 mt-2">
-                      <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
-                        <span>Foco cumprido</span>
-                        <span>{Math.min(100, Math.round((pomodoroBlocosHoje / 4) * 100))}%</span>
-                      </div>
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-black/40">
-                        <div
-                          className="h-full bg-gradient-to-r from-rose-500 to-amber-500 transition-all duration-500 rounded-full"
-                          style={{ width: `${Math.min(100, Math.round((pomodoroBlocosHoje / 4) * 100))}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-3 flex items-center justify-between">
-                      <span>Modo: <strong className="text-slate-700 dark:text-slate-200">{pomodoroModo === '25m' ? '25m Clássico' : '50m Padrão'}</strong></span>
-                      <span className="text-slate-400 font-mono text-[10px]">🌙 Reset 00:00</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-black/[0.06] dark:border-white/10 flex items-center justify-between">
-                    <button
-                      onClick={() => {
-                        if (pomodoroRunning) {
-                          pausarPomodoro();
-                        } else {
-                          iniciarPomodoro();
-                        }
-                      }}
-                      className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      <Play className="h-3 w-3 fill-current" />
-                      <span>{pomodoroRunning ? 'Pausar Pomodoro' : 'Focar Agora'}</span>
-                    </button>
-                    <button
-                      onClick={() => ajustarBlocosPomodoroHoje(1)}
-                      className="rounded-md border border-black/10 dark:border-white/10 bg-black/[0.04] dark:bg-black/30 hover:bg-black/10 dark:hover:bg-white/10 px-2 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300 transition cursor-pointer"
-                      title="+1 bloco registrado manualmente"
-                    >
-                      +1 Bloco
-                    </button>
-                  </div>
-                </div>
               </div>
 
-              {/* 3. PREPARAÇÃO DO DIA (LADO A LADO: METAS DIÁRIAS + DICA ESTRATÉGICA) */}
+              {/* 3. WORKFLOW DIÁRIO: METAS DO DIA & DICA ESTRATÉGICA */}
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
                 <MetasDiariasCard
                   onNavigateToTab={(tab) => setActiveTab(tab as TabType)}
@@ -2504,7 +2539,7 @@ export default function App() {
                 />
               </div>
 
-              {/* 4. EVOLUÇÃO & ANÁLISE GRÁFICA (LADO A LADO: CRONOGRAMA 8 SEMANAS + EVOLUÇÃO MENSAL) */}
+              {/* 4. ANÁLISE GRÁFICA & EVOLUÇÃO SEMANAL */}
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
                 <CronogramaProgressoChart
                   tarefasConcluidas={tarefasConcluidas}
@@ -2519,462 +2554,226 @@ export default function App() {
                 />
               </div>
 
-              {/* 5. DISCIPLINA & AUTOMAÇÕES (COM ABAS LIMPAS: ALARME DIÁRIO VS LEMBRETE WORD) */}
-              <div className="win11-widget-card rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-[#272727] p-5 shadow-xs space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div>
-                    <h2 className="text-base font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                      <Bell className="h-4 w-4 text-amber-500 dark:text-amber-400" />
-                      <span>Disciplina & Automações de Estudo</span>
-                    </h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Configure alarmes com Web Audio API e lembretes automáticos salvos no seu navegador.
-                    </p>
+              {/* 5. RADAR HISTÓRICO FGV & DATAS OFICIAIS (BARRA LIMPA & LEVE) */}
+              <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-800/80 p-5 backdrop-blur-xl shadow-xs space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Award className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
+                      Distribuição Histórica das Peças FGV (32 Exames)
+                    </h3>
                   </div>
-
-                  {/* Alternador Limpo entre Alarme Diário e Lembrete Word */}
-                  <div className="flex items-center rounded-lg bg-slate-100 dark:bg-black/30 p-1 border border-black/[0.06] dark:border-white/5 self-start sm:self-auto">
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-zinc-500 dark:text-zinc-400">Prova Oficial:</span>
+                    <strong className="font-mono text-blue-600 dark:text-blue-400">
+                      {diasProva >= 0 ? `${diasProva} dias` : 'Hoje'} (13h-18h)
+                    </strong>
                     <button
-                      type="button"
-                      onClick={() => setDisciplinaTab('alarme')}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-md transition cursor-pointer flex items-center gap-1.5 ${
-                        disciplinaTab === 'alarme'
-                          ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold border border-amber-500/30 shadow-xs'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                      }`}
+                      onClick={() => setActiveTab('pecas')}
+                      className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline ml-2 cursor-pointer"
                     >
-                      <Clock className="h-3.5 w-3.5" />
-                      <span>Alarme Diário ({notifHorario})</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDisciplinaTab('word')}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-md transition cursor-pointer flex items-center gap-1.5 ${
-                        disciplinaTab === 'word'
-                          ? 'bg-[#0067c0]/15 text-[#0067c0] dark:text-[#4cc2ff] font-bold border border-[#0067c0]/30 shadow-xs'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                      }`}
-                    >
-                      <Download className="h-3.5 w-3.5" />
-                      <span>Lembrete Word (.doc)</span>
+                      Ver Catálogo Completo →
                     </button>
                   </div>
                 </div>
 
-                {/* CONTEÚDO DA ABA 1: ALARME DIÁRIO DE ESTUDO */}
-                {disciplinaTab === 'alarme' && (
-                  <div className="space-y-4 pt-1">
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                      {/* Horário & Presets */}
-                      <div className="md:col-span-5 rounded-xl border border-black/[0.08] dark:border-white/10 bg-slate-50 dark:bg-black/20 p-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <label htmlFor="horario-estudo-input" className="text-xs font-bold text-amber-600 dark:text-amber-300 flex items-center gap-1.5">
-                            <Clock className="h-3.5 w-3.5" /> Horário Programado:
-                          </label>
-                          <span className="font-mono text-sm font-bold text-slate-800 dark:text-white bg-slate-200/70 dark:bg-black/40 px-2.5 py-0.5 rounded-lg border border-black/[0.08] dark:border-white/10">
-                            {notifHorario}
-                          </span>
-                        </div>
-
-                        <input
-                          id="horario-estudo-input"
-                          type="time"
-                          value={notifHorario}
-                          onChange={e => handleNotifHorarioChange(e.target.value)}
-                          className="rounded-lg border border-black/[0.12] dark:border-white/10 bg-white dark:bg-black/40 px-3 py-1.5 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 w-full"
-                        />
-
-                        {/* Presets Rápidos */}
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400">Sugestões:</span>
-                          {['06:30', '08:00', '13:30', '19:00', '20:00', '21:30'].map(h => (
-                            <button
-                              key={h}
-                              type="button"
-                              onClick={() => handleNotifHorarioChange(h)}
-                              className={`rounded-md px-2 py-0.5 font-mono text-[11px] font-semibold transition cursor-pointer ${
-                                notifHorario === h
-                                  ? 'bg-amber-500 text-slate-950 font-bold'
-                                  : 'bg-slate-200/70 dark:bg-black/30 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 border border-black/[0.06] dark:border-white/5'
-                              }`}
-                            >
-                              {h}
-                            </button>
-                          ))}
-                        </div>
+                {/* Grid Compacta dos 6 Principais Modelos */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                  {[
+                    { nome: 'Mandado de Segurança', freq: '10x', pct: '31%', cor: 'border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300' },
+                    { nome: 'Recurso de Apelação', freq: '9x', pct: '28%', cor: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' },
+                    { nome: 'Agravo de Instrumento', freq: '7x', pct: '22%', cor: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300' },
+                    { nome: 'Ação Anulatória', freq: '7x', pct: '22%', cor: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300' },
+                    { nome: 'Repetição de Indébito', freq: '6x', pct: '19%', cor: 'border-purple-500/30 bg-purple-500/10 text-purple-700 dark:text-purple-300' },
+                    { nome: 'Embargos à Execução', freq: '4x', pct: '13%', cor: 'border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300' }
+                  ].map(p => (
+                    <div
+                      key={p.nome}
+                      className={`p-2.5 rounded-xl border ${p.cor} flex flex-col justify-between cursor-pointer hover:opacity-90 transition`}
+                      onClick={() => setActiveTab('pecas')}
+                      title={`Clique para estudar o modelo padrão de ${p.nome}`}
+                    >
+                      <div className="text-[11px] font-bold truncate">{p.nome}</div>
+                      <div className="flex items-center justify-between mt-1 text-[10px] font-mono">
+                        <span>{p.freq}</span>
+                        <span className="opacity-75">{p.pct}</span>
                       </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-                      {/* Mensagem e Frequência */}
-                      <div className="md:col-span-7 rounded-xl border border-black/[0.08] dark:border-white/10 bg-slate-50 dark:bg-black/20 p-4 space-y-3">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <label className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 cursor-pointer">
+              {/* 6. PREFERÊNCIAS & AUTOMAÇÕES (PAINEL COMPACTO & RETRÁTIL) */}
+              <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-800/80 backdrop-blur-xl shadow-xs overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setPainelAutomacoesAberto(!painelAutomacoesAberto)}
+                  className="w-full p-4 flex items-center justify-between text-left hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                      <Bell className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                        <span>Preferências de Alarme & Automações de Backup</span>
+                        <span className="text-[10px] font-normal px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-zinc-500 dark:text-zinc-400 font-mono">
+                          {notifAtiva ? `Alarme ${notifHorario}` : 'Alarme Pausado'} • {tomAlarme.toUpperCase()}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                        {painelAutomacoesAberto ? 'Clique para recolher as opções avançadas' : 'Configure o tom do alarme Web Audio, horários diários e lembretes de exportação para Word'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+                      {painelAutomacoesAberto ? 'Recolher' : 'Configurar'}
+                    </span>
+                    <span className="text-zinc-400 font-mono text-xs">
+                      {painelAutomacoesAberto ? '▲' : '▼'}
+                    </span>
+                  </div>
+                </button>
+
+                {/* Conteúdo Retrátil */}
+                {painelAutomacoesAberto && (
+                  <div className="p-4 pt-1 border-t border-black/5 dark:border-white/10 space-y-4">
+                    {/* Abas Internas */}
+                    <div className="flex items-center gap-2 border-b border-black/5 dark:border-white/10 pb-2">
+                      <button
+                        type="button"
+                        onClick={() => setDisciplinaTab('alarme')}
+                        className={`px-3 py-1 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                          disciplinaTab === 'alarme'
+                            ? 'bg-blue-600 text-white shadow-xs'
+                            : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'
+                        }`}
+                      >
+                        ⏰ Alarme Diário & Tons
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDisciplinaTab('word')}
+                        className={`px-3 py-1 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                          disciplinaTab === 'word'
+                            ? 'bg-blue-600 text-white shadow-xs'
+                            : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'
+                        }`}
+                      >
+                        📄 Backup Semanal no Word
+                      </button>
+                    </div>
+
+                    {disciplinaTab === 'alarme' && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-3.5 rounded-xl border border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-black/20 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                              Horário Programado:
+                            </label>
+                            <input
+                              type="time"
+                              value={notifHorario}
+                              onChange={e => handleNotifHorarioChange(e.target.value)}
+                              className="rounded-lg border border-black/15 dark:border-white/15 bg-white dark:bg-zinc-800 px-2 py-1 text-xs font-bold text-zinc-900 dark:text-white"
+                            />
+                          </div>
+
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[10px] text-zinc-400">Atalhos:</span>
+                            {['06:30', '08:00', '13:30', '20:00', '21:30'].map(h => (
+                              <button
+                                key={h}
+                                type="button"
+                                onClick={() => handleNotifHorarioChange(h)}
+                                className={`rounded-md px-2 py-0.5 font-mono text-[10.5px] font-semibold transition cursor-pointer ${
+                                  notifHorario === h
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-black/5 dark:bg-white/10 text-zinc-700 dark:text-zinc-300'
+                                }`}
+                              >
+                                {h}
+                              </button>
+                            ))}
+                          </div>
+
+                          <label className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300 cursor-pointer pt-1">
                             <input
                               type="checkbox"
                               checked={notifAtiva}
                               onChange={e => handleNotifAtivaChange(e.target.checked)}
-                              className="h-4 w-4 rounded accent-emerald-500"
+                              className="h-4 w-4 rounded accent-blue-600"
                             />
-                            <span>Alarme Ativado Automaticamente</span>
+                            <span>Disparar alarme automaticamente</span>
                           </label>
+                        </div>
 
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className="text-slate-500 dark:text-slate-400">Frequência:</span>
-                            <select
-                              value={notifDias}
-                              onChange={e => handleNotifDiasChange(e.target.value)}
-                              className="rounded-md border border-black/[0.12] dark:border-white/10 bg-white dark:bg-black/40 px-2 py-1 text-xs text-slate-800 dark:text-white"
-                            >
-                              <option value="todos">Todos os Dias</option>
-                              <option value="seg-sex">Segunda a Sexta</option>
-                            </select>
+                        <div className="p-3.5 rounded-xl border border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-black/20 space-y-2.5">
+                          <div className="text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                            Tom do Alarme (Web Audio API):
                           </div>
-                        </div>
-
-                        <div>
-                          <div className="text-[11px] text-slate-500 dark:text-slate-400 mb-1">
-                            Mensagem de Incentivo Diária:
-                          </div>
-                          <input
-                            type="text"
-                            value={notifMensagem}
-                            onChange={e => handleNotifMensagemChange(e.target.value)}
-                            placeholder="Ex: Hora do Bloco Tributário FGV: 1 Peça + 5 Flashcards"
-                            className="w-full rounded-lg border border-black/[0.12] dark:border-white/10 bg-white dark:bg-black/40 px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-amber-500"
-                          />
-                        </div>
-
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
-                          <span className="flex items-center gap-1.5">
-                            <span className={`h-2 w-2 rounded-full ${notifAtiva ? 'bg-emerald-500 animate-ping' : 'bg-slate-400 dark:bg-slate-600'}`}></span>
-                            Status: <strong className="text-slate-800 dark:text-white">{notifAtiva ? `Ativo às ${notifHorario}` : 'Desativado'}</strong>
-                          </span>
-                          <button
-                            type="button"
-                            onClick={testarNotificacaoManual}
-                            className="text-xs font-bold text-amber-600 dark:text-amber-300 hover:text-amber-500 dark:hover:text-amber-200 underline cursor-pointer"
-                          >
-                            Testar Notificação Agora →
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Seletor dos 3 Tons do Alarme */}
-                    <div className="pt-2">
-                      <div className="text-xs font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-1.5">
-                        <Volume2 className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
-                        <span>Tom do Alarme Sonoro (Web Audio API):</span>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {TONS_ALARME.map((t) => {
-                          const ativo = tomAlarme === t.id;
-                          return (
-                            <div
-                              key={t.id}
-                              onClick={() => handleTomAlarmeChange(t.id)}
-                              className={`cursor-pointer rounded-xl border p-3 transition flex flex-col justify-between ${
-                                ativo
-                                  ? 'border-amber-500 dark:border-amber-400 bg-amber-500/10 dark:bg-amber-500/15 shadow-xs'
-                                  : 'border-black/[0.08] dark:border-white/10 bg-slate-50 dark:bg-black/20 hover:bg-slate-100 dark:hover:bg-black/30'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                                  <span>{t.icone}</span>
-                                  <span>{t.nome}</span>
-                                </span>
-                                {ativo && (
-                                  <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">✓ Ativo</span>
-                                )}
-                              </div>
-                              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 mb-2 leading-relaxed">
-                                {t.descricao}
-                              </p>
+                          <div className="grid grid-cols-3 gap-1.5">
+                            {TONS_ALARME.map(t => (
                               <button
+                                key={t.id}
                                 type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
+                                onClick={() => {
+                                  handleTomAlarmeChange(t.id);
                                   tocarAlarmeWebAudio(t.id);
                                 }}
-                                className="text-[10px] font-bold text-amber-700 dark:text-amber-300 hover:text-amber-600 dark:hover:text-amber-200 bg-slate-200/80 dark:bg-black/40 hover:bg-slate-300 dark:hover:bg-black/60 px-2 py-1 rounded border border-black/[0.06] dark:border-white/10 inline-flex items-center justify-center gap-1 transition self-start"
+                                className={`p-2 rounded-lg border text-left text-xs transition cursor-pointer ${
+                                  tomAlarme === t.id
+                                    ? 'border-blue-500 bg-blue-500/10 text-blue-700 dark:text-blue-300 font-bold'
+                                    : 'border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
+                                }`}
                               >
-                                <Volume2 className="h-3 w-3" /> Ouvir tom
+                                <div>{t.icone} {t.nome}</div>
+                                <div className="text-[9px] text-zinc-400 mt-0.5 truncate">{t.descricao}</div>
                               </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                )}
+                            ))}
+                          </div>
 
-                {/* CONTEÚDO DA ABA 2: LEMBRETE SEMANAL DE EXPORTAÇÃO WORD */}
-                {disciplinaTab === 'word' && (
-                  <div className="space-y-4 pt-1">
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                      <div className="md:col-span-5 rounded-xl border border-black/[0.08] dark:border-white/10 bg-slate-50 dark:bg-black/20 p-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <label className="text-xs font-bold text-[#0067c0] dark:text-blue-300 flex items-center gap-1.5">
-                            <Calendar className="h-3.5 w-3.5" /> Frequência Semanal:
-                          </label>
-                          <span className="font-mono text-xs font-bold text-slate-800 dark:text-white bg-slate-200/70 dark:bg-black/40 px-2 py-0.5 rounded-lg border border-black/[0.08] dark:border-white/10">
-                            {notifWordDia === '0' ? 'Dom' : notifWordDia === '1' ? 'Seg' : notifWordDia === '2' ? 'Ter' : notifWordDia === '3' ? 'Qua' : notifWordDia === '4' ? 'Qui' : notifWordDia === '5' ? 'Sex' : 'Sáb'} • {notifWordHora}
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1">Dia da Semana:</label>
-                            <select
-                              value={notifWordDia}
-                              onChange={e => handleNotifWordDiaChange(e.target.value)}
-                              className="w-full rounded-md border border-black/[0.12] dark:border-white/10 bg-white dark:bg-black/40 px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#0067c0]"
+                          <div className="flex items-center justify-between pt-1">
+                            <button
+                              type="button"
+                              onClick={testarNotificacaoManual}
+                              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
                             >
-                              <option value="5">Sexta-feira (Recomendado)</option>
-                              <option value="6">Sábado</option>
-                              <option value="0">Domingo</option>
-                              <option value="1">Segunda-feira</option>
-                              <option value="2">Terça-feira</option>
-                              <option value="3">Quarta-feira</option>
-                              <option value="4">Quinta-feira</option>
-                            </select>
+                              Testar Alarme Agora →
+                            </button>
                           </div>
-                          <div>
-                            <label className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1">Horário:</label>
-                            <input
-                              type="time"
-                              value={notifWordHora}
-                              onChange={e => handleNotifWordHoraChange(e.target.value)}
-                              className="w-full rounded-md border border-black/[0.12] dark:border-white/10 bg-white dark:bg-black/40 px-2.5 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#0067c0]"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Presets Rápidos */}
-                        <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400">Sugestões:</span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              handleNotifWordDiaChange('5');
-                              handleNotifWordHoraChange('20:00');
-                            }}
-                            className={`rounded-md px-2 py-0.5 text-[10px] font-semibold transition cursor-pointer ${
-                              notifWordDia === '5' && notifWordHora === '20:00'
-                                ? 'bg-[#0067c0] text-white font-bold'
-                                : 'bg-slate-200/70 dark:bg-black/30 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 border border-black/[0.06] dark:border-white/5'
-                            }`}
-                          >
-                            Sexta 20h
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              handleNotifWordDiaChange('5');
-                              handleNotifWordHoraChange('22:00');
-                            }}
-                            className={`rounded-md px-2 py-0.5 text-[10px] font-semibold transition cursor-pointer ${
-                              notifWordDia === '5' && notifWordHora === '22:00'
-                                ? 'bg-[#0067c0] text-white font-bold'
-                                : 'bg-slate-200/70 dark:bg-black/30 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 border border-black/[0.06] dark:border-white/5'
-                            }`}
-                          >
-                            Sexta 22h
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              handleNotifWordDiaChange('0');
-                              handleNotifWordHoraChange('19:00');
-                            }}
-                            className={`rounded-md px-2 py-0.5 text-[10px] font-semibold transition cursor-pointer ${
-                              notifWordDia === '0' && notifWordHora === '19:00'
-                                ? 'bg-[#0067c0] text-white font-bold'
-                                : 'bg-slate-200/70 dark:bg-black/30 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 border border-black/[0.06] dark:border-white/5'
-                            }`}
-                          >
-                            Domingo 19h
-                          </button>
                         </div>
                       </div>
+                    )}
 
-                      <div className="md:col-span-7 rounded-xl border border-black/[0.08] dark:border-white/10 bg-slate-50 dark:bg-black/20 p-4 space-y-3">
+                    {disciplinaTab === 'word' && (
+                      <div className="p-3.5 rounded-xl border border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-black/20 space-y-3">
                         <div className="flex items-center justify-between flex-wrap gap-2">
-                          <label className="flex items-center gap-2 text-xs font-bold text-[#0067c0] dark:text-blue-400 cursor-pointer">
+                          <label className="flex items-center gap-2 text-xs font-bold text-zinc-800 dark:text-zinc-200 cursor-pointer">
                             <input
                               type="checkbox"
                               checked={notifWordAtivo}
                               onChange={e => handleNotifWordAtivoChange(e.target.checked)}
-                              className="h-4 w-4 rounded accent-[#0067c0]"
+                              className="h-4 w-4 rounded accent-blue-600"
                             />
-                            <span>Lembrete Semanal Ativado</span>
+                            <span>Lembrete Semanal de Backup no Word (.doc)</span>
                           </label>
 
-                          <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                            {linhasCount} linhas no editor
-                          </span>
-                        </div>
-
-                        <div>
-                          <div className="text-[11px] text-slate-500 dark:text-slate-400 mb-1">
-                            Mensagem do Alerta de Exportação Word:
-                          </div>
-                          <input
-                            type="text"
-                            value={notifWordMsg}
-                            onChange={e => handleNotifWordMsgChange(e.target.value)}
-                            placeholder="Ex: Hora de exportar sua peça prática para o Word (.doc) e manter seu backup em dia!"
-                            className="w-full rounded-md border border-black/[0.12] dark:border-white/10 bg-white dark:bg-black/40 px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-[#0067c0]"
-                          />
-                        </div>
-
-                        <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
-                          <button
-                            type="button"
-                            onClick={testarLembreteWordManual}
-                            className="text-xs font-bold text-[#0067c0] dark:text-blue-300 hover:underline cursor-pointer"
-                          >
-                            Testar Lembrete Word →
-                          </button>
                           <button
                             type="button"
                             onClick={() => exportarRedacaoNoWord(textoRedacao)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#0067c0] hover:bg-[#005fb8] text-white text-xs font-bold transition cursor-pointer shadow-xs"
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition cursor-pointer shadow-xs"
                           >
                             <Download className="h-3 w-3" />
-                            <span>Baixar Word (.doc) Agora</span>
+                            <span>Exportar Redação Atual</span>
                           </button>
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
-              </div>
-
-              {/* 6. RADAR DA PROVA & RANKING HISTÓRICO DE PEÇAS FGV */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                {/* Radar da Prova & Repescagem */}
-                <div className="win11-widget-card lg:col-span-6 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-[#272727] p-5 shadow-xs space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-amber-500 dark:text-amber-400" />
-                        <span>Radar da Prova FGV & Repescagem</span>
-                      </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Cronograma oficial do Exame de Ordem Unificado.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => testarAlarmeSonoro(tomAlarme)}
-                      className="rounded-md border border-black/10 dark:border-white/10 bg-black/[0.04] dark:bg-black/30 hover:bg-black/10 dark:hover:bg-white/10 px-2.5 py-1 text-xs text-slate-700 dark:text-slate-300 transition inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      <Volume2 className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
-                      <span>Som</span>
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* Inscrição Repescagem */}
-                    <div className="rounded-lg border border-black/[0.06] dark:border-white/10 bg-slate-50 dark:bg-black/20 p-3.5 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-amber-800 dark:text-amber-300">Inscrição Repescagem</span>
-                        <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-bold">
-                          {repescagemPaga ? 'Inscrito ✓' : diasRepescagem >= 0 ? `${diasRepescagem}d` : 'Verificar'}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400">Data limite:</span>
-                        <input
-                          type="date"
-                          value={dataRepescagem}
-                          onChange={e => handleRepescagemDateChange(e.target.value)}
-                          className="rounded-md border border-black/15 dark:border-white/10 bg-white dark:bg-black/40 px-2 py-0.5 text-xs text-slate-800 dark:text-white"
-                        />
-                      </div>
-                      <label className="flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400 cursor-pointer pt-1">
-                        <input
-                          type="checkbox"
-                          checked={repescagemPaga}
-                          onChange={e => handleRepescagemPagaChange(e.target.checked)}
-                          className="h-3.5 w-3.5 rounded accent-emerald-500"
-                        />
-                        <span>Inscrito e Boleto Pago</span>
-                      </label>
-                    </div>
-
-                    {/* Prova 5h */}
-                    <div className="rounded-lg border border-black/[0.06] dark:border-white/10 bg-slate-50 dark:bg-black/20 p-3.5 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-[#0067c0] dark:text-sky-300">Dia da Prova (5h)</span>
-                        <span className="text-[10px] font-mono text-[#0067c0] dark:text-sky-400 font-bold">
-                          {diasProva >= 0 ? `Faltam ${diasProva} dias` : 'Hoje'}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400">Data da prova:</span>
-                        <input
-                          type="date"
-                          value={dataProva}
-                          onChange={e => handleProvaDateChange(e.target.value)}
-                          className="rounded-md border border-black/15 dark:border-white/10 bg-white dark:bg-black/40 px-2 py-0.5 text-xs text-slate-800 dark:text-white"
-                        />
-                      </div>
-                      <p className="text-[10.5px] text-slate-500 dark:text-slate-400 pt-1">
-                        Horário FGV: 13h às 18h (5 horas corridas).
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Ranking Histórico de Peças FGV */}
-                <div className="win11-widget-card lg:col-span-6 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-[#272727] p-5 shadow-xs space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                        <Award className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                        <span>Ranking Histórico de Peças FGV</span>
-                      </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Frequência oficial nos Exames Unificados da OAB.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setActiveTab('pecas')}
-                      className="text-xs font-bold text-[#0067c0] dark:text-sky-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      <span>Ver modelos</span>
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                    <div className="flex items-center justify-between rounded-lg border border-black/[0.06] dark:border-white/5 bg-slate-50 dark:bg-black/20 p-2.5">
-                      <span className="text-slate-800 dark:text-slate-200">1º <strong>Mandado de Segurança</strong></span>
-                      <span className="font-mono text-[11px] font-bold text-emerald-600 dark:text-emerald-400">10x</span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg border border-black/[0.06] dark:border-white/5 bg-slate-50 dark:bg-black/20 p-2.5">
-                      <span className="text-slate-800 dark:text-slate-200">2º <strong>Recurso de Apelação</strong></span>
-                      <span className="font-mono text-[11px] font-bold text-emerald-600 dark:text-emerald-400">9x</span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg border border-black/[0.06] dark:border-white/5 bg-slate-50 dark:bg-black/20 p-2.5">
-                      <span className="text-slate-800 dark:text-slate-200">3º <strong>Agravo de Instrumento</strong></span>
-                      <span className="font-mono text-[11px] font-bold text-[#0067c0] dark:text-sky-400">7x</span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg border border-black/[0.06] dark:border-white/5 bg-slate-50 dark:bg-black/20 p-2.5">
-                      <span className="text-slate-800 dark:text-slate-200">4º <strong>Ação Anulatória</strong></span>
-                      <span className="font-mono text-[11px] font-bold text-amber-600 dark:text-amber-400">7x</span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg border border-black/[0.06] dark:border-white/5 bg-slate-50 dark:bg-black/20 p-2.5">
-                      <span className="text-slate-800 dark:text-slate-200">5º <strong>Repetição de Indébito</strong></span>
-                      <span className="font-mono text-[11px] font-bold text-amber-600 dark:text-amber-400">6x</span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg border border-black/[0.06] dark:border-white/5 bg-slate-50 dark:bg-black/20 p-2.5">
-                      <span className="text-slate-800 dark:text-slate-200">6º <strong>Embargos à Execução</strong></span>
-                      <span className="font-mono text-[11px] font-bold text-purple-600 dark:text-purple-400">4x</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           )}
@@ -3789,12 +3588,15 @@ export default function App() {
           {activeTab === 'simulador' && (
             <div className="space-y-4">
               {/* Header Bar */}
-              <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-4 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/90 dark:bg-zinc-800/90 p-4 shadow-xs backdrop-blur-md flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div className="flex-1 min-w-[260px]">
+                  <label className="text-[10.5px] font-bold text-zinc-500 dark:text-zinc-400 block mb-1">
+                    Caderno de Questões FGV / Caso Simulado:
+                  </label>
                   <select
                     value={casoIndex}
                     onChange={e => setCasoIndex(Number(e.target.value))}
-                    className="w-full rounded-xl border border-[#56677d] bg-[#1b232e] px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:border-sky-400"
+                    className="w-full rounded-xl border border-black/15 dark:border-white/15 bg-zinc-50 dark:bg-zinc-900/90 px-3 py-2 text-xs font-semibold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-blue-500"
                   >
                     {CASOS_SIMULADO.map(c => (
                       <option key={c.id} value={c.id}>
@@ -3805,9 +3607,9 @@ export default function App() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 rounded-xl border border-sky-400/60 bg-[#344154] px-3.5 py-1.5">
-                    <span className="text-[11px] text-slate-300">Relógio 5h:</span>
-                    <strong className="font-mono text-sm font-bold text-sky-300">
+                  <div className="flex items-center gap-2 rounded-xl border border-blue-500/30 bg-blue-50/60 dark:bg-blue-950/40 px-3.5 py-1.5 shadow-xs">
+                    <span className="text-[11px] font-medium text-zinc-600 dark:text-zinc-300">Relógio Oficial 5h:</span>
+                    <strong className="font-mono text-sm font-bold text-blue-600 dark:text-blue-400">
                       {format5hTimer(prova5hSecs)}
                     </strong>
                     <button
@@ -3815,17 +3617,17 @@ export default function App() {
                         if (!prova5hRunning) tocarAlarmeWebAudio();
                         setProva5hRunning(!prova5hRunning);
                       }}
-                      className="rounded-full bg-sky-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-sky-500 transition"
+                      className="rounded-full bg-blue-600 hover:bg-blue-500 px-3 py-1 text-[11px] font-semibold text-white shadow-xs transition cursor-pointer"
                     >
-                      {prova5hRunning ? 'Pausar 5h' : prova5hSecs < 5 * 3600 ? 'Retomar 5h' : 'Iniciar 5h'}
+                      {prova5hRunning ? 'Pausar' : prova5hSecs < 5 * 3600 ? 'Retomar' : 'Iniciar 5h'}
                     </button>
                     <button
                       onClick={() => {
                         setProva5hRunning(false);
                         setProva5hSecs(5 * 3600);
                       }}
-                      className="rounded-full border border-slate-600 px-2 py-1 text-[11px] text-slate-300 hover:bg-slate-600"
-                      title="Reiniciar 5h"
+                      className="rounded-full border border-black/10 dark:border-white/15 bg-black/5 dark:bg-white/10 px-2 py-1 text-[11px] text-zinc-700 dark:text-zinc-300 hover:bg-black/10 transition cursor-pointer"
+                      title="Reiniciar relógio de 5 horas"
                     >
                       <RotateCcw className="h-3 w-3" />
                     </button>
@@ -3835,23 +3637,30 @@ export default function App() {
 
               {/* Split layout: Enunciado & Folha */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-                {/* Left: Enunciado Oficial */}
+                {/* Left: Enunciado Oficial & Instruções */}
                 <div className="lg:col-span-4 space-y-4">
-                  <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-4 shadow-sm">
-                    <span className="badge b-AMARELO mb-2">Enunciado Oficial FGV</span>
-                    <h3 className="text-xs font-bold text-white mb-2">
+                  <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/90 dark:bg-zinc-800/90 p-4 shadow-xs backdrop-blur-md">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/20">
+                        Enunciado Oficial FGV
+                      </span>
+                      <span className="text-[10.5px] font-mono text-zinc-500 dark:text-zinc-400">Caso {casoIndex + 1}/3</span>
+                    </div>
+                    <h3 className="text-xs font-bold text-zinc-900 dark:text-white mb-2 leading-snug">
                       {CASOS_SIMULADO[casoIndex].titulo}
                     </h3>
-                    <p className="text-xs leading-relaxed text-slate-200">
+                    <p className="text-xs leading-relaxed text-zinc-700 dark:text-zinc-300">
                       {CASOS_SIMULADO[casoIndex].enunciado}
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-4 shadow-sm">
-                    <h4 className="text-xs font-bold text-sky-300 mb-2">Instruções da Banca FGV</h4>
-                    <ul className="list-disc pl-4 space-y-1 text-[11px] text-slate-300 leading-relaxed">
+                  <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/90 dark:bg-zinc-800/90 p-4 shadow-xs backdrop-blur-md">
+                    <h4 className="text-xs font-bold text-blue-600 dark:text-blue-400 mb-2 flex items-center gap-1.5">
+                      <span>Instruções da Banca Examinadora</span>
+                    </h4>
+                    <ul className="list-disc pl-4 space-y-1 text-[11px] text-zinc-600 dark:text-zinc-300 leading-relaxed">
                       <li>Use exclusivamente caneta esferográfica azul ou preta.</li>
-                      <li>Máximo de 150 linhas distribuídas em 5 páginas pautadas.</li>
+                      <li>Máximo de 150 linhas distribuídas rigorosamente em 5 páginas pautadas.</li>
                       <li>Proibida assinatura identificadora no corpo da peça (use "...").</li>
                       <li>Indique artigos e súmulas expressamente no mérito para pontuar.</li>
                     </ul>
@@ -3866,9 +3675,25 @@ export default function App() {
                   />
                 </div>
 
-                {/* Right: Folha Padrão 150 Linhas */}
-                <div className="lg:col-span-8 space-y-3">
-                  <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-4 shadow-sm">
+                {/* Right: Análise em Tempo Real + Folha Padrão 150 Linhas */}
+                <div className="lg:col-span-8 space-y-4">
+                  {/* Card de Análise Heurística de Peça em Tempo Real (FGV histórico + fatos + redação ativa) */}
+                  <SimuladorAnalisePecaCard
+                    analise={analisePecaAtual}
+                    onAdotarEsqueleto={(esqueleto, nomePeca) => {
+                      aplicarEsqueletoPecaSugerida(esqueleto);
+                      mostrarToast(`⚡ Esqueleto de ${nomePeca} adotado na folha de 150 linhas!`);
+                    }}
+                    onNavegarParaCatalogo={(codigoPeca: string) => {
+                      const achada = CATALOGO_PECAS.find(p => p.codigo.toUpperCase() === codigoPeca.toUpperCase());
+                      if (achada) {
+                        setPecaSelecionada(achada);
+                      }
+                      setActiveTab('pecas');
+                    }}
+                  />
+
+                  <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/90 dark:bg-zinc-800/90 p-4 shadow-xs backdrop-blur-md">
                     {/* Page Switcher & Mode Toggles */}
                     <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                       <div className="flex items-center gap-1.5">
@@ -3876,10 +3701,10 @@ export default function App() {
                           <button
                             key={p}
                             onClick={() => mudarPaginaFolha(p)}
-                            className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                            className={`rounded-full px-3 py-1 text-xs font-semibold transition cursor-pointer ${
                               paginaFolha === p
-                                ? 'bg-sky-600 text-white border border-sky-400'
-                                : 'border border-[#56677d] bg-[#3b495e] text-slate-200 hover:bg-slate-600'
+                                ? 'bg-blue-600 text-white shadow-xs'
+                                : 'border border-black/10 dark:border-white/15 bg-black/[0.04] dark:bg-white/[0.06] text-zinc-700 dark:text-zinc-300 hover:bg-black/10 dark:hover:bg-white/10'
                             }`}
                           >
                             Pág {p}
@@ -3901,14 +3726,14 @@ export default function App() {
                                 : 'Destaque de Sintaxe Jurídica desativado.'
                             );
                           }}
-                          className={`rounded-full px-3 py-1 text-xs font-semibold transition inline-flex items-center gap-1.5 shadow-sm cursor-pointer ${
+                          className={`rounded-full px-3 py-1 text-xs font-semibold transition inline-flex items-center gap-1.5 shadow-xs cursor-pointer ${
                             destaqueSintaxe
-                              ? 'bg-gradient-to-r from-sky-600 to-indigo-600 text-white border border-sky-400'
-                              : 'border border-[#56677d] bg-[#3b495e] text-slate-200 hover:bg-slate-600'
+                              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs'
+                              : 'border border-black/10 dark:border-white/15 bg-black/[0.04] dark:bg-white/[0.06] text-zinc-700 dark:text-zinc-300 hover:bg-black/10 dark:hover:bg-white/10'
                           }`}
                           title="Alternar modo de destaque de sintaxe jurídica FGV no texto da folha"
                         >
-                          <Sparkles className={`h-3.5 w-3.5 ${destaqueSintaxe ? 'text-amber-200 animate-spin' : 'text-slate-400'}`} />
+                          <Sparkles className={`h-3.5 w-3.5 ${destaqueSintaxe ? 'text-amber-200 animate-spin' : 'text-zinc-400'}`} />
                           <span>{destaqueSintaxe ? 'Destaque: Ativado' : 'Destaque de Sintaxe'}</span>
                         </button>
 
@@ -3916,10 +3741,10 @@ export default function App() {
                         {destaqueSintaxe && (
                           <button
                             onClick={toggleTooltipsSintaxe}
-                            className={`rounded-full px-3 py-1 text-xs font-semibold transition inline-flex items-center gap-1.5 shadow-sm cursor-pointer ${
+                            className={`rounded-full px-3 py-1 text-xs font-semibold transition inline-flex items-center gap-1.5 shadow-xs cursor-pointer ${
                               tooltipsAtivos
-                                ? 'bg-emerald-600 text-white border border-emerald-400 shadow-emerald-500/20'
-                                : 'border border-[#56677d] bg-[#3b495e] text-slate-300 hover:bg-slate-600'
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : 'border border-black/10 dark:border-white/15 bg-black/[0.04] dark:bg-white/[0.06] text-zinc-700 dark:text-zinc-300 hover:bg-black/10 dark:hover:bg-white/10'
                             }`}
                             title="Alternar exibição de janelas flutuantes com conceitos jurídicos e fundamentação ao passar o mouse sobre os termos"
                           >
@@ -3929,19 +3754,19 @@ export default function App() {
 
                         <button
                           onClick={() => setModalVersoesAberto(true)}
-                          className="rounded-full px-3 py-1 text-xs font-semibold transition inline-flex items-center gap-1.5 shadow-sm cursor-pointer border border-[#56677d] bg-[#3b495e] text-slate-200 hover:bg-slate-600 hover:text-white"
+                          className="rounded-full px-3 py-1 text-xs font-semibold transition inline-flex items-center gap-1.5 shadow-xs cursor-pointer border border-black/10 dark:border-white/15 bg-black/[0.04] dark:bg-white/[0.06] text-zinc-700 dark:text-zinc-300 hover:bg-black/10 dark:hover:bg-white/10"
                           title="Gerenciar e comparar versões da redação com visualização de diff"
                         >
-                          <History className="h-3.5 w-3.5 text-sky-400" />
+                          <History className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
                           <span>Versões ({versoesRedacao.length})</span>
                         </button>
 
                         <button
                           onClick={() => setModoRascunho(!modoRascunho)}
-                          className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                          className={`rounded-full px-3 py-1 text-xs font-semibold transition cursor-pointer ${
                             modoRascunho
-                              ? 'bg-amber-600 text-white border border-amber-400'
-                              : 'border border-[#56677d] bg-[#3b495e] text-slate-200 hover:bg-slate-600'
+                              ? 'bg-amber-600 text-white shadow-xs'
+                              : 'border border-black/10 dark:border-white/15 bg-black/[0.04] dark:bg-white/[0.06] text-zinc-700 dark:text-zinc-300 hover:bg-black/10 dark:hover:bg-white/10'
                           }`}
                         >
                           📋 {modoRascunho ? 'Modo Definitivo' : 'Alternar Rascunho'}

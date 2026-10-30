@@ -1,64 +1,81 @@
 /* ==========================================================================
-   TRIBUTAOAB DESKTOP PRO — WINDOWS 11 FLUENT DESIGN SYSTEM
-   Mica Alt Backgrounds, Acrylic Materials, Segoe UI Variable & Fluent Controls
+   TRIBUTAOAB DESKTOP PRO — macOS SEQUOIA / SONOMA DESIGN SYSTEM
+   Vibrant Frosted Glass, Traffic Light Window Controls, SF Pro Typography & Liquid macOS Surfaces
    ========================================================================== */
 
 :root {
-  /* Windows 11 Light Mode Default Palette (Fluent / Mica Light) */
-  --win11-desktop-bg: #f3f3f3;
-  --win11-mica-bg: #f8fafc;
-  --win11-acrylic-panel: rgba(248, 250, 252, 0.92);
-  --win11-card-bg: rgba(255, 255, 255, 0.98);
-  --win11-card-subtle: #f9fafb;
-  --win11-card-hover: #ffffff;
-  --win11-border-subtle: rgba(0, 0, 0, 0.08);
-  --win11-border-card: rgba(0, 0, 0, 0.09);
-  --win11-text-primary: #1e1e1e;
-  --win11-text-secondary: #5c5c5c;
-  --win11-text-muted: #8c8c8c;
+  /* macOS Sequoia Light Mode Palette */
+  --macos-window-bg: #f6f6f7;
+  --macos-titlebar-bg: rgba(246, 246, 247, 0.82);
+  --macos-sidebar-bg: rgba(239, 240, 243, 0.75);
+  --macos-card-bg: rgba(255, 255, 255, 0.85);
+  --macos-card-subtle: rgba(244, 245, 248, 0.7);
+  --macos-card-hover: rgba(255, 255, 255, 0.96);
+  --macos-border-subtle: rgba(0, 0, 0, 0.08);
+  --macos-border-card: rgba(0, 0, 0, 0.07);
+  --macos-text-primary: #1d1d1f;
+  --macos-text-secondary: #6e6e73;
+  --macos-text-muted: #86868b;
   
-  /* Windows 11 Accent Colors (Signature Windows Blue) */
-  --win11-accent: #0067c0;
-  --win11-accent-hover: #1873c4;
-  --win11-accent-active: #0055a4;
-  --win11-accent-light: #0078d4;
-  --win11-accent-subtle: rgba(0, 103, 192, 0.09);
+  /* Apple System Blue Accent */
+  --macos-accent: #007aff;
+  --macos-accent-hover: #0062cc;
+  --macos-accent-active: #0051a8;
+  --macos-accent-light: #5ac8fa;
+  --macos-accent-subtle: rgba(0, 122, 255, 0.1);
   
-  /* Status Colors */
-  --win11-success: #107c10;
-  --win11-warning: #795e00;
-  --win11-caution: #b14605;
-  --win11-danger: #c42b1c;
+  /* macOS Status Colors */
+  --macos-success: #34c759;
+  --macos-warning: #ff9500;
+  --macos-danger: #ff3b30;
+  --macos-purple: #af52de;
+  --macos-indigo: #5856d6;
   
   /* Chart helpers */
-  --chart-grid: #e2e8f0;
-  --chart-axis: #64748b;
+  --chart-grid: #e5e5ea;
+  --chart-axis: #6e6e73;
 
-  /* Typography */
-  --font-fluent: 'Segoe UI Variable Display', 'Segoe UI Variable Text', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, system-ui, sans-serif;
-  --font-mono: 'Cascadia Code', 'Consolas', monospace;
+  /* Typography: Apple San Francisco Pro */
+  --font-macos: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: "SF Mono", "Menlo", "Monaco", "Consolas", monospace;
+
+  /* Aliases for compatibility */
+  --win11-desktop-bg: var(--macos-window-bg);
+  --win11-card-bg: var(--macos-card-bg);
+  --win11-accent: var(--macos-accent);
+  --win11-accent-subtle: var(--macos-accent-subtle);
+  --win11-border-subtle: var(--macos-border-subtle);
+  --win11-border-card: var(--macos-border-card);
 }
 
-/* Windows 11 Dark Mode (Mica Dark / Acrylic) */
+/* macOS Sequoia Dark Mode Palette */
 .theme-dark {
-  --win11-desktop-bg: #202020;
-  --win11-mica-bg: #262626;
-  --win11-acrylic-panel: rgba(36, 36, 36, 0.88);
-  --win11-card-bg: rgba(43, 43, 43, 0.92);
-  --win11-card-subtle: rgba(50, 50, 50, 0.85);
-  --win11-card-hover: rgba(56, 56, 56, 0.95);
-  --win11-border-subtle: rgba(255, 255, 255, 0.08);
-  --win11-border-card: rgba(255, 255, 255, 0.09);
-  --win11-text-primary: #ffffff;
-  --win11-text-secondary: #d1d1d1;
-  --win11-text-muted: #9e9e9e;
-  --win11-accent: #4cc2ff;
-  --win11-accent-hover: #60cdff;
-  --win11-accent-active: #38b6ff;
-  --win11-accent-light: #60cdff;
-  --win11-accent-subtle: rgba(76, 194, 255, 0.14);
-  --chart-grid: #334155;
-  --chart-axis: #94a3b8;
+  --macos-window-bg: #1e1e20;
+  --macos-titlebar-bg: rgba(30, 30, 32, 0.82);
+  --macos-sidebar-bg: rgba(24, 24, 27, 0.78);
+  --macos-card-bg: rgba(38, 38, 42, 0.82);
+  --macos-card-subtle: rgba(45, 45, 50, 0.7);
+  --macos-card-hover: rgba(50, 50, 55, 0.95);
+  --macos-border-subtle: rgba(255, 255, 255, 0.09);
+  --macos-border-card: rgba(255, 255, 255, 0.08);
+  --macos-text-primary: #f5f5f7;
+  --macos-text-secondary: #a1a1a6;
+  --macos-text-muted: #86868b;
+  --macos-accent: #0a84ff;
+  --macos-accent-hover: #409cff;
+  --macos-accent-active: #0071e3;
+  --macos-accent-light: #64d2ff;
+  --macos-accent-subtle: rgba(10, 132, 255, 0.16);
+  --chart-grid: #2c2c2e;
+  --chart-axis: #8e8e93;
+
+  /* Aliases */
+  --win11-desktop-bg: var(--macos-window-bg);
+  --win11-card-bg: var(--macos-card-bg);
+  --win11-accent: var(--macos-accent);
+  --win11-accent-subtle: var(--macos-accent-subtle);
+  --win11-border-subtle: var(--macos-border-subtle);
+  --win11-border-card: var(--macos-border-card);
 }
 
 *, *::before, *::after {
@@ -66,11 +83,12 @@
 }
 
 html {
-  font-family: var(--font-fluent);
+  font-family: var(--font-macos);
   color-scheme: light;
   scroll-behavior: smooth;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 html.theme-dark {
@@ -80,13 +98,13 @@ html.theme-dark {
 body {
   margin: 0;
   padding: 0;
-  background-color: var(--win11-desktop-bg);
+  background-color: var(--macos-window-bg);
   background-image: 
-    radial-gradient(circle at 12% 15%, rgba(0, 103, 192, 0.05) 0%, transparent 45%),
-    radial-gradient(circle at 88% 85%, rgba(0, 120, 212, 0.03) 0%, transparent 50%),
-    linear-gradient(180deg, #f8fafc 0%, #edf2f7 100%);
+    radial-gradient(circle at 10% 10%, rgba(0, 122, 255, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 90% 90%, rgba(175, 82, 222, 0.03) 0%, transparent 45%),
+    linear-gradient(180deg, #fbfbfd 0%, #f1f1f4 100%);
   background-attachment: fixed;
-  color: var(--win11-text-primary);
+  color: var(--macos-text-primary);
   line-height: 1.5;
   overflow: hidden;
   height: 100vh;
@@ -94,261 +112,361 @@ body {
 }
 
 body.theme-dark {
-  background-color: var(--win11-desktop-bg);
+  background-color: var(--macos-window-bg);
   background-image: 
-    radial-gradient(circle at 15% 15%, rgba(76, 194, 255, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 85% 80%, rgba(0, 120, 212, 0.06) 0%, transparent 45%),
-    linear-gradient(180deg, #1c1c1c 0%, #242424 100%);
-  color: #f1f5f9;
+    radial-gradient(circle at 12% 12%, rgba(10, 132, 255, 0.07) 0%, transparent 35%),
+    radial-gradient(circle at 88% 85%, rgba(175, 82, 222, 0.05) 0%, transparent 40%),
+    linear-gradient(180deg, #18181a 0%, #202023 100%);
+  color: #f5f5f7;
 }
 
 /* ==========================================================================
-   Windows 11 Fluent Window Chrome (Titlebar & Controls)
+   macOS Window Chrome (Traffic Lights & Unified Toolbar)
    ========================================================================== */
+.macos-titlebar,
 .win11-titlebar {
-  height: 36px;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(24px) saturate(130%);
-  border-bottom: 1px solid var(--win11-border-subtle);
+  height: 44px;
+  background: var(--macos-titlebar-bg);
+  backdrop-filter: blur(28px) saturate(180%);
+  border-bottom: 1px solid var(--macos-border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 10px;
+  padding: 0 16px;
   user-select: none;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--win11-text-primary);
+  color: var(--macos-text-primary);
+  z-index: 50;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
+.theme-dark .macos-titlebar,
 .theme-dark .win11-titlebar {
-  background: rgba(32, 32, 32, 0.85);
+  background: var(--macos-titlebar-bg);
+  border-bottom-color: var(--macos-border-subtle);
   color: #ffffff;
-  border-bottom-color: var(--win11-border-subtle);
 }
 
-.win11-window-controls {
+/* Authentic macOS Traffic Lights */
+.macos-traffic-lights {
   display: flex;
   align-items: center;
-  height: 100%;
+  gap: 8px;
 }
 
-.win11-caption-btn {
-  width: 44px;
-  height: 100%;
+.macos-traffic-btn {
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #475569;
-  background: transparent;
-  border: none;
+  border: 1px solid rgba(0, 0, 0, 0.12);
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  padding: 0;
+  transition: transform 0.12s ease, filter 0.12s ease;
+  position: relative;
+  outline: none;
 }
 
-.theme-dark .win11-caption-btn {
-  color: #cbd5e1;
+.macos-traffic-btn.close {
+  background-color: #ff5f57;
+  border-color: #e0443e;
 }
 
-.win11-caption-btn:hover {
-  background-color: rgba(0, 0, 0, 0.06);
-  color: #0f172a;
+.macos-traffic-btn.minimize {
+  background-color: #febc2e;
+  border-color: #d89e24;
 }
 
-.theme-dark .win11-caption-btn:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+.macos-traffic-btn.zoom {
+  background-color: #28c840;
+  border-color: #1aab29;
 }
 
-.win11-caption-btn.close:hover {
-  background-color: #c42b1c !important;
-  color: #ffffff !important;
+.macos-traffic-btn:hover {
+  filter: brightness(0.92);
+}
+
+.macos-traffic-btn svg,
+.macos-traffic-btn span {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  color: rgba(0, 0, 0, 0.65);
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.macos-traffic-lights:hover .macos-traffic-btn svg,
+.macos-traffic-lights:hover .macos-traffic-btn span {
+  opacity: 1;
 }
 
 /* ==========================================================================
-   Windows 11 Fluent Acrylic Sidebar Navigation
+   macOS Sidebar Navigation View
    ========================================================================== */
+.macos-sidebar,
 .win11-sidebar {
-  background: var(--win11-acrylic-panel);
-  backdrop-filter: blur(30px) saturate(140%);
-  border-right: 1px solid var(--win11-border-subtle);
+  background: var(--macos-sidebar-bg);
+  backdrop-filter: blur(32px) saturate(160%);
+  border-right: 1px solid var(--macos-border-subtle);
 }
 
+.theme-dark .macos-sidebar,
+.theme-dark .win11-sidebar {
+  background: var(--macos-sidebar-bg);
+  border-right-color: var(--macos-border-subtle);
+}
+
+.macos-nav-item,
 .win11-nav-item {
   position: relative;
-  border-radius: 8px;
-  font-size: 12.5px;
+  border-radius: 10px;
+  font-size: 13px;
   font-weight: 500;
-  transition: all 0.16s cubic-bezier(0.1, 0.9, 0.2, 1);
+  transition: all 0.14s ease;
   display: flex;
   align-items: center;
-  padding: 8px 12px;
-  color: #475569;
+  padding: 7px 11px;
+  color: var(--macos-text-secondary);
+  cursor: pointer;
 }
 
+.theme-dark .macos-nav-item,
 .theme-dark .win11-nav-item {
-  color: #cbd5e1;
+  color: #a1a1a6;
 }
 
+.macos-nav-item:hover,
 .win11-nav-item:hover {
-  background-color: rgba(0, 0, 0, 0.04);
-  color: #0f172a;
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--macos-text-primary);
 }
 
+.theme-dark .macos-nav-item:hover,
 .theme-dark .win11-nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.06);
+  background-color: rgba(255, 255, 255, 0.07);
   color: #ffffff;
 }
 
+/* macOS Active selection pill */
+.macos-nav-item.active,
 .win11-nav-item.active {
-  background-color: var(--win11-accent-subtle);
-  color: var(--win11-accent);
+  background-color: var(--macos-accent);
+  color: #ffffff !important;
   font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.28);
 }
 
+.theme-dark .macos-nav-item.active,
 .theme-dark .win11-nav-item.active {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+  background-color: var(--macos-accent);
+  color: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(10, 132, 255, 0.35);
 }
 
-/* O icônico indicador ativo vertical do Windows 11 */
-.win11-nav-item.active::before {
-  content: '';
-  position: absolute;
-  left: 3px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3.5px;
-  height: 16px;
-  background-color: var(--win11-accent);
-  border-radius: 99px;
-  box-shadow: 0 0 6px rgba(0, 103, 192, 0.4);
-}
-
-.theme-dark .win11-nav-item.active::before {
-  background-color: #60cdff;
-  box-shadow: 0 0 8px rgba(96, 205, 255, 0.6);
+.macos-nav-item.active svg,
+.win11-nav-item.active svg {
+  color: #ffffff !important;
 }
 
 /* ==========================================================================
-   Windows 11 Fluent Cards & Widgets
+   macOS Frosted Glass Cards & Widgets
    ========================================================================== */
+.macos-card,
 .win11-widget-card {
-  background: var(--win11-card-bg);
-  backdrop-filter: blur(24px) saturate(130%);
-  border: 1px solid var(--win11-border-card);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  background: var(--macos-card-bg);
+  backdrop-filter: blur(28px) saturate(170%);
+  border: 1px solid var(--macos-border-card);
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
+.macos-card:hover,
 .win11-widget-card:hover {
-  border-color: rgba(0, 103, 192, 0.25);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 122, 255, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
+.theme-dark .macos-card,
 .theme-dark .win11-widget-card {
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.24);
+  background: var(--macos-card-bg);
+  border-color: var(--macos-border-card);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
 }
 
+.theme-dark .macos-card:hover,
 .theme-dark .win11-widget-card:hover {
-  border-color: rgba(96, 205, 255, 0.3);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
+  border-color: rgba(10, 132, 255, 0.35);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
 }
 
+.macos-subcard,
 .win11-subcard {
-  background: #f8fafc;
-  border: 1px solid rgba(0, 0, 0, 0.07);
-  border-radius: 10px;
+  background: var(--macos-card-subtle);
+  border: 1px solid var(--macos-border-subtle);
+  border-radius: 12px;
 }
 
+.theme-dark .macos-subcard,
 .theme-dark .win11-subcard {
-  background: rgba(30, 37, 49, 0.7);
-  border-color: rgba(255, 255, 255, 0.07);
+  background: rgba(30, 30, 33, 0.6);
+  border-color: var(--macos-border-subtle);
 }
 
-/* Botões Estilo Windows 11 */
-.win11-btn-primary {
-  background-color: var(--win11-accent) !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
+/* ==========================================================================
+   macOS Buttons & Segmented Controls
+   ========================================================================== */
+.macos-btn-primary {
+  background: var(--macos-accent);
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 6px 14px;
   font-weight: 600;
   font-size: 12px;
+  box-shadow: 0 1px 3px rgba(0, 122, 255, 0.25);
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.macos-btn-primary:hover {
+  background: var(--macos-accent-hover);
+  box-shadow: 0 3px 8px rgba(0, 122, 255, 0.35);
+}
+
+.macos-btn-secondary {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--macos-text-primary);
+  border: 1px solid var(--macos-border-subtle);
+  border-radius: 10px;
   padding: 6px 14px;
-  transition: background-color 0.15s ease, transform 0.1s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
-}
-
-.win11-btn-primary:hover {
-  background-color: var(--win11-accent-hover) !important;
-}
-
-.win11-btn-primary:active {
-  background-color: var(--win11-accent-active) !important;
-  transform: scale(0.98);
-}
-
-.win11-btn-secondary {
-  background-color: #ffffff;
-  color: #1e293b;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 6px;
   font-weight: 500;
   font-size: 12px;
-  padding: 6px 14px;
-  transition: background-color 0.15s ease;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
 }
 
-.theme-dark .win11-btn-secondary {
-  background-color: rgba(255, 255, 255, 0.06);
-  color: #f1f5f9;
+.theme-dark .macos-btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
   border-color: rgba(255, 255, 255, 0.12);
 }
 
-.win11-btn-secondary:hover {
-  background-color: #f1f5f9;
+.macos-btn-secondary:hover {
+  background: rgba(0, 0, 0, 0.08);
 }
 
-.theme-dark .win11-btn-secondary:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+.theme-dark .macos-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* Segmented Picker */
+.macos-segmented {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 3px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.theme-dark .macos-segmented {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.macos-segmented-btn {
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--macos-text-secondary);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.macos-segmented-btn.active {
+  background: #ffffff;
+  color: var(--macos-text-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12), 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.theme-dark .macos-segmented-btn.active {
+  background: #3a3a3c;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 /* ==========================================================================
-   Inputs e Barra de Busca Estilo Fluent
+   macOS CommandBar & Desktop StatusBar
    ========================================================================== */
-.win11-input {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-bottom: 2px solid #94a3b8;
-  border-radius: 6px;
-  color: #0f172a;
-  padding: 6px 12px;
-  font-size: 12px;
-  transition: all 0.15s ease;
+.macos-commandbar,
+.win11-commandbar {
+  height: 44px;
+  background: var(--macos-titlebar-bg);
+  backdrop-filter: blur(24px) saturate(170%);
+  border-bottom: 1px solid var(--macos-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  user-select: none;
 }
 
-.win11-input:focus {
-  outline: none;
-  background: #ffffff;
-  border-bottom-color: var(--win11-accent);
-  box-shadow: 0 0 0 3px rgba(0, 103, 192, 0.15);
+.theme-dark .macos-commandbar,
+.theme-dark .win11-commandbar {
+  background: var(--macos-titlebar-bg);
+  border-bottom-color: var(--macos-border-subtle);
 }
 
-.theme-dark .win11-input {
-  background: rgba(20, 24, 32, 0.7);
-  border-color: rgba(255, 255, 255, 0.1);
-  border-bottom-color: rgba(255, 255, 255, 0.25);
-  color: #ffffff;
+.macos-statusbar,
+.win11-statusbar {
+  height: 28px;
+  min-height: 28px;
+  background: var(--macos-titlebar-bg);
+  backdrop-filter: blur(24px);
+  border-top: 1px solid var(--macos-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  font-size: 11.5px;
+  color: var(--macos-text-secondary);
+  user-select: none;
+  z-index: 30;
 }
 
-.theme-dark .win11-input:focus {
-  background: rgba(26, 32, 42, 0.85);
-  border-bottom-color: var(--win11-accent-light);
-  box-shadow: 0 0 10px rgba(96, 205, 255, 0.2);
+.theme-dark .macos-statusbar,
+.theme-dark .win11-statusbar {
+  background: var(--macos-titlebar-bg);
+  border-top-color: var(--macos-border-subtle);
+  color: #a1a1a6;
 }
 
-/* Barra de rolagem Windows 11 fluida */
+.macos-focus-card,
+.win11-focus-card {
+  background: var(--macos-card-bg);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--macos-border-card);
+  border-radius: 14px;
+  transition: all 0.2s ease;
+}
+
+/* macOS Thin Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -359,239 +477,241 @@ body.theme-dark {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 99px;
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 9999px;
+}
+
+.theme-dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.theme-dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
 }
 
 /* ==========================================================================
-   Windows 11 Fluent CommandBar & Desktop StatusBar
+   Simulador Folha Oficial FGV (Caderno de 150 Linhas)
    ========================================================================== */
-.win11-commandbar {
-  height: 44px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px) saturate(130%);
-  border-bottom: 1px solid var(--win11-border-subtle);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  user-select: none;
-}
-
-.theme-dark .win11-commandbar {
-  background: rgba(32, 32, 32, 0.82);
-  border-bottom-color: var(--win11-border-subtle);
-}
-
-.win11-statusbar {
-  height: 26px;
-  min-height: 26px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px);
-  border-top: 1px solid var(--win11-border-subtle);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 12px;
-  font-size: 11px;
-  color: var(--win11-text-secondary);
-  user-select: none;
-  z-index: 30;
-}
-
-.theme-dark .win11-statusbar {
-  background: rgba(30, 30, 30, 0.92);
-  border-top-color: var(--win11-border-subtle);
-  color: var(--win11-text-secondary);
-}
-
-.win11-focus-card {
-  background: var(--win11-card-bg);
-  backdrop-filter: blur(20px);
-  border: 1px solid var(--win11-border-card);
-  border-radius: 12px;
+.fgv-sheet-wrapper {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
   transition: all 0.2s ease;
 }
 
-.theme-dark .win11-focus-card {
-  background: rgba(38, 38, 38, 0.85);
-  border-color: rgba(255, 255, 255, 0.08);
+.theme-dark .fgv-sheet-wrapper {
+  background: #1c1c1e;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-/* Animações sutis Windows 11 */
-@keyframes win11Entrance {
-  from {
-    opacity: 0;
-    transform: translateY(6px) scale(0.995);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+.fgv-sheet-top {
+  padding: 10px 16px;
+  background: #f7f7f8;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
+.theme-dark .fgv-sheet-top {
+  background: #252528;
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.fgv-editor-container {
+  display: flex;
+  overflow-y: auto;
+  position: relative;
+  background: #ffffff;
+}
+
+.theme-dark .fgv-editor-container {
+  background: #1a1a1c;
+}
+
+.fgv-line-numbers {
+  width: 44px;
+  flex-shrink: 0;
+  background: #f4f4f6;
+  border-right: 1px solid #e5e5ea;
+  user-select: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 28px;
+  color: #8e8e93;
+  text-align: right;
+  padding-right: 8px;
+}
+
+.theme-dark .fgv-line-numbers {
+  background: #202022;
+  border-right-color: #2c2c2e;
+  color: #636366;
+}
+
+.fgv-lined-textarea {
+  flex: 1;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 28px;
+  padding: 0 16px;
+  background: transparent;
+  background-image: linear-gradient(to bottom, transparent 27px, #e5e5ea 27px, #e5e5ea 28px);
+  background-size: 100% 28px;
+  color: #1d1d1f;
+  white-space: pre;
+}
+
+.theme-dark .fgv-lined-textarea {
+  background-image: linear-gradient(to bottom, transparent 27px, #2c2c2e 27px, #2c2c2e 28px);
+  color: #f5f5f7;
+}
+
+.fgv-watermark {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-25deg);
+  font-size: 5rem;
+  font-weight: 900;
+  color: rgba(255, 149, 0, 0.08);
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: 0.2em;
+}
+
+/* Badges FGV 4 Cores */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.b-ROSA {
+  background-color: rgba(255, 45, 85, 0.12);
+  color: #d81545;
+  border: 1px solid rgba(255, 45, 85, 0.28);
+}
+.theme-dark .b-ROSA {
+  background-color: rgba(255, 45, 85, 0.2);
+  color: #ff375f;
+}
+
+.b-VERDE {
+  background-color: rgba(52, 199, 89, 0.12);
+  color: #1e873b;
+  border: 1px solid rgba(52, 199, 89, 0.28);
+}
+.theme-dark .b-VERDE {
+  background-color: rgba(52, 199, 89, 0.2);
+  color: #30d158;
+}
+
+.b-AMARELO {
+  background-color: rgba(255, 149, 0, 0.12);
+  color: #b36b00;
+  border: 1px solid rgba(255, 149, 0, 0.28);
+}
+.theme-dark .b-AMARELO {
+  background-color: rgba(255, 149, 0, 0.2);
+  color: #ffd60a;
+}
+
+.b-AZUL {
+  background-color: rgba(0, 122, 255, 0.12);
+  color: #0056b3;
+  border: 1px solid rgba(0, 122, 255, 0.28);
+}
+.theme-dark .b-AZUL {
+  background-color: rgba(10, 132, 255, 0.2);
+  color: #409cff;
+}
+
+.b-CLIPES {
+  background-color: rgba(175, 82, 222, 0.12);
+  color: #7928ca;
+  border: 1px solid rgba(175, 82, 222, 0.28);
+}
+.theme-dark .b-CLIPES {
+  background-color: rgba(175, 82, 222, 0.2);
+  color: #bf5af2;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.macos-animate,
 .win11-animate {
-  animation: win11Entrance 0.2s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* ==========================================================================
-   REGRAS ESPECÍFICAS DE CONVERSÃO PARA O TEMA CLARO
-   Garante contraste, nitidez e conforto visual em toda a aplicação
+   Garantia Total de Cores no Modo Claro vs Escuro (macOS Sequoia)
+   Corrige todos os quadros, cards, inputs e textos para alternarem perfeitamente
    ========================================================================== */
-
-.theme-light {
-  color-scheme: light;
-  color: #0f172a;
-}
-
-/* Painéis e Fundos em Tema Claro */
-.theme-light .bg-\[\#222b38\] {
-  background-color: #f1f5f9 !important;
-  color: #0f172a !important;
-}
-
-.theme-light .bg-\[\#1b232e\] {
+.theme-light [class*="bg-[#2b3646]"],
+.theme-light [class*="bg-[#344154]"],
+.theme-light [class*="bg-[#272727]"],
+.theme-light [class*="bg-[#232323]"],
+.theme-light [class*="bg-[#2b2b2b]"] {
   background-color: #ffffff !important;
-  color: #0f172a !important;
+  color: #1d1d1f !important;
 }
 
-.theme-light .bg-\[\#2b3646\] {
+.theme-light [class*="bg-[#1b232e]"],
+.theme-light [class*="bg-[#222b38]"] {
+  background-color: #f5f5f7 !important;
+  color: #1d1d1f !important;
+}
+
+.theme-light [class*="bg-[#3b495e]"],
+.theme-light [class*="bg-[#3d4d63]"] {
+  background-color: #f0f0f3 !important;
+  color: #1d1d1f !important;
+}
+
+.theme-light [class*="border-[#455468]"],
+.theme-light [class*="border-[#56677d]"] {
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+.theme-light [class*="text-slate-300"],
+.theme-light [class*="text-slate-200"],
+.theme-light [class*="text-slate-400"] {
+  color: #48484a !important;
+}
+
+.theme-light [class*="bg-[#2b3646]"] h3,
+.theme-light [class*="bg-[#2b3646]"] h4,
+.theme-light [class*="bg-[#344154]"] h3,
+.theme-light [class*="bg-[#344154]"] h4,
+.theme-light [class*="bg-[#1b232e]"] h3,
+.theme-light [class*="bg-[#1b232e]"] h4 {
+  color: #1d1d1f !important;
+}
+
+.theme-light select[class*="bg-[#1b232e]"],
+.theme-light input[class*="bg-[#1b232e]"],
+.theme-light textarea[class*="bg-[#1b232e]"] {
   background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  color: #0f172a !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02) !important;
-}
-
-.theme-light .bg-\[\#344154\],
-.theme-light .bg-\[\#3b495e\] {
-  background-color: #f8fafc !important;
-  border-color: #e2e8f0 !important;
-  color: #1e293b !important;
-}
-
-.theme-light .bg-\[\#202733\]\/80,
-.theme-light .bg-\[\#1e2532\]\/75,
-.theme-light .bg-slate-800,
-.theme-light .bg-slate-800\/80,
-.theme-light .bg-slate-900,
-.theme-light .bg-slate-900\/60 {
-  background-color: #f1f5f9 !important;
-  border-color: #e2e8f0 !important;
-  color: #1e293b !important;
-}
-
-/* Bordas em Tema Claro */
-.theme-light .border-\[\#455468\],
-.theme-light .border-\[\#56677d\],
-.theme-light .border-slate-700,
-.theme-light .border-slate-600,
-.theme-light .border-white\/10,
-.theme-light .border-white\/5 {
-  border-color: #e2e8f0 !important;
-}
-
-/* Tipografia em Tema Claro */
-.theme-light .text-white:not(.win11-btn-primary):not(.badge):not(.btn-colored):not([class*="bg-sky"]):not([class*="bg-blue"]):not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-amber"]):not([class*="bg-indigo"]):not([class*="bg-purple"]) {
-  color: #0f172a !important;
-}
-
-.theme-light .text-\[\#f1f5f9\] {
-  color: #0f172a !important;
-}
-
-.theme-light .text-\[\#cbd5e1\],
-.theme-light .text-slate-300 {
-  color: #334155 !important;
-}
-
-.theme-light .text-slate-200 {
-  color: #1e293b !important;
-}
-
-.theme-light .text-slate-400 {
-  color: #64748b !important;
-}
-
-/* Garante que botões de ação e badges mantenham texto branco legível */
-.theme-light .bg-sky-600,
-.theme-light .bg-blue-600,
-.theme-light .bg-emerald-600,
-.theme-light .bg-emerald-700,
-.theme-light .bg-indigo-600,
-.theme-light .bg-rose-600,
-.theme-light .bg-amber-600,
-.theme-light .win11-btn-primary {
-  color: #ffffff !important;
-}
-
-.theme-light .bg-sky-600 *,
-.theme-light .bg-blue-600 *,
-.theme-light .bg-emerald-600 *,
-.theme-light .bg-indigo-600 *,
-.theme-light .win11-btn-primary * {
-  color: #ffffff !important;
-}
-
-/* Botões com fundo transparente ou neutro no tema claro */
-.theme-light button.bg-slate-700\/80,
-.theme-light button.bg-slate-800 {
-  background-color: #e2e8f0 !important;
-  color: #1e293b !important;
-  border-color: #cbd5e1 !important;
-}
-
-.theme-light button.bg-slate-700\/80:hover,
-.theme-light button.bg-slate-800:hover {
-  background-color: #cbd5e1 !important;
-  color: #0f172a !important;
-}
-
-/* Inputs, Selects e Textareas em Tema Claro */
-.theme-light input,
-.theme-light select,
-.theme-light textarea:not(.fgv-lined-textarea) {
-  background-color: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
-}
-
-.theme-light input::placeholder,
-.theme-light textarea::placeholder {
-  color: #94a3b8 !important;
-}
-
-/* Modal e Drawer no Tema Claro */
-.theme-light .fixed.inset-0.bg-black\/75,
-.theme-light .fixed.inset-0.bg-black\/70,
-.theme-light .fixed.inset-0.bg-black\/60 {
-  background-color: rgba(15, 23, 42, 0.45) !important;
-  backdrop-filter: blur(6px) !important;
-}
-
-/* Header subnavigation bar */
-.theme-light header.border-b {
-  background-color: rgba(255, 255, 255, 0.92) !important;
-  border-bottom-color: #e2e8f0 !important;
-}
-
-/* Barra de pesquisa da barra de título no tema claro */
-.theme-light .win11-titlebar button.border-white\/10 {
-  border-color: #cbd5e1 !important;
-  background-color: #f1f5f9 !important;
-  color: #334155 !important;
-}
-
-.theme-light .win11-titlebar button.border-white\/10:hover {
-  background-color: #e2e8f0 !important;
-  border-color: var(--win11-accent) !important;
-}
-
-.theme-light .win11-titlebar button.border-white\/10 kbd {
-  background-color: #e2e8f0 !important;
-  border-color: #cbd5e1 !important;
-  color: #475569 !important;
+  color: #1d1d1f !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
 }
