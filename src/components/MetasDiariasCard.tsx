@@ -310,24 +310,24 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
   };
 
   return (
-    <div className="rounded-2xl border border-emerald-500/50 bg-[#2b3646] p-5 shadow-sm space-y-4">
+    <div className="rounded-2xl border border-emerald-500/40 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 p-5 shadow-sm space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20 border border-emerald-500 text-emerald-400 shadow-xs">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20 border border-emerald-500 text-emerald-600 dark:text-emerald-400 shadow-xs">
             <Target className="h-5 w-5" />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="badge b-VERDE text-[10px]">Micro-Hábitos FGV</span>
-              <span className="text-[11px] text-slate-300 font-mono">Consistência Diária</span>
-              <span className="text-[11px] text-amber-300 bg-amber-400/15 border border-amber-400/30 px-2 py-0.5 rounded-full inline-flex items-center gap-1 font-semibold">
+              <span className="text-[11px] text-zinc-500 dark:text-slate-300 font-mono">Consistência Diária</span>
+              <span className="text-[11px] text-amber-700 dark:text-amber-300 bg-amber-400/15 border border-amber-400/30 px-2 py-0.5 rounded-full inline-flex items-center gap-1 font-semibold">
                 <Clock className="h-3 w-3" /> Limpa às 00:00 (em {tempoRestante})
               </span>
             </div>
-            <h2 className="text-base font-bold text-white mt-0.5 flex items-center gap-2">
+            <h2 className="text-base font-bold text-zinc-900 dark:text-white mt-0.5 flex items-center gap-2">
               Metas Diárias & Tarefas Rápidas
-              <span className="text-xs font-normal text-slate-300">
+              <span className="text-xs font-normal text-zinc-500 dark:text-slate-300">
                 (Micro-ações diárias com checkbox • Reseta às 00:00)
               </span>
             </h2>
@@ -337,10 +337,10 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
         <div className="flex items-center gap-2 flex-wrap">
           {streak > 0 && (
             <div
-              className="rounded-full border border-amber-500/50 bg-amber-950/30 px-3 py-1 text-xs font-bold text-amber-300 inline-flex items-center gap-1.5 shadow-xs"
+              className="rounded-full border border-amber-500/40 bg-amber-50 dark:bg-amber-950/30 px-3 py-1 text-xs font-bold text-amber-700 dark:text-amber-300 inline-flex items-center gap-1.5 shadow-xs"
               title="Dias consecutivos cumprindo metas diárias"
             >
-              <Flame className="h-3.5 w-3.5 text-amber-400 fill-amber-400 animate-pulse" />
+              <Flame className="h-3.5 w-3.5 text-amber-500 fill-amber-500 animate-pulse" />
               <span>{streak} {streak === 1 ? 'dia de constância' : 'dias de constância'}</span>
             </div>
           )}
@@ -348,7 +348,7 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
           {metas.length > 0 ? (
             <button
               onClick={limparMetasManual}
-              className="rounded-full border border-slate-600 bg-slate-800 hover:bg-slate-700 px-3 py-1 text-[11px] text-slate-300 hover:text-white transition cursor-pointer"
+              className="rounded-full border border-black/10 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-3 py-1 text-[11px] text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white transition cursor-pointer"
               title="Limpar tarefas de hoje para começar do zero"
             >
               Limpar tarefas
@@ -365,21 +365,21 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
       </div>
 
       {/* Barra de Progresso do Dia */}
-      <div className="rounded-xl border border-[#455468] bg-[#344154] p-3.5 space-y-2">
+      <div className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-800/90 p-3.5 space-y-2">
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-white">Progresso de Hoje:</span>
-            <span className="font-mono text-emerald-400 font-bold">
+            <span className="font-semibold text-zinc-900 dark:text-white">Progresso de Hoje:</span>
+            <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">
               {concluidasCount} de {totalMetas} {totalMetas === 1 ? 'tarefa cumprida' : 'tarefas cumpridas'} ({percentualProgresso}%)
             </span>
           </div>
 
-          <div className="text-[11px] text-slate-300 flex items-center gap-1">
+          <div className="text-[11px] text-zinc-500 dark:text-slate-300 flex items-center gap-1">
             <span>{totalMetas}/{LIMITE_MAXIMO_METAS} slots em uso</span>
           </div>
         </div>
 
-        <div className="h-2.5 w-full overflow-hidden rounded-full border border-[#455468] bg-[#1b232e]">
+        <div className="h-2.5 w-full overflow-hidden rounded-full border border-black/10 dark:border-white/10 bg-slate-200 dark:bg-zinc-900">
           <div
             className={`h-full transition-all duration-500 ${
               todasConcluidas
@@ -391,8 +391,8 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
         </div>
 
         {todasConcluidas && (
-          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-300 bg-emerald-950/40 border border-emerald-500/40 rounded-lg p-2 mt-1">
-            <Sparkles className="h-4 w-4 text-emerald-400 shrink-0 animate-spin" />
+          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/40 rounded-lg p-2 mt-1">
+            <Sparkles className="h-4 w-4 text-emerald-500 dark:text-emerald-400 shrink-0 animate-spin" />
             <span>
               Excelente trabalho! Todas as tarefas e metas de hoje foram concluídas. Sua constância diária constrói a aprovação!
             </span>
@@ -401,16 +401,16 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
       </div>
 
       {/* CAMPO DE ENTRADA DE TAREFA RÁPIDA (SEMPRE ACESSÍVEL) */}
-      <div className="rounded-xl border border-emerald-500/40 bg-[#222d3d] p-3.5 space-y-3 shadow-inner">
+      <div className="rounded-xl border border-emerald-500/30 bg-emerald-50/40 dark:bg-zinc-800/60 p-3.5 space-y-3 shadow-inner">
         <div className="flex items-center justify-between text-xs flex-wrap gap-1">
-          <span className="font-semibold text-emerald-400 flex items-center gap-1.5">
+          <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
             <Zap className="h-3.5 w-3.5" /> Adicionar Tarefa Rápida
           </span>
-          <span className="text-[11px] text-slate-300">
+          <span className="text-[11px] text-zinc-600 dark:text-slate-300">
             {metas.length < LIMITE_MAXIMO_METAS ? (
               <span>{LIMITE_MAXIMO_METAS - metas.length} {LIMITE_MAXIMO_METAS - metas.length === 1 ? 'vaga restante' : 'vagas restantes'} hoje</span>
             ) : (
-              <span className="text-amber-400 font-medium">Limite de {LIMITE_MAXIMO_METAS} tarefas atingido</span>
+              <span className="text-amber-600 dark:text-amber-400 font-medium">Limite de {LIMITE_MAXIMO_METAS} tarefas atingido</span>
             )}
           </span>
         </div>
@@ -429,10 +429,10 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
               onChange={(e) => setNovoTextoMeta(e.target.value)}
               placeholder="Adicionar tarefa rápida (ex: Rever Súmula 166 STJ)..."
               disabled={metas.length >= LIMITE_MAXIMO_METAS}
-              className="w-full rounded-xl border border-[#56677d] bg-[#1b232e] pl-9 pr-3.5 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/40 transition disabled:opacity-60"
+              className="w-full rounded-xl border border-black/15 dark:border-white/15 bg-white dark:bg-zinc-900 pl-9 pr-3.5 py-2.5 text-xs text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/40 transition disabled:opacity-60"
               maxLength={120}
             />
-            <Plus className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Plus className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 dark:text-slate-400" />
           </div>
           <button
             type="submit"
@@ -445,12 +445,12 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
         </form>
 
         {/* Sugestões Rápidas de 1 Clique */}
-        <div className="space-y-1.5 pt-1 border-t border-slate-700/60">
-          <div className="flex items-center justify-between text-[11px] text-slate-300">
+        <div className="space-y-1.5 pt-1 border-t border-black/10 dark:border-slate-700/60">
+          <div className="flex items-center justify-between text-[11px] text-zinc-600 dark:text-slate-300">
             <span className="flex items-center gap-1 font-medium">
-              <Sparkles className="h-3 w-3 text-amber-400" /> Sugestões Rápidas de 1 Clique:
+              <Sparkles className="h-3 w-3 text-amber-500 dark:text-amber-400" /> Sugestões Rápidas de 1 Clique:
             </span>
-            <span className="text-[10px] text-slate-400">Clique para adicionar ao seu dia</span>
+            <span className="text-[10px] text-zinc-500 dark:text-slate-400">Clique para adicionar ao seu dia</span>
           </div>
 
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -464,14 +464,14 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
                   onClick={() => adicionarMeta(sug.texto, sug.aba)}
                   className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition inline-flex items-center gap-1 cursor-pointer border ${
                     jaAdicionada
-                      ? 'border-emerald-500/30 bg-emerald-950/30 text-emerald-300 opacity-60 cursor-not-allowed'
-                      : 'border-[#455468] bg-[#1b232e] text-slate-200 hover:border-emerald-400 hover:bg-[#253243]'
+                      ? 'border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 opacity-60 cursor-not-allowed'
+                      : 'border-black/10 dark:border-[#455468] bg-white dark:bg-[#1b232e] text-zinc-700 dark:text-slate-200 hover:border-emerald-500 hover:bg-slate-50 dark:hover:bg-[#253243]'
                   }`}
                   title={jaAdicionada ? 'Já adicionada hoje' : `Adicionar "${sug.texto}"`}
                 >
                   <span>{sug.icone}</span>
                   <span>{sug.texto}</span>
-                  {jaAdicionada && <Check className="h-3 w-3 text-emerald-400 ml-0.5" />}
+                  {jaAdicionada && <Check className="h-3 w-3 text-emerald-500 dark:text-emerald-400 ml-0.5" />}
                 </button>
               );
             })}
@@ -482,11 +482,11 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
       {/* Lista das Micro-Metas e Tarefas Diárias */}
       <div className="space-y-2">
         {metas.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-[#455468] p-5 text-center space-y-3">
-            <Target className="h-8 w-8 text-slate-400 mx-auto opacity-60" />
+          <div className="rounded-xl border border-dashed border-black/15 dark:border-[#455468] p-5 text-center space-y-3">
+            <Target className="h-8 w-8 text-zinc-400 dark:text-slate-400 mx-auto opacity-60" />
             <div>
-              <p className="text-xs font-semibold text-white">Nenhuma tarefa definida para hoje.</p>
-              <p className="text-[11px] text-slate-300 mt-1 max-w-md mx-auto">
+              <p className="text-xs font-semibold text-zinc-900 dark:text-white">Nenhuma tarefa definida para hoje.</p>
+              <p className="text-[11px] text-zinc-600 dark:text-slate-300 mt-1 max-w-md mx-auto">
                 Digite uma tarefa rápida no campo acima (ex: Rever Súmula 166 STJ) ou clique em uma das sugestões rápidas. Às 00:00 o checklist é zerado automaticamente para não acumular pendências.
               </p>
             </div>
@@ -507,8 +507,8 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
               onClick={() => alternarConclusaoMeta(meta.id)}
               className={`group flex items-center justify-between gap-3 rounded-xl border p-3 transition cursor-pointer ${
                 meta.concluida
-                  ? 'border-emerald-500/40 bg-emerald-950/20 text-slate-300'
-                  : 'border-[#455468] bg-[#344154] text-slate-100 hover:border-sky-400 hover:bg-[#3d4d63]'
+                  ? 'border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20 text-zinc-500 dark:text-slate-400'
+                  : 'border-black/10 dark:border-[#455468] bg-slate-50 dark:bg-[#344154] text-zinc-900 dark:text-slate-100 hover:border-sky-400 hover:bg-slate-100 dark:hover:bg-[#3d4d63]'
               }`}
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -529,7 +529,7 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
                     className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-all ${
                       meta.concluida
                         ? 'border-emerald-400 bg-emerald-500 text-white shadow-xs'
-                        : 'border-slate-400 bg-[#1b232e] hover:border-emerald-400'
+                        : 'border-zinc-300 dark:border-slate-400 bg-white dark:bg-[#1b232e] hover:border-emerald-400'
                     }`}
                   >
                     <Check
@@ -542,12 +542,12 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono text-slate-400">#{idx + 1}</span>
+                    <span className="text-[10px] font-mono text-zinc-400 dark:text-slate-400">#{idx + 1}</span>
                     <span
                       className={`text-xs font-medium leading-snug break-words transition-colors ${
                         meta.concluida
-                          ? 'line-through text-slate-400 italic'
-                          : 'text-white'
+                          ? 'line-through text-zinc-400 dark:text-slate-400 italic'
+                          : 'text-zinc-900 dark:text-white'
                       }`}
                     >
                       {meta.texto}
@@ -565,7 +565,7 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
                       e.stopPropagation();
                       onNavigateToTab(meta.destinoAba!);
                     }}
-                    className="rounded-full border border-sky-500/40 bg-[#1b232e] hover:bg-sky-950/60 px-2.5 py-1 text-[10.5px] font-semibold text-sky-300 transition inline-flex items-center gap-1 cursor-pointer"
+                    className="rounded-full border border-sky-500/40 bg-sky-50 dark:bg-[#1b232e] hover:bg-sky-100 dark:hover:bg-sky-950/60 px-2.5 py-1 text-[10.5px] font-semibold text-sky-700 dark:text-sky-300 transition inline-flex items-center gap-1 cursor-pointer"
                     title={`Ir para o módulo de ${getNomeAbaFormatado(meta.destinoAba)}`}
                   >
                     <span>{getNomeAbaFormatado(meta.destinoAba)}</span>
@@ -577,7 +577,7 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
                 <button
                   type="button"
                   onClick={(e) => removerMeta(meta.id, e)}
-                  className="rounded-lg p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-950/30 transition opacity-80 group-hover:opacity-100 cursor-pointer"
+                  className="rounded-lg p-1.5 text-zinc-400 dark:text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition opacity-80 group-hover:opacity-100 cursor-pointer"
                   title="Excluir esta tarefa"
                   aria-label="Excluir tarefa"
                 >
@@ -590,12 +590,12 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
       </div>
 
       {/* Rodapé Informativo: Reset à Meia-Noite */}
-      <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-[#455468]/60 flex-wrap gap-2">
-        <span className="inline-flex items-center gap-1.5 text-slate-300">
-          <Clock className="h-3.5 w-3.5 text-amber-400" />
+      <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-slate-400 pt-1 border-t border-black/10 dark:border-[#455468]/60 flex-wrap gap-2">
+        <span className="inline-flex items-center gap-1.5 text-zinc-600 dark:text-slate-300">
+          <Clock className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
           <span>Checkboxes e tarefas são resetados automaticamente todo dia às 00:00.</span>
         </span>
-        <span className="font-mono text-amber-300/90 font-medium">
+        <span className="font-mono text-amber-600 dark:text-amber-300/90 font-medium">
           Próximo reset em {tempoRestante}
         </span>
       </div>

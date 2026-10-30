@@ -362,7 +362,7 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
   return (
     <div className="space-y-4">
       {/* Banner Principal do Simulado Oficial com Temporizador de 5h e Ações */}
-      <div className="rounded-2xl border border-sky-500/50 bg-[#253040] p-4.5 shadow-md space-y-4">
+      <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 p-4.5 shadow-md space-y-4 text-zinc-900 dark:text-zinc-100">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
@@ -376,30 +376,30 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
                 Nota de Corte: 6,00 pts
               </span>
             </div>
-            <h2 className="text-base font-bold text-white flex items-center gap-2 mt-1">
-              <Scale className="h-5 w-5 text-sky-400" />
+            <h2 className="text-base font-bold text-zinc-900 dark:text-white flex items-center gap-2 mt-1">
+              <Scale className="h-5 w-5 text-sky-500 dark:text-sky-400" />
               {simulado.titulo}
             </h2>
-            <p className="text-xs text-slate-300 max-w-3xl leading-relaxed">
+            <p className="text-xs text-zinc-600 dark:text-slate-300 max-w-3xl leading-relaxed">
               Estrutura rigorosamente idêntica à prova real aplicada pela banca FGV: uma situação-problema para a Peça Prático-Profissional (folha de 150 linhas) e 4 questões discursivas inéditas com itens A e B (folha de 30 linhas cada).
             </p>
           </div>
 
           {/* Temporizador Oficial de 5 Horas (300 min) */}
-          <div className="flex items-center gap-3 bg-[#1b232e] border border-[#455468] p-2.5 rounded-2xl shadow-inner">
+          <div className="flex items-center gap-3 bg-slate-100 dark:bg-zinc-900 border border-black/10 dark:border-white/10 p-2.5 rounded-2xl shadow-inner">
             <div className="flex items-center gap-2">
-              <Clock className={`h-5 w-5 ${timerAtivo ? 'text-emerald-400 animate-spin' : 'text-amber-400'}`} />
+              <Clock className={`h-5 w-5 ${timerAtivo ? 'text-emerald-500 dark:text-emerald-400 animate-spin' : 'text-amber-500 dark:text-amber-400'}`} />
               <div>
-                <div className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider">
+                <div className="text-[10px] text-zinc-500 dark:text-slate-400 uppercase font-semibold tracking-wider">
                   Tempo Restante (5h FGV)
                 </div>
-                <div className="font-mono text-xl font-black text-white tracking-wider">
+                <div className="font-mono text-xl font-black text-zinc-900 dark:text-white tracking-wider">
                   {formatTimer(tempoSegundos)}
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5 pl-2 border-l border-slate-700">
+            <div className="flex items-center gap-1.5 pl-2 border-l border-black/10 dark:border-slate-700">
               <button
                 type="button"
                 onClick={() => setTimerAtivo(!timerAtivo)}
@@ -420,7 +420,7 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
                   SafeStorage.set(`tributa_simulado_comp_${simuladoAtivoId}_tempo`, '18000');
                   mostrarToast('Cronômetro reiniciado para 05:00:00.');
                 }}
-                className="p-2 rounded-xl border border-slate-600 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition cursor-pointer"
+                className="p-2 rounded-xl border border-black/10 dark:border-slate-600 bg-white dark:bg-slate-800 text-zinc-700 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer"
                 title="Reiniciar para 5 horas"
               >
                 <RotateCcw className="h-4 w-4" />
@@ -430,14 +430,14 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
         </div>
 
         {/* Toolbar de Navegação e Ações Rápidas */}
-        <div className="flex items-center justify-between border-t border-[#455468]/70 pt-3 flex-wrap gap-3">
+        <div className="flex items-center justify-between border-t border-black/10 dark:border-[#455468]/70 pt-3 flex-wrap gap-3">
           {/* Seletor de Simulado Semanal */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-300">Edição do Simulado:</span>
+            <span className="text-xs font-semibold text-zinc-700 dark:text-slate-300">Edição do Simulado:</span>
             <select
               value={simuladoAtivoId}
               onChange={e => selecionarSimulado(Number(e.target.value))}
-              className="rounded-xl border border-[#56677d] bg-[#1b232e] px-3 py-1.5 text-xs text-white focus:outline-none focus:border-sky-400 cursor-pointer font-medium"
+              className="rounded-xl border border-black/15 dark:border-[#56677d] bg-white dark:bg-[#1b232e] px-3 py-1.5 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-sky-400 cursor-pointer font-medium"
             >
               {SIMULADOS_SEMANAIS_COMPLETOS.map(s => (
                 <option key={s.id} value={s.id}>
@@ -451,17 +451,17 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
             <button
               type="button"
               onClick={handleExportarCadernoPdf}
-              className="rounded-full border border-sky-400 bg-sky-950/60 hover:bg-sky-900/70 px-3.5 py-1.5 text-xs font-bold text-sky-200 transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer"
+              className="rounded-full border border-sky-400 bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 dark:hover:bg-sky-900/70 px-3.5 py-1.5 text-xs font-bold text-sky-800 dark:text-sky-200 transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer"
               title="Gera um PDF completo com a capa, enunciados e folhas de resposta pautadas FGV para impressão"
             >
-              <Printer className="h-3.5 w-3.5 text-sky-300" />
+              <Printer className="h-3.5 w-3.5 text-sky-600 dark:text-sky-300" />
               <span>🖨️ Imprimir Caderno Oficial (PDF)</span>
             </button>
 
             <button
               type="button"
               onClick={() => setModalGabaritoAberto(true)}
-              className="rounded-full border border-amber-400/60 bg-[#1b232e] hover:bg-amber-950/40 px-3 py-1.5 text-xs font-semibold text-amber-300 transition inline-flex items-center gap-1.5 cursor-pointer"
+              className="rounded-full border border-amber-400/60 bg-amber-50 dark:bg-[#1b232e] hover:bg-amber-100 dark:hover:bg-amber-950/40 px-3 py-1.5 text-xs font-semibold text-amber-800 dark:text-amber-300 transition inline-flex items-center gap-1.5 cursor-pointer"
             >
               <BookOpen className="h-3.5 w-3.5" />
               <span>Padrão de Respostas FGV</span>
@@ -480,19 +480,19 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
       </div>
 
       {/* Caderno de Respostas Oficial: Abas (Peça + Questões 1 a 4 + Resultado) */}
-      <div className="flex items-center gap-1.5 border-b border-[#455468] pb-1 overflow-x-auto">
+      <div className="flex items-center gap-1.5 border-b border-black/10 dark:border-[#455468] pb-1 overflow-x-auto">
         <button
           type="button"
           onClick={() => setAbaCaderno('peca')}
           className={`px-3.5 py-2 rounded-t-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer border-t border-x ${
             abaCaderno === 'peca'
-              ? 'bg-[#2b3646] text-white border-[#56677d] shadow-sm border-b-2 border-b-sky-400'
-              : 'text-slate-400 hover:text-slate-200 border-transparent hover:bg-slate-800/40'
+              ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white border-black/10 dark:border-[#56677d] shadow-sm border-b-2 border-b-sky-500'
+              : 'text-zinc-600 dark:text-slate-400 hover:text-zinc-900 dark:hover:text-slate-200 border-transparent hover:bg-slate-100 dark:hover:bg-slate-800/40'
           }`}
         >
-          <Scale className="h-3.5 w-3.5 text-sky-400" />
+          <Scale className="h-3.5 w-3.5 text-sky-500 dark:text-sky-400" />
           <span>Peça Prática (0,00 - 5,00)</span>
-          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-sky-950 text-sky-300 border border-sky-500/30">
+          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300 border border-sky-500/30">
             {linhasPecaCount}/150L
           </span>
         </button>
@@ -509,17 +509,17 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
               onClick={() => setAbaCaderno(key)}
               className={`px-3 py-2 rounded-t-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border-t border-x ${
                 abaCaderno === key
-                  ? 'bg-[#2b3646] text-white border-[#56677d] shadow-sm border-b-2 border-b-sky-400'
-                  : 'text-slate-400 hover:text-slate-200 border-transparent hover:bg-slate-800/40'
+                  ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white border-black/10 dark:border-[#56677d] shadow-sm border-b-2 border-b-sky-500'
+                  : 'text-zinc-600 dark:text-slate-400 hover:text-zinc-900 dark:hover:text-slate-200 border-transparent hover:bg-slate-100 dark:hover:bg-slate-800/40'
               }`}
             >
-              <FileText className="h-3.5 w-3.5 text-amber-400" />
+              <FileText className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
               <span>Questão {num} (1,25 pt)</span>
               <span
                 className={`text-[9.5px] font-mono px-1.5 py-0.2 rounded border ${
                   respondida
-                    ? 'bg-emerald-950/60 text-emerald-300 border-emerald-500/40'
-                    : 'bg-slate-800 text-slate-400 border-slate-700'
+                    ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-500/40'
+                    : 'bg-slate-100 dark:bg-slate-800 text-zinc-600 dark:text-slate-400 border-black/10 dark:border-slate-700'
                 }`}
               >
                 {linhas}/30L
@@ -533,11 +533,11 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
           onClick={() => setAbaCaderno('resultado')}
           className={`px-3.5 py-2 rounded-t-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer border-t border-x ml-auto ${
             abaCaderno === 'resultado'
-              ? 'bg-[#2b3646] text-white border-[#56677d] shadow-sm border-b-2 border-b-emerald-400'
-              : 'text-slate-400 hover:text-slate-200 border-transparent hover:bg-slate-800/40'
+              ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white border-black/10 dark:border-[#56677d] shadow-sm border-b-2 border-b-emerald-500'
+              : 'text-zinc-600 dark:text-slate-400 hover:text-zinc-900 dark:hover:text-slate-200 border-transparent hover:bg-slate-100 dark:hover:bg-slate-800/40'
           }`}
         >
-          <Trophy className="h-3.5 w-3.5 text-emerald-400" />
+          <Trophy className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" />
           <span>Boletim & Espelho FGV</span>
           {resultadoIntegral && (
             <span
@@ -558,29 +558,29 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
           {/* Coluna da Esquerda: Enunciado Oficial da Peça */}
           <div className="lg:col-span-5 space-y-4">
-            <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-4 shadow-sm space-y-3">
+            <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 p-4 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
                 <span className="badge b-AZUL text-[10px]">Peça Prático-Profissional</span>
-                <span className="text-xs text-amber-300 font-bold font-mono">Valor: 5,00 pontos</span>
+                <span className="text-xs text-amber-600 dark:text-amber-300 font-bold font-mono">Valor: 5,00 pontos</span>
               </div>
 
               <div>
-                <h3 className="text-sm font-bold text-white">{simulado.peca.titulo}</h3>
-                <div className="text-xs text-slate-300 mt-0.5">
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-white">{simulado.peca.titulo}</h3>
+                <div className="text-xs text-zinc-600 dark:text-slate-300 mt-0.5">
                   Peça Cabível:{' '}
-                  <strong className="text-emerald-400">{simulado.peca.peca}</strong>
+                  <strong className="text-emerald-600 dark:text-emerald-400">{simulado.peca.peca}</strong>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-700 bg-[#1e2530] p-3 text-xs text-slate-200 leading-relaxed max-h-[320px] overflow-y-auto whitespace-pre-line font-sans">
+              <div className="rounded-xl border border-black/10 dark:border-slate-700 bg-slate-50 dark:bg-zinc-900 p-3 text-xs text-zinc-800 dark:text-slate-200 leading-relaxed max-h-[320px] overflow-y-auto whitespace-pre-line font-sans">
                 {simulado.peca.enunciado}
               </div>
 
               {/* Dica da Banca FGV */}
-              <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-2.5 text-xs text-emerald-200 flex items-start gap-2">
-                <Sparkles className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 p-2.5 text-xs text-emerald-800 dark:text-emerald-200 flex items-start gap-2">
+                <Sparkles className="h-4 w-4 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
                 <div>
-                  <strong className="font-semibold text-emerald-300">Dica da Banca FGV: </strong>
+                  <strong className="font-semibold text-emerald-700 dark:text-emerald-300">Dica da Banca FGV: </strong>
                   {simulado.peca.dicaBanca}
                 </div>
               </div>
@@ -597,7 +597,7 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
                 <button
                   type="button"
                   onClick={onNavegarParaSimulador}
-                  className="rounded-xl border border-slate-600 bg-slate-800 hover:bg-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition inline-flex items-center gap-1 cursor-pointer"
+                  className="rounded-xl border border-black/10 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-3 py-2 text-xs font-semibold text-zinc-700 dark:text-slate-200 transition inline-flex items-center gap-1 cursor-pointer"
                   title="Abrir a folha de 150 linhas em tela cheia com overlay de sintaxe e tooltips"
                 >
                   <span>Folha 150L</span>
@@ -609,21 +609,21 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
 
           {/* Coluna da Direita: Folha de Redação Pautada FGV 150 Linhas */}
           <div className="lg:col-span-7 space-y-3">
-            <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-4 shadow-sm space-y-3">
+            <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 p-4 shadow-sm space-y-3">
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-white">Caderno de Resposta da Peça</span>
+                  <span className="font-bold text-zinc-900 dark:text-white">Caderno de Resposta da Peça</span>
                   <span
                     className={`font-mono font-bold text-xs px-2 py-0.5 rounded-full ${
                       linhasPecaCount >= 150
                         ? 'bg-amber-400 text-slate-950 font-black animate-pulse'
-                        : 'bg-slate-700 text-slate-200'
+                        : 'bg-slate-200 dark:bg-slate-700 text-zinc-800 dark:text-slate-200'
                     }`}
                   >
                     {linhasPecaCount} / 150 Linhas (5 Páginas)
                   </span>
                 </div>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-zinc-500 dark:text-slate-400">
                   Páginas 1 a 5 pautadas FGV • Autosave ativo
                 </span>
               </div>
@@ -634,18 +634,18 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
                   value={textoPeca}
                   onChange={e => handleAtualizarPeca(e.target.value)}
                   placeholder="Redija aqui a petição inicial ou recurso completo conforme os 150 quesitos oficiais da FGV..."
-                  className="w-full rounded-xl border border-slate-600 bg-[#1b232e] p-3 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-400 leading-relaxed resize-y"
+                  className="w-full rounded-xl border border-black/15 dark:border-slate-600 bg-slate-50 dark:bg-[#1b232e] p-3 text-xs font-mono text-zinc-900 dark:text-slate-100 placeholder-zinc-400 dark:placeholder-slate-500 focus:outline-none focus:border-sky-500 leading-relaxed resize-y"
                 />
               </div>
 
-              <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-700/60">
+              <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-slate-400 pt-1 border-t border-black/10 dark:border-slate-700/60">
                 <span>
                   Estrutura recomendada: Endereçamento • Qualificação • Fatos • Mérito/Teses • Liminar/Tutela • Pedidos • Fechamento
                 </span>
                 <button
                   type="button"
                   onClick={() => handleAtualizarPeca(simulado.peca.esqueleto)}
-                  className="text-sky-400 hover:text-sky-300 transition underline cursor-pointer"
+                  className="text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 transition underline cursor-pointer"
                 >
                   Restaurar esqueleto padrão
                 </button>
@@ -669,42 +669,42 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
               {/* Coluna da Esquerda: Enunciado Oficial da Questão + Itens A e B */}
               <div className="lg:col-span-5 space-y-4">
-                <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-4 shadow-sm space-y-3.5">
+                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 p-4 shadow-sm space-y-3.5">
                   <div className="flex items-center justify-between">
                     <span className="badge b-AMARELO text-[10px]">Questão Discursiva {questao.numero}</span>
-                    <span className="text-xs text-amber-300 font-bold font-mono">Valor: 1,25 ponto</span>
+                    <span className="text-xs text-amber-600 dark:text-amber-300 font-bold font-mono">Valor: 1,25 ponto</span>
                   </div>
 
-                  <h3 className="text-sm font-bold text-white">{questao.titulo}</h3>
+                  <h3 className="text-sm font-bold text-zinc-900 dark:text-white">{questao.titulo}</h3>
 
-                  <div className="rounded-xl border border-slate-700 bg-[#1e2530] p-3 text-xs text-slate-200 leading-relaxed whitespace-pre-line font-sans">
+                  <div className="rounded-xl border border-black/10 dark:border-slate-700 bg-slate-50 dark:bg-zinc-900 p-3 text-xs text-zinc-800 dark:text-slate-200 leading-relaxed whitespace-pre-line font-sans">
                     {questao.enunciado}
                   </div>
 
                   {/* Itens A e B */}
                   <div className="space-y-2.5">
-                    <div className="rounded-xl border border-sky-500/30 bg-sky-950/20 p-3 space-y-1">
-                      <div className="flex items-center justify-between text-xs font-bold text-sky-300">
+                    <div className="rounded-xl border border-sky-500/30 bg-sky-50 dark:bg-sky-950/20 p-3 space-y-1">
+                      <div className="flex items-center justify-between text-xs font-bold text-sky-700 dark:text-sky-300">
                         <span>Item A)</span>
-                        <span className="font-mono text-[11px] text-sky-400">0,65 pt</span>
+                        <span className="font-mono text-[11px] text-sky-600 dark:text-sky-400">0,65 pt</span>
                       </div>
-                      <p className="text-xs text-slate-200">{questao.itemA.pergunta}</p>
+                      <p className="text-xs text-zinc-700 dark:text-slate-200">{questao.itemA.pergunta}</p>
                     </div>
 
-                    <div className="rounded-xl border border-teal-500/30 bg-teal-950/20 p-3 space-y-1">
-                      <div className="flex items-center justify-between text-xs font-bold text-teal-300">
+                    <div className="rounded-xl border border-teal-500/30 bg-teal-50 dark:bg-teal-950/20 p-3 space-y-1">
+                      <div className="flex items-center justify-between text-xs font-bold text-teal-700 dark:text-teal-300">
                         <span>Item B)</span>
-                        <span className="font-mono text-[11px] text-teal-400">0,60 pt</span>
+                        <span className="font-mono text-[11px] text-teal-600 dark:text-teal-400">0,60 pt</span>
                       </div>
-                      <p className="text-xs text-slate-200">{questao.itemB.pergunta}</p>
+                      <p className="text-xs text-zinc-700 dark:text-slate-200">{questao.itemB.pergunta}</p>
                     </div>
                   </div>
 
                   {/* Dica da Banca */}
-                  <div className="rounded-xl border border-amber-500/30 bg-amber-950/20 p-2.5 text-xs text-amber-200 flex items-start gap-2">
-                    <Sparkles className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                  <div className="rounded-xl border border-amber-500/30 bg-amber-50 dark:bg-amber-950/20 p-2.5 text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2">
+                    <Sparkles className="h-4 w-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
                     <div>
-                      <strong className="font-semibold text-amber-300">Dica da Banca FGV: </strong>
+                      <strong className="font-semibold text-amber-700 dark:text-amber-300">Dica da Banca FGV: </strong>
                       {questao.dicaBanca}
                     </div>
                   </div>
@@ -713,28 +713,28 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
 
               {/* Coluna da Direita: Folha de Resposta Pautada de 30 Linhas FGV */}
               <div className="lg:col-span-7 space-y-3">
-                <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-4 shadow-sm space-y-3">
+                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 p-4 shadow-sm space-y-3">
                   <div className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-white">Caderno de Resposta da Questão {questao.numero}</span>
+                      <span className="font-bold text-zinc-900 dark:text-white">Caderno de Resposta da Questão {questao.numero}</span>
                       <span
                         className={`font-mono font-bold text-xs px-2 py-0.5 rounded-full ${
                           linhasCount > 30
                             ? 'bg-red-500 text-white font-black animate-bounce'
-                            : 'bg-slate-700 text-slate-200'
+                            : 'bg-slate-200 dark:bg-slate-700 text-zinc-800 dark:text-slate-200'
                         }`}
                       >
                         {linhasCount} / 30 Linhas
                       </span>
                     </div>
-                    <span className="text-[11px] text-slate-400">
+                    <span className="text-[11px] text-zinc-500 dark:text-slate-400">
                       Limite oficial FGV: 30 linhas por questão
                     </span>
                   </div>
 
                   {linhasCount > 30 && (
-                    <div className="flex items-center gap-2 text-xs font-semibold text-red-300 bg-red-950/40 border border-red-500/40 rounded-xl p-2.5">
-                      <AlertTriangle className="h-4 w-4 text-red-400 shrink-0" />
+                    <div className="flex items-center gap-2 text-xs font-semibold text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/40 border border-red-500/40 rounded-xl p-2.5">
+                      <AlertTriangle className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0" />
                       <span>
                         ⚠️ Atenção: você ultrapassou o limite oficial de 30 linhas da FGV para esta questão. Linhas excedentes são desconsideradas pela banca corretora!
                       </span>
@@ -748,11 +748,11 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
                       value={respostasQuestoes[chave]}
                       onChange={e => handleAtualizarQuestao(chave, e.target.value)}
                       placeholder={`Escreva aqui sua resposta aos itens A e B da Questão ${questao.numero}...\nExemplo de estrutura:\nA) O pedido não é legítimo, tendo em vista que...\nB) Em relação aos créditos, aplica-se o artigo...`}
-                      className="w-full rounded-xl border border-slate-600 bg-[#1b232e] p-3 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400 leading-relaxed resize-y"
+                      className="w-full rounded-xl border border-black/15 dark:border-slate-600 bg-slate-50 dark:bg-[#1b232e] p-3 text-xs font-mono text-zinc-900 dark:text-slate-100 placeholder-zinc-400 dark:placeholder-slate-500 focus:outline-none focus:border-amber-500 leading-relaxed resize-y"
                     />
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-700/60">
+                  <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-slate-400 pt-1 border-t border-black/10 dark:border-slate-700/60">
                     <span>
                       Dica de resposta: Divida sua resposta claramente em <strong>A)</strong> e <strong>B)</strong> para facilitar a pontuação no espelho da FGV.
                     </span>
@@ -823,33 +823,33 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
 
                   {/* Resumo em Cards */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    <div className="bg-[#1b232e]/80 border border-slate-700 rounded-xl p-2.5 text-center min-w-[90px]">
-                      <div className="text-[10px] text-slate-400 font-semibold">Peça Prática</div>
-                      <div className="font-mono text-base font-bold text-sky-400">
+                    <div className="bg-white/90 dark:bg-[#1b232e]/80 border border-black/10 dark:border-slate-700 rounded-xl p-2.5 text-center min-w-[90px]">
+                      <div className="text-[10px] text-zinc-500 dark:text-slate-400 font-semibold">Peça Prática</div>
+                      <div className="font-mono text-base font-bold text-sky-600 dark:text-sky-400">
                         {resultadoIntegral.notaPeca.toFixed(2)} / 5,00
                       </div>
                     </div>
-                    <div className="bg-[#1b232e]/80 border border-slate-700 rounded-xl p-2.5 text-center min-w-[90px]">
-                      <div className="text-[10px] text-slate-400 font-semibold">Questão 1</div>
-                      <div className="font-mono text-base font-bold text-amber-300">
+                    <div className="bg-white/90 dark:bg-[#1b232e]/80 border border-black/10 dark:border-slate-700 rounded-xl p-2.5 text-center min-w-[90px]">
+                      <div className="text-[10px] text-zinc-500 dark:text-slate-400 font-semibold">Questão 1</div>
+                      <div className="font-mono text-base font-bold text-amber-600 dark:text-amber-300">
                         {resultadoIntegral.notaQ1.toFixed(2)} / 1,25
                       </div>
                     </div>
-                    <div className="bg-[#1b232e]/80 border border-slate-700 rounded-xl p-2.5 text-center min-w-[90px]">
-                      <div className="text-[10px] text-slate-400 font-semibold">Questão 2</div>
-                      <div className="font-mono text-base font-bold text-amber-300">
+                    <div className="bg-white/90 dark:bg-[#1b232e]/80 border border-black/10 dark:border-slate-700 rounded-xl p-2.5 text-center min-w-[90px]">
+                      <div className="text-[10px] text-zinc-500 dark:text-slate-400 font-semibold">Questão 2</div>
+                      <div className="font-mono text-base font-bold text-amber-600 dark:text-amber-300">
                         {resultadoIntegral.notaQ2.toFixed(2)} / 1,25
                       </div>
                     </div>
-                    <div className="bg-[#1b232e]/80 border border-slate-700 rounded-xl p-2.5 text-center min-w-[90px]">
-                      <div className="text-[10px] text-slate-400 font-semibold">Questão 3</div>
-                      <div className="font-mono text-base font-bold text-amber-300">
+                    <div className="bg-white/90 dark:bg-[#1b232e]/80 border border-black/10 dark:border-slate-700 rounded-xl p-2.5 text-center min-w-[90px]">
+                      <div className="text-[10px] text-zinc-500 dark:text-slate-400 font-semibold">Questão 3</div>
+                      <div className="font-mono text-base font-bold text-amber-600 dark:text-amber-300">
                         {resultadoIntegral.notaQ3.toFixed(2)} / 1,25
                       </div>
                     </div>
-                    <div className="bg-[#1b232e]/80 border border-slate-700 rounded-xl p-2.5 text-center min-w-[90px]">
-                      <div className="text-[10px] text-slate-400 font-semibold">Questão 4</div>
-                      <div className="font-mono text-base font-bold text-amber-300">
+                    <div className="bg-white/90 dark:bg-[#1b232e]/80 border border-black/10 dark:border-slate-700 rounded-xl p-2.5 text-center min-w-[90px]">
+                      <div className="text-[10px] text-zinc-500 dark:text-slate-400 font-semibold">Questão 4</div>
+                      <div className="font-mono text-base font-bold text-amber-600 dark:text-amber-300">
                         {resultadoIntegral.notaQ4.toFixed(2)} / 1,25
                       </div>
                     </div>
@@ -860,12 +860,12 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
               {/* Detalhamento dos Espelhos Oficiais FGV */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Espelho da Peça Prática */}
-                <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-4 space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-700 pb-2">
-                    <span className="font-bold text-white text-sm flex items-center gap-2">
-                      <Scale className="h-4 w-4 text-sky-400" /> Espelho Oficial da Peça ({simulado.peca.peca})
+                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 p-4 space-y-3">
+                  <div className="flex items-center justify-between border-b border-black/10 dark:border-slate-700 pb-2">
+                    <span className="font-bold text-zinc-900 dark:text-white text-sm flex items-center gap-2">
+                      <Scale className="h-4 w-4 text-sky-500 dark:text-sky-400" /> Espelho Oficial da Peça ({simulado.peca.peca})
                     </span>
-                    <span className="font-mono text-xs font-bold text-sky-400">
+                    <span className="font-mono text-xs font-bold text-sky-600 dark:text-sky-400">
                       {resultadoIntegral.notaPeca.toFixed(2)} / 5,00
                     </span>
                   </div>
@@ -874,30 +874,30 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
                     {resultadoIntegral.criteriosPeca.map(crit => (
                       <div
                         key={crit.id}
-                        className="rounded-xl border border-slate-700 bg-[#1b232e] p-2.5 text-xs space-y-1"
+                        className="rounded-xl border border-black/10 dark:border-slate-700 bg-slate-50 dark:bg-zinc-900 p-2.5 text-xs space-y-1"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="font-semibold text-white">{crit.item}</span>
+                          <span className="font-semibold text-zinc-900 dark:text-white">{crit.item}</span>
                           <div className="flex items-center gap-2">
                             {getStatusBadge(crit.status)}
-                            <span className="font-mono text-[11px] font-bold text-slate-300">
+                            <span className="font-mono text-[11px] font-bold text-zinc-700 dark:text-slate-300">
                               {crit.pontosObtidos.toFixed(2)} / {crit.pontosMax.toFixed(2)} pt
                             </span>
                           </div>
                         </div>
-                        <p className="text-[11px] text-slate-400">{crit.comentario}</p>
+                        <p className="text-[11px] text-zinc-600 dark:text-slate-400">{crit.comentario}</p>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 {/* Espelho das 4 Questões Discursivas */}
-                <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-4 space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-700 pb-2">
-                    <span className="font-bold text-white text-sm flex items-center gap-2">
-                      <FileCheck2 className="h-4 w-4 text-amber-400" /> Espelho das 4 Questões Discursivas
+                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 p-4 space-y-3">
+                  <div className="flex items-center justify-between border-b border-black/10 dark:border-slate-700 pb-2">
+                    <span className="font-bold text-zinc-900 dark:text-white text-sm flex items-center gap-2">
+                      <FileCheck2 className="h-4 w-4 text-amber-500 dark:text-amber-400" /> Espelho das 4 Questões Discursivas
                     </span>
-                    <span className="font-mono text-xs font-bold text-amber-400">
+                    <span className="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
                       {(resultadoIntegral.notaQ1 + resultadoIntegral.notaQ2 + resultadoIntegral.notaQ3 + resultadoIntegral.notaQ4).toFixed(2)} / 5,00
                     </span>
                   </div>
@@ -906,20 +906,20 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
                     {resultadoIntegral.criteriosQuestoes.map((crit, idx) => (
                       <div
                         key={idx}
-                        className="rounded-xl border border-slate-700 bg-[#1b232e] p-2.5 text-xs space-y-1"
+                        className="rounded-xl border border-black/10 dark:border-slate-700 bg-slate-50 dark:bg-zinc-900 p-2.5 text-xs space-y-1"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="font-semibold text-white">
+                          <span className="font-semibold text-zinc-900 dark:text-white">
                             Questão {crit.questaoNum} • Item {crit.item}
                           </span>
                           <div className="flex items-center gap-2">
                             {getStatusBadge(crit.status)}
-                            <span className="font-mono text-[11px] font-bold text-slate-300">
+                            <span className="font-mono text-[11px] font-bold text-zinc-700 dark:text-slate-300">
                               {crit.pontosObtidos.toFixed(2)} / {crit.pontosMax.toFixed(2)} pt
                             </span>
                           </div>
                         </div>
-                        <p className="text-[11px] text-slate-400">{crit.descricao}</p>
+                        <p className="text-[11px] text-zinc-600 dark:text-slate-400">{crit.descricao}</p>
                       </div>
                     ))}
                   </div>
@@ -927,10 +927,10 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
               </div>
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-[#455468] bg-[#2b3646]/60 p-8 text-center space-y-3">
-              <Trophy className="h-10 w-10 text-slate-500 mx-auto" />
-              <h3 className="text-base font-bold text-white">Nenhuma correção integral realizada ainda</h3>
-              <p className="text-xs text-slate-300 max-w-md mx-auto">
+            <div className="rounded-2xl border border-dashed border-black/15 dark:border-white/15 bg-slate-50 dark:bg-zinc-800/60 p-8 text-center space-y-3">
+              <Trophy className="h-10 w-10 text-zinc-400 dark:text-slate-500 mx-auto" />
+              <h3 className="text-base font-bold text-zinc-900 dark:text-white">Nenhuma correção integral realizada ainda</h3>
+              <p className="text-xs text-zinc-600 dark:text-slate-300 max-w-md mx-auto">
                 Preencha a Peça e as 4 Questões nos campos do caderno e clique em <strong>"Corrigir Prova Completa"</strong> para receber a nota oficial de 0 a 10,00 pontos conforme os critérios da banca FGV.
               </p>
               <button
@@ -949,37 +949,37 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
       {/* MODAL COM O PADRÃO OFICIAL DE RESPOSTA COMPLETO FGV */}
       {modalGabaritoAberto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
-          <div className="win11-modal max-w-3xl w-full max-h-[85vh] flex flex-col p-5 bg-[#202937] border border-slate-600 rounded-2xl shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-700">
+          <div className="win11-modal max-w-3xl w-full max-h-[85vh] flex flex-col p-5 bg-white dark:bg-zinc-900 border border-black/15 dark:border-slate-700 rounded-2xl shadow-2xl text-zinc-900 dark:text-zinc-100">
+            <div className="flex items-center justify-between pb-3 border-b border-black/10 dark:border-slate-700">
               <div>
                 <span className="badge b-AMARELO text-[10px]">Padrão de Resposta Oficial da Banca FGV</span>
-                <h3 className="text-base font-bold text-white mt-1">
+                <h3 className="text-base font-bold text-zinc-900 dark:text-white mt-1">
                   Espelho Completo: {simulado.titulo}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setModalGabaritoAberto(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 cursor-pointer"
+                className="p-1.5 rounded-lg text-zinc-400 dark:text-slate-400 hover:text-zinc-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <div className="overflow-y-auto space-y-4 py-4 pr-1 text-xs text-slate-200">
+            <div className="overflow-y-auto space-y-4 py-4 pr-1 text-xs text-zinc-800 dark:text-slate-200">
               {/* Gabarito da Peça */}
-              <div className="rounded-xl border border-sky-500/40 bg-sky-950/20 p-3 space-y-2">
-                <h4 className="font-bold text-sky-300 text-sm flex items-center gap-2">
+              <div className="rounded-xl border border-sky-500/40 bg-sky-50 dark:bg-sky-950/20 p-3 space-y-2">
+                <h4 className="font-bold text-sky-700 dark:text-sky-300 text-sm flex items-center gap-2">
                   <Scale className="h-4 w-4" /> Peça Prático-Profissional (5,00 pts): {simulado.peca.peca}
                 </h4>
                 <div className="space-y-1.5">
                   {simulado.peca.espelhoCorrecao.map(crit => (
-                    <div key={crit.id} className="flex items-start justify-between gap-3 text-xs border-b border-slate-800 pb-1">
+                    <div key={crit.id} className="flex items-start justify-between gap-3 text-xs border-b border-black/5 dark:border-slate-800 pb-1">
                       <div>
-                        <strong className="text-white">{crit.item}: </strong>
-                        <span className="text-slate-300">{crit.descricao}</span>
+                        <strong className="text-zinc-900 dark:text-white">{crit.item}: </strong>
+                        <span className="text-zinc-600 dark:text-slate-300">{crit.descricao}</span>
                       </div>
-                      <span className="font-mono text-sky-400 font-bold shrink-0">{crit.pontos.toFixed(2)} pt</span>
+                      <span className="font-mono text-sky-600 dark:text-sky-400 font-bold shrink-0">{crit.pontos.toFixed(2)} pt</span>
                     </div>
                   ))}
                 </div>
@@ -987,29 +987,29 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
 
               {/* Gabarito das 4 Questões */}
               {simulado.questoes.map(q => (
-                <div key={q.numero} className="rounded-xl border border-slate-700 bg-[#1b232e] p-3 space-y-2">
-                  <h4 className="font-bold text-amber-300 text-sm">
+                <div key={q.numero} className="rounded-xl border border-black/10 dark:border-slate-700 bg-slate-50 dark:bg-zinc-900 p-3 space-y-2">
+                  <h4 className="font-bold text-amber-700 dark:text-amber-300 text-sm">
                     Questão {q.numero} (1,25 pts) • {q.titulo}
                   </h4>
                   <div className="space-y-2 text-xs">
-                    <div className="p-2 rounded-lg bg-[#253040] space-y-1">
-                      <div className="flex items-center justify-between font-bold text-sky-300">
+                    <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-black/5 dark:border-white/5 space-y-1">
+                      <div className="flex items-center justify-between font-bold text-sky-700 dark:text-sky-300">
                         <span>Gabarito Item A)</span>
                         <span className="font-mono">0,65 pt</span>
                       </div>
-                      <p className="text-slate-200">{q.itemA.gabaritoEsperado}</p>
-                      <div className="text-[11px] text-sky-400 font-mono">
+                      <p className="text-zinc-700 dark:text-slate-200">{q.itemA.gabaritoEsperado}</p>
+                      <div className="text-[11px] text-sky-600 dark:text-sky-400 font-mono">
                         Fundamentos: {q.itemA.fundamentos.join(' • ')}
                       </div>
                     </div>
 
-                    <div className="p-2 rounded-lg bg-[#253040] space-y-1">
-                      <div className="flex items-center justify-between font-bold text-teal-300">
+                    <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-black/5 dark:border-white/5 space-y-1">
+                      <div className="flex items-center justify-between font-bold text-teal-700 dark:text-teal-300">
                         <span>Gabarito Item B)</span>
                         <span className="font-mono">0,60 pt</span>
                       </div>
-                      <p className="text-slate-200">{q.itemB.gabaritoEsperado}</p>
-                      <div className="text-[11px] text-teal-400 font-mono">
+                      <p className="text-zinc-700 dark:text-slate-200">{q.itemB.gabaritoEsperado}</p>
+                      <div className="text-[11px] text-teal-600 dark:text-teal-400 font-mono">
                         Fundamentos: {q.itemB.fundamentos.join(' • ')}
                       </div>
                     </div>
@@ -1018,11 +1018,11 @@ export const SimuladoOficialCompletoView: React.FC<SimuladoOficialCompletoViewPr
               ))}
             </div>
 
-            <div className="pt-3 border-t border-slate-700 flex justify-end">
+            <div className="pt-3 border-t border-black/10 dark:border-slate-700 flex justify-end">
               <button
                 type="button"
                 onClick={() => setModalGabaritoAberto(false)}
-                className="rounded-xl bg-slate-700 hover:bg-slate-600 px-4 py-2 text-xs font-semibold text-white transition cursor-pointer"
+                className="rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 px-4 py-2 text-xs font-semibold text-zinc-900 dark:text-white transition cursor-pointer"
               >
                 Fechar Espelho
               </button>

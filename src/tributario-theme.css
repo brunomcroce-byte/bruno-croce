@@ -667,51 +667,220 @@ body.theme-dark {
    Garantia Total de Cores no Modo Claro vs Escuro (macOS Sequoia)
    Corrige todos os quadros, cards, inputs e textos para alternarem perfeitamente
    ========================================================================== */
-.theme-light [class*="bg-[#2b3646]"],
-.theme-light [class*="bg-[#344154]"],
-.theme-light [class*="bg-[#272727]"],
-.theme-light [class*="bg-[#232323]"],
-.theme-light [class*="bg-[#2b2b2b]"] {
+.theme-light .bg-\[\#2b3646\],
+.theme-light .bg-\[\#344154\],
+.theme-light .bg-\[\#272727\],
+.theme-light .bg-\[\#232323\],
+.theme-light .bg-\[\#2b2b2b\],
+html:not(.dark) .bg-\[\#2b3646\],
+html:not(.dark) .bg-\[\#344154\],
+html:not(.dark) .bg-\[\#272727\],
+html:not(.dark) .bg-\[\#232323\],
+html:not(.dark) .bg-\[\#2b2b2b\],
+html:not(.dark) .bg-\[\#253040\],
+html:not(.dark) .bg-\[\#202937\],
+html:not(.dark) .bg-\[\#222c3a\],
+html:not(.dark) .bg-\[\#222d3d\],
+html:not(.dark) .bg-\[\#202733\],
+.theme-light .bg-\[\#2b3646\],
+.theme-light .bg-\[\#344154\],
+.theme-light .bg-\[\#272727\],
+.theme-light .bg-\[\#232323\],
+.theme-light .bg-\[\#2b2b2b\],
+.theme-light .bg-\[\#253040\],
+.theme-light .bg-\[\#202937\],
+.theme-light .bg-\[\#222c3a\],
+.theme-light .bg-\[\#222d3d\],
+.theme-light .bg-\[\#202733\] {
   background-color: #ffffff !important;
   color: #1d1d1f !important;
 }
 
-.theme-light [class*="bg-[#1b232e]"],
-.theme-light [class*="bg-[#222b38]"] {
+.theme-light .bg-\[\#1b232e\],
+.theme-light .bg-\[\#222b38\],
+.theme-light .bg-\[\#1e2530\],
+.theme-light .bg-\[\#1e293b\],
+.theme-light .bg-\[\#242e3e\],
+.theme-light .bg-\[\#2a3648\],
+html:not(.dark) .bg-\[\#1b232e\],
+html:not(.dark) .bg-\[\#222b38\],
+html:not(.dark) .bg-\[\#1e2530\],
+html:not(.dark) .bg-\[\#1e293b\],
+html:not(.dark) .bg-\[\#242e3e\],
+html:not(.dark) .bg-\[\#2a3648\] {
   background-color: #f5f5f7 !important;
   color: #1d1d1f !important;
 }
 
-.theme-light [class*="bg-[#3b495e]"],
-.theme-light [class*="bg-[#3d4d63]"] {
+.theme-light .bg-\[\#3b495e\],
+.theme-light .bg-\[\#3d4d63\],
+.theme-light .bg-\[\#334155\],
+html:not(.dark) .bg-\[\#3b495e\],
+html:not(.dark) .bg-\[\#3d4d63\],
+html:not(.dark) .bg-\[\#334155\] {
   background-color: #f0f0f3 !important;
   color: #1d1d1f !important;
 }
 
-.theme-light [class*="border-[#455468]"],
-.theme-light [class*="border-[#56677d]"] {
+.theme-light .border-\[\#455468\],
+.theme-light .border-\[\#56677d\],
+html:not(.dark) .border-\[\#455468\],
+html:not(.dark) .border-\[\#56677d\] {
   border-color: rgba(0, 0, 0, 0.12) !important;
 }
 
-.theme-light [class*="text-slate-300"],
-.theme-light [class*="text-slate-200"],
-.theme-light [class*="text-slate-400"] {
+.theme-light .text-slate-300,
+.theme-light .text-slate-200,
+.theme-light .text-slate-400,
+html:not(.dark) .text-slate-300,
+html:not(.dark) .text-slate-200,
+html:not(.dark) .text-slate-400 {
   color: #48484a !important;
 }
 
-.theme-light [class*="bg-[#2b3646]"] h3,
-.theme-light [class*="bg-[#2b3646]"] h4,
-.theme-light [class*="bg-[#344154]"] h3,
-.theme-light [class*="bg-[#344154]"] h4,
-.theme-light [class*="bg-[#1b232e]"] h3,
-.theme-light [class*="bg-[#1b232e]"] h4 {
+.theme-light .bg-\[\#2b3646\] h2,
+.theme-light .bg-\[\#2b3646\] h3,
+.theme-light .bg-\[\#2b3646\] h4,
+.theme-light .bg-\[\#344154\] h2,
+.theme-light .bg-\[\#344154\] h3,
+.theme-light .bg-\[\#344154\] h4,
+.theme-light .bg-\[\#1b232e\] h2,
+.theme-light .bg-\[\#1b232e\] h3,
+.theme-light .bg-\[\#1b232e\] h4,
+html:not(.dark) .bg-\[\#2b3646\] h2,
+html:not(.dark) .bg-\[\#2b3646\] h3,
+html:not(.dark) .bg-\[\#2b3646\] h4,
+html:not(.dark) .bg-\[\#344154\] h2,
+html:not(.dark) .bg-\[\#344154\] h3,
+html:not(.dark) .bg-\[\#344154\] h4,
+html:not(.dark) .bg-\[\#1b232e\] h2,
+html:not(.dark) .bg-\[\#1b232e\] h3,
+html:not(.dark) .bg-\[\#1b232e\] h4 {
   color: #1d1d1f !important;
 }
 
-.theme-light select[class*="bg-[#1b232e]"],
-.theme-light input[class*="bg-[#1b232e]"],
-.theme-light textarea[class*="bg-[#1b232e]"] {
+.theme-light select.bg-\[\#1b232e\],
+.theme-light input.bg-\[\#1b232e\],
+.theme-light textarea.bg-\[\#1b232e\],
+html:not(.dark) select.bg-\[\#1b232e\],
+html:not(.dark) input.bg-\[\#1b232e\],
+html:not(.dark) textarea.bg-\[\#1b232e\] {
   background-color: #ffffff !important;
   color: #1d1d1f !important;
   border-color: rgba(0, 0, 0, 0.15) !important;
 }
+
+/* ==========================================================================
+   Universal Light Mode Fallback via Attribute Substring Matching
+   Guarantees zero dark boxes regardless of component tree or nesting
+   ========================================================================== */
+.theme-light [class*="2b3646"],
+.theme-light [class*="253040"],
+.theme-light [class*="202937"],
+.theme-light [class*="222c3a"],
+.theme-light [class*="222d3d"],
+.theme-light [class*="202733"],
+html:not(.dark) [class*="2b3646"],
+html:not(.dark) [class*="253040"],
+html:not(.dark) [class*="202937"],
+html:not(.dark) [class*="222c3a"],
+html:not(.dark) [class*="222d3d"],
+html:not(.dark) [class*="202733"] {
+  background-color: #ffffff !important;
+  color: #1d1d1f !important;
+}
+
+.theme-light [class*="344154"],
+html:not(.dark) [class*="344154"] {
+  background-color: #f8f9fa !important;
+  color: #1d1d1f !important;
+}
+
+.theme-light [class*="1b232e"],
+.theme-light [class*="1e2530"],
+.theme-light [class*="1e293b"],
+.theme-light [class*="242e3e"],
+.theme-light [class*="2a3648"],
+html:not(.dark) [class*="1b232e"],
+html:not(.dark) [class*="1e2530"],
+html:not(.dark) [class*="1e293b"],
+html:not(.dark) [class*="242e3e"],
+html:not(.dark) [class*="2a3648"] {
+  background-color: #f1f3f5 !important;
+  color: #1d1d1f !important;
+}
+
+.theme-light [class*="455468"],
+.theme-light [class*="56677d"],
+html:not(.dark) [class*="455468"],
+html:not(.dark) [class*="56677d"] {
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+.theme-light [class*="2b3646"] h1,
+.theme-light [class*="2b3646"] h2,
+.theme-light [class*="2b3646"] h3,
+.theme-light [class*="2b3646"] h4,
+.theme-light [class*="344154"] h1,
+.theme-light [class*="344154"] h2,
+.theme-light [class*="344154"] h3,
+.theme-light [class*="344154"] h4,
+.theme-light [class*="1b232e"] h1,
+.theme-light [class*="1b232e"] h2,
+.theme-light [class*="1b232e"] h3,
+.theme-light [class*="1b232e"] h4,
+html:not(.dark) [class*="2b3646"] h1,
+html:not(.dark) [class*="2b3646"] h2,
+html:not(.dark) [class*="2b3646"] h3,
+html:not(.dark) [class*="2b3646"] h4,
+html:not(.dark) [class*="344154"] h1,
+html:not(.dark) [class*="344154"] h2,
+html:not(.dark) [class*="344154"] h3,
+html:not(.dark) [class*="344154"] h4,
+html:not(.dark) [class*="1b232e"] h1,
+html:not(.dark) [class*="1b232e"] h2,
+html:not(.dark) [class*="1b232e"] h3,
+html:not(.dark) [class*="1b232e"] h4 {
+  color: #1d1d1f !important;
+}
+
+.theme-light [class*="2b3646"] p,
+.theme-light [class*="344154"] p,
+.theme-light [class*="1b232e"] p,
+html:not(.dark) [class*="2b3646"] p,
+html:not(.dark) [class*="344154"] p,
+html:not(.dark) [class*="1b232e"] p {
+  color: #3a3a3c !important;
+}
+
+.theme-light [class*="2b3646"] .text-white,
+.theme-light [class*="344154"] .text-white,
+.theme-light [class*="1b232e"] .text-white,
+html:not(.dark) [class*="2b3646"] .text-white,
+html:not(.dark) [class*="344154"] .text-white,
+html:not(.dark) [class*="1b232e"] .text-white {
+  color: #1d1d1f !important;
+}
+
+.theme-light [class*="2b3646"] .text-slate-300,
+.theme-light [class*="2b3646"] .text-slate-200,
+.theme-light [class*="2b3646"] .text-slate-400,
+.theme-light [class*="344154"] .text-slate-300,
+.theme-light [class*="344154"] .text-slate-200,
+.theme-light [class*="344154"] .text-slate-400,
+.theme-light [class*="1b232e"] .text-slate-300,
+.theme-light [class*="1b232e"] .text-slate-200,
+.theme-light [class*="1b232e"] .text-slate-400,
+html:not(.dark) [class*="2b3646"] .text-slate-300,
+html:not(.dark) [class*="2b3646"] .text-slate-200,
+html:not(.dark) [class*="2b3646"] .text-slate-400,
+html:not(.dark) [class*="344154"] .text-slate-300,
+html:not(.dark) [class*="344154"] .text-slate-200,
+html:not(.dark) [class*="344154"] .text-slate-400,
+html:not(.dark) [class*="1b232e"] .text-slate-300,
+html:not(.dark) [class*="1b232e"] .text-slate-200,
+html:not(.dark) [class*="1b232e"] .text-slate-400 {
+  color: #48484a !important;
+}
+
+

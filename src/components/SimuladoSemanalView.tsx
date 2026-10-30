@@ -288,18 +288,18 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
   return (
     <div className="space-y-5">
       {/* Top Header Card */}
-      <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-5 shadow-sm space-y-4">
+      <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 p-5 shadow-sm space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <div className="flex items-center gap-2">
               <span className="badge b-AZUL font-mono font-bold">Simulado Semanal OAB</span>
               <span className="badge b-AMARELO text-[10px]">32 Provas FGV Reais</span>
             </div>
-            <h2 className="text-lg font-bold text-white mt-1.5 flex items-center gap-2">
-              <Award className="h-5 w-5 text-amber-400" />
+            <h2 className="text-lg font-bold text-zinc-900 dark:text-white mt-1.5 flex items-center gap-2">
+              <Award className="h-5 w-5 text-amber-500 dark:text-amber-400" />
               Simulados Oficiais FGV com Esqueleto de Memorização & Correção
             </h2>
-            <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+            <p className="text-xs text-zinc-600 dark:text-slate-300 mt-1 max-w-2xl leading-relaxed">
               Treine com as 32 provas históricas da FGV. O esqueleto carrega na folha de 150 linhas com o endereçamento, teses e fundamentos normativos estruturados para você memorizar a peça e desenvolver a fundamentação jurídica.
             </p>
           </div>
@@ -315,17 +315,17 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
 
             <button
               onClick={() => setAnexoInfoAberto(true)}
-              className="rounded-full border border-sky-400/70 bg-sky-950/60 px-3.5 py-2 text-xs font-semibold text-sky-200 hover:bg-sky-900 transition inline-flex items-center gap-1.5 cursor-pointer"
+              className="rounded-full border border-sky-400/70 bg-sky-50 dark:bg-sky-950/60 px-3.5 py-2 text-xs font-semibold text-sky-700 dark:text-sky-200 hover:bg-sky-100 dark:hover:bg-sky-900 transition inline-flex items-center gap-1.5 cursor-pointer"
               title="Informações sobre como importar ou enviar seus 32 arquivos específicos"
             >
-              <Upload className="h-3.5 w-3.5 text-sky-400" /> Meus 32 Arquivos
+              <Upload className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" /> Meus 32 Arquivos
             </button>
           </div>
         </div>
 
         {/* Sub-Aba Toggle: Simulado Oficial FGV (Peça + 4Q) vs. Gerenciador vs. Banco de 32 Provas FGV vs. Cronograma */}
-        <div className="flex items-center justify-between border-t border-[#455468] pt-3 flex-wrap gap-3">
-          <div className="flex items-center gap-1.5 bg-[#1b232e] p-1 rounded-xl border border-[#455468] flex-wrap">
+        <div className="flex items-center justify-between border-t border-black/10 dark:border-white/10 pt-3 flex-wrap gap-3">
+          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-zinc-900 p-1 rounded-xl border border-black/10 dark:border-white/10 flex-wrap">
             <button
               onClick={() => setSubAba('oficial_fgv')}
               className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer flex items-center gap-2 ${
@@ -413,15 +413,15 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
       {subAba === 'simulados' && (
         <div className="space-y-4">
           {/* Filters Bar */}
-          <div className="flex items-center justify-between gap-3 flex-wrap bg-[#2b3646] p-3.5 rounded-xl border border-[#455468]">
+          <div className="flex items-center justify-between gap-3 flex-wrap bg-white dark:bg-zinc-800 p-3.5 rounded-xl border border-black/10 dark:border-white/10">
             <div className="flex items-center gap-2 flex-1 min-w-[260px]">
-              <Search className="h-4 w-4 text-slate-400 ml-1" />
+              <Search className="h-4 w-4 text-zinc-400 ml-1" />
               <input
                 type="text"
                 value={busca}
                 onChange={e => setBusca(e.target.value)}
                 placeholder="Buscar por exame, peça (ex: Mandado de Segurança, Repetição, ICMS)..."
-                className="w-full bg-transparent text-xs text-white placeholder-slate-400 focus:outline-none"
+                className="w-full bg-transparent text-xs text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none"
               />
             </div>
 
@@ -444,7 +444,7 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
                   className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition whitespace-nowrap cursor-pointer ${
                     filtroPeca === filtro
                       ? 'bg-sky-600 text-white'
-                      : 'border border-[#56677d] bg-[#1b232e] text-slate-300 hover:bg-[#344154]'
+                      : 'border border-black/10 dark:border-white/10 bg-slate-100 dark:bg-zinc-900 text-zinc-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-zinc-800'
                   }`}
                 >
                   {filtro}
@@ -454,7 +454,7 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
           </div>
 
           {/* Active Simulado Showcase Card */}
-          <div className="rounded-2xl border-2 border-sky-500/70 bg-[#2b3646] p-5 shadow-lg space-y-4">
+          <div className="rounded-2xl border-2 border-sky-500/70 bg-white dark:bg-zinc-800 p-5 shadow-lg space-y-4">
             <div className="flex items-start justify-between flex-wrap gap-3">
               <div>
                 <div className="flex items-center gap-2">
@@ -470,7 +470,7 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
                     </span>
                   )}
                 </div>
-                <h3 className="text-base font-bold text-white mt-2">
+                <h3 className="text-base font-bold text-zinc-900 dark:text-white mt-2">
                   {simuladoAtivo.titulo}
                 </h3>
               </div>
@@ -478,9 +478,9 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setEsqueletoModalAberto(true)}
-                  className="rounded-full border border-slate-400 bg-[#344154] px-3.5 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-600 transition inline-flex items-center gap-1.5 cursor-pointer"
+                  className="rounded-full border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-700 px-3.5 py-1.5 text-xs font-semibold text-zinc-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-zinc-600 transition inline-flex items-center gap-1.5 cursor-pointer"
                 >
-                  <BookOpen className="h-3.5 w-3.5 text-amber-400" /> Memorizar Esqueleto
+                  <BookOpen className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" /> Memorizar Esqueleto
                 </button>
                 <button
                   onClick={() => handleTreinarNaFolha(simuladoAtivo)}
@@ -492,37 +492,37 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
             </div>
 
             {/* Official FGV Prompt Box */}
-            <div className="rounded-xl border border-[#455468] bg-[#1b232e] p-4 text-xs leading-relaxed text-slate-200 space-y-2">
-              <div className="font-bold text-amber-400 flex items-center gap-1.5">
+            <div className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-900 p-4 text-xs leading-relaxed text-zinc-800 dark:text-slate-200 space-y-2">
+              <div className="font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                 <Scale className="h-4 w-4" /> Enunciado Oficial da Prova FGV:
               </div>
-              <p className="whitespace-pre-line text-slate-200 text-xs leading-relaxed">
+              <p className="whitespace-pre-line text-zinc-700 dark:text-slate-200 text-xs leading-relaxed">
                 {simuladoAtivo.enunciado}
               </p>
             </div>
 
             {/* Quick Teses & Normativos preview */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-              <div className="rounded-xl border border-[#455468]/60 bg-[#344154] p-3 text-xs">
-                <span className="font-bold text-sky-300 block mb-1">
+              <div className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-700/60 p-3 text-xs">
+                <span className="font-bold text-sky-600 dark:text-sky-300 block mb-1">
                   🎯 Teses de Mérito Exigidas na Peça:
                 </span>
-                <ul className="list-disc pl-4 space-y-1 text-slate-200 text-[11px]">
+                <ul className="list-disc pl-4 space-y-1 text-zinc-600 dark:text-slate-200 text-[11px]">
                   {simuladoAtivo.tesesPrincipais.map((t, idx) => (
                     <li key={idx}>{t}</li>
                   ))}
                 </ul>
               </div>
 
-              <div className="rounded-xl border border-[#455468]/60 bg-[#344154] p-3 text-xs">
-                <span className="font-bold text-emerald-300 block mb-1">
+              <div className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-700/60 p-3 text-xs">
+                <span className="font-bold text-emerald-600 dark:text-emerald-300 block mb-1">
                   ⚖️ Fundamentos Normativos e Súmulas:
                 </span>
                 <div className="flex flex-wrap gap-1.5 mt-1.5">
                   {simuladoAtivo.fundamentosNormativos.map((f, idx) => (
                     <span
                       key={idx}
-                      className="rounded bg-[#1b232e] border border-emerald-500/40 px-2 py-0.5 text-[10.5px] font-mono text-emerald-300"
+                      className="rounded bg-slate-100 dark:bg-zinc-900 border border-emerald-500/40 px-2 py-0.5 text-[10.5px] font-mono text-emerald-600 dark:text-emerald-300"
                     >
                       {f}
                     </span>
@@ -532,8 +532,8 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
             </div>
 
             {/* Dica de Ouro da Banca */}
-            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200 flex items-start gap-2">
-              <Info className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2">
+              <Info className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
               <div>
                 <strong>Dica de Ouro da Banca FGV:</strong> {simuladoAtivo.dicaBanca}
               </div>
@@ -543,10 +543,10 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
           {/* Grid of All 32 FGV Exams */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-slate-400">
                 Selecione entre os 32 Exames Oficiais FGV ({simuladosFiltrados.length} disponíveis)
               </h4>
-              <span className="text-[11px] text-slate-400">
+              <span className="text-[11px] text-zinc-400 dark:text-slate-400">
                 Clique em qualquer simulado para abrir o enunciado e esqueleto
               </span>
             </div>
@@ -562,8 +562,8 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
                     onClick={() => setSimuladoSelecionadoId(sim.id)}
                     className={`rounded-xl border p-3.5 transition cursor-pointer flex flex-col justify-between ${
                       isSelected
-                        ? 'border-sky-400 bg-[#344154] shadow-md ring-1 ring-sky-400'
-                        : 'border-[#455468] bg-[#2b3646] hover:border-slate-400 hover:bg-[#344154]/70'
+                        ? 'border-sky-500 bg-sky-50/60 dark:bg-zinc-700 shadow-md ring-1 ring-sky-500'
+                        : 'border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 hover:border-black/20 dark:hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-zinc-700/70'
                     }`}
                   >
                     <div>
@@ -620,21 +620,21 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
       {/* SUB-ABA 2: CRONOGRAMA DE 8 SEMANAS */}
       {subAba === 'cronograma' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between bg-[#2b3646] p-4 rounded-xl border border-[#455468]">
+          <div className="flex items-center justify-between bg-white dark:bg-zinc-800 p-4 rounded-xl border border-black/10 dark:border-white/10">
             <div>
               <span className="badge b-VERDE">Ciclos de Metas</span>
-              <h3 className="text-sm font-bold text-white mt-1">
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-white mt-1">
                 Cronograma de Estudo & Simulados (8 Semanas)
               </h3>
             </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={onSincronizarPlanner}
-                className="rounded-full border border-sky-400 bg-sky-600/90 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-sky-500 transition shadow-sm inline-flex items-center gap-1.5"
+                className="rounded-full border border-sky-400 bg-sky-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-sky-500 transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer"
               >
                 Sincronizar com Planner
               </button>
-              <div className="rounded-xl border border-[#455468] bg-[#344154] px-3.5 py-1.5 text-right font-mono text-xs font-bold text-emerald-400">
+              <div className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-100 dark:bg-zinc-700 px-3.5 py-1.5 text-right font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
                 {tarefasConcluidas.length} / {totalTarefas} ({Math.round((tarefasConcluidas.length / totalTarefas) * 100)}%)
               </div>
             </div>
@@ -649,13 +649,13 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
               return (
                 <div
                   key={sIdx}
-                  className={`rounded-xl border border-[#455468] bg-[#344154] p-4 transition flex flex-col justify-between ${
-                    allDone ? 'border-emerald-500/80 bg-emerald-950/20' : ''
+                  className={`rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 p-4 transition flex flex-col justify-between ${
+                    allDone ? 'border-emerald-500/80 bg-emerald-50/50 dark:bg-emerald-950/20' : ''
                   }`}
                 >
                   <div>
-                    <div className="flex items-center justify-between mb-3 border-b border-[#455468]/60 pb-2">
-                      <h3 className="text-xs font-bold text-sky-300">{sem.semana}</h3>
+                    <div className="flex items-center justify-between mb-3 border-b border-black/10 dark:border-white/10 pb-2">
+                      <h3 className="text-xs font-bold text-sky-600 dark:text-sky-300">{sem.semana}</h3>
                       {allDone && <span className="badge b-VERDE text-[9px]">Completo</span>}
                     </div>
                     <div className="space-y-2.5">
@@ -665,7 +665,7 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
                         return (
                           <label
                             key={tIdx}
-                            className="flex items-start gap-2.5 text-xs text-slate-200 cursor-pointer select-none"
+                            className="flex items-start gap-2.5 text-xs text-zinc-700 dark:text-slate-200 cursor-pointer select-none"
                           >
                             <input
                               type="checkbox"
@@ -673,7 +673,7 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
                               onChange={() => onToggleTarefa(taskId)}
                               className="mt-0.5 h-4 w-4 rounded accent-emerald-500"
                             />
-                            <span className={isDone ? 'line-through text-slate-400' : ''}>
+                            <span className={isDone ? 'line-through text-zinc-400 dark:text-slate-500' : ''}>
                               {tarefa}
                             </span>
                           </label>
@@ -690,32 +690,32 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
 
       {/* MODAL 1: ESQUELETO DE MEMORIZAÇÃO */}
       {esqueletoModalAberto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="win11-subcard max-h-[90vh] w-full max-w-3xl overflow-hidden flex flex-col p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-[#455468] pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border border-black/10 dark:border-white/10 rounded-2xl shadow-2xl max-h-[90vh] w-full max-w-3xl overflow-hidden flex flex-col p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-3">
               <div>
                 <span className="badge b-AMARELO text-[10px]">Esqueleto de Memorização</span>
-                <h3 className="text-base font-bold text-white mt-1">
+                <h3 className="text-base font-bold text-zinc-900 dark:text-white mt-1">
                   {simuladoAtivo.exame} • {simuladoAtivo.peca}
                 </h3>
               </div>
               <button
                 onClick={() => setEsqueletoModalAberto(false)}
-                className="text-slate-400 hover:text-white text-lg font-bold p-1"
+                className="text-zinc-400 hover:text-zinc-800 dark:hover:text-white text-lg font-bold p-1 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <p className="text-xs text-slate-300">
+            <p className="text-xs text-zinc-600 dark:text-slate-300">
               Este esqueleto contém a estrutura padrão oficial exigida pela FGV com os artigos e súmulas de mérito identificados. O desenvolvimento de cada parágrafo é seu!
             </p>
 
-            <div className="flex-1 overflow-y-auto rounded-xl border border-[#455468] bg-[#1b232e] p-4 font-mono text-xs leading-relaxed text-slate-200 whitespace-pre-wrap select-all">
+            <div className="flex-1 overflow-y-auto rounded-xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-950 p-4 font-mono text-xs leading-relaxed text-zinc-800 dark:text-slate-200 whitespace-pre-wrap select-all">
               {simuladoAtivo.esqueleto}
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-[#455468]">
+            <div className="flex items-center justify-between pt-2 border-t border-black/10 dark:border-white/10">
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(simuladoAtivo.esqueleto);
@@ -854,12 +854,12 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
 
                 {/* Rubric Breakdown Table */}
                 <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-slate-400 mb-2">
                     Detalhamento por Quesito do Espelho FGV
                   </h4>
-                  <div className="overflow-x-auto rounded-xl border border-[#455468] bg-[#1b232e]">
-                    <table className="w-full text-left text-xs text-slate-200">
-                      <thead className="bg-[#242e3e] text-[11px] uppercase text-slate-400">
+                  <div className="overflow-x-auto rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-900">
+                    <table className="w-full text-left text-xs text-zinc-800 dark:text-slate-200">
+                      <thead className="bg-slate-100 dark:bg-zinc-800 text-[11px] uppercase text-zinc-600 dark:text-slate-400">
                         <tr>
                           <th className="px-3 py-2.5">Quesito Avaliado</th>
                           <th className="px-3 py-2.5 text-center">Status</th>
@@ -867,10 +867,10 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
                           <th className="px-3 py-2.5">Parecer do Avaliador</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#455468]/60">
+                      <tbody className="divide-y divide-black/5 dark:divide-slate-800/60">
                         {resultadoCorrecao.criteriosAvaliados.map((crit, idx) => (
-                          <tr key={idx} className="hover:bg-[#2b3646]/50">
-                            <td className="px-3 py-2.5 font-semibold text-white">
+                          <tr key={idx} className="hover:bg-black/5 dark:hover:bg-zinc-800/50">
+                            <td className="px-3 py-2.5 font-semibold text-zinc-900 dark:text-white">
                               {crit.item}
                             </td>
                             <td className="px-3 py-2.5 text-center">
@@ -886,10 +886,10 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
                                 {crit.status.toUpperCase()}
                               </span>
                             </td>
-                            <td className="px-3 py-2.5 text-center font-mono font-bold text-sky-300">
+                            <td className="px-3 py-2.5 text-center font-mono font-bold text-sky-600 dark:text-sky-300">
                               {crit.notaObtida.toFixed(2)} / {crit.notaMaxima.toFixed(2)}
                             </td>
-                            <td className="px-3 py-2.5 text-slate-300 text-[11px]">
+                            <td className="px-3 py-2.5 text-zinc-600 dark:text-slate-300 text-[11px]">
                               {crit.comentario}
                             </td>
                           </tr>
@@ -901,22 +901,22 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
 
                 {/* Strengths & Improvements */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-emerald-500/40 bg-emerald-950/20 p-3 text-xs">
-                    <span className="font-bold text-emerald-400 block mb-1">
+                  <div className="rounded-xl border border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20 p-3 text-xs">
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400 block mb-1">
                       ✓ Pontos Fortes Observados:
                     </span>
-                    <ul className="list-disc pl-4 space-y-1 text-slate-200 text-[11px]">
+                    <ul className="list-disc pl-4 space-y-1 text-zinc-700 dark:text-slate-200 text-[11px]">
                       {resultadoCorrecao.pontosFortes.map((p, idx) => (
                         <li key={idx}>{p}</li>
                       ))}
                     </ul>
                   </div>
 
-                  <div className="rounded-xl border border-amber-500/40 bg-amber-950/20 p-3 text-xs">
-                    <span className="font-bold text-amber-400 block mb-1">
+                  <div className="rounded-xl border border-amber-500/40 bg-amber-50/50 dark:bg-amber-950/20 p-3 text-xs">
+                    <span className="font-bold text-amber-600 dark:text-amber-400 block mb-1">
                       ⚠️ Pontos para Gabaritar na FGV:
                     </span>
-                    <ul className="list-disc pl-4 space-y-1 text-slate-200 text-[11px]">
+                    <ul className="list-disc pl-4 space-y-1 text-zinc-700 dark:text-slate-200 text-[11px]">
                       {resultadoCorrecao.pontosMelhoria.map((m, idx) => (
                         <li key={idx}>{m}</li>
                       ))}
@@ -925,18 +925,18 @@ export const SimuladoSemanalView: React.FC<SimuladoSemanalViewProps> = ({
                 </div>
 
                 {/* Examiner Statement */}
-                <div className="rounded-xl border border-[#455468] bg-[#344154] p-3.5 text-xs text-slate-200">
-                  <span className="font-bold text-sky-300 block mb-1">
+                <div className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 p-3.5 text-xs text-zinc-800 dark:text-slate-200">
+                  <span className="font-bold text-sky-600 dark:text-sky-300 block mb-1">
                     Parecer Geral da Banca FGV:
                   </span>
-                  <p className="leading-relaxed text-slate-300">
+                  <p className="leading-relaxed text-zinc-600 dark:text-slate-300">
                     {resultadoCorrecao.parecerBancaFGV}
                   </p>
                 </div>
               </div>
             ) : null}
 
-            <div className="flex items-center justify-between pt-2 border-t border-[#455468]">
+            <div className="flex items-center justify-between pt-2 border-t border-black/10 dark:border-white/10">
               <button
                 onClick={() => {
                   finalizarECorrigirSimulado();

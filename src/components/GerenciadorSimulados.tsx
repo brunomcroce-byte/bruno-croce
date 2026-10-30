@@ -476,7 +476,7 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
   return (
     <div className="space-y-4">
       {/* HEADER PRINCIPAL DO GERENCIADOR DE SIMULADOS */}
-      <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-5 shadow-sm space-y-4">
+      <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 p-5 shadow-sm space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <div className="flex items-center gap-2">
@@ -485,11 +485,11 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
                 {listaSimulados.length} Provas Carregadas
               </span>
             </div>
-            <h2 className="text-lg font-bold text-white mt-1.5 flex items-center gap-2">
-              <Award className="h-5 w-5 text-amber-400" />
+            <h2 className="text-lg font-bold text-zinc-900 dark:text-white mt-1.5 flex items-center gap-2">
+              <Award className="h-5 w-5 text-amber-500 dark:text-amber-400" />
               Treinamento de Peças com Provas Reais FGV & Correção com IA
             </h2>
-            <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+            <p className="text-xs text-zinc-600 dark:text-slate-300 mt-1 max-w-2xl leading-relaxed">
               Inicie um novo ciclo de simulado para sortear uma prova aleatória surpresa. A folha padrão é pré-carregada exclusivamente com a estrutura de teses e fundamentos para você memorizar e desenvolver a argumentação.
             </p>
           </div>
@@ -514,14 +514,14 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
         </div>
 
         {/* NAVEGAÇÃO INTERNA ENTRE CICLO ATIVO, BIBLIOTECA (32 PROVAS) E HISTÓRICO */}
-        <div className="flex items-center justify-between border-t border-[#455468] pt-3 flex-wrap gap-3">
-          <div className="flex items-center gap-1.5 bg-[#1b232e] p-1 rounded-xl border border-[#455468]">
+        <div className="flex items-center justify-between border-t border-black/10 dark:border-[#455468] pt-3 flex-wrap gap-3">
+          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-zinc-900 p-1 rounded-xl border border-black/10 dark:border-[#455468]">
             <button
               onClick={() => setAbaInterna('ciclo')}
               className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer flex items-center gap-2 ${
                 abaInterna === 'ciclo'
                   ? 'bg-sky-600 text-white shadow-sm'
-                  : 'text-slate-300 hover:text-white'
+                  : 'text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white'
               }`}
             >
               <FileText className="h-3.5 w-3.5" /> Ciclo de Treino Atual
@@ -531,7 +531,7 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
               className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer flex items-center gap-2 ${
                 abaInterna === 'biblioteca'
                   ? 'bg-sky-600 text-white shadow-sm'
-                  : 'text-slate-300 hover:text-white'
+                  : 'text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white'
               }`}
             >
               <FolderOpen className="h-3.5 w-3.5" /> Banco de Provas ({listaSimulados.length})
@@ -541,7 +541,7 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
               className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer flex items-center gap-2 ${
                 abaInterna === 'historico'
                   ? 'bg-sky-600 text-white shadow-sm'
-                  : 'text-slate-300 hover:text-white'
+                  : 'text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white'
               }`}
             >
               <Clock className="h-3.5 w-3.5" /> Histórico de Ciclos ({historicoCiclos.length})
@@ -550,9 +550,9 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
 
           {/* CRONÔMETRO INTEGRADO DO CICLO */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-[#1b232e] px-3.5 py-1.5 rounded-xl border border-[#455468]">
-              <Clock className="h-3.5 w-3.5 text-sky-400" />
-              <span className="font-mono text-xs font-bold text-white">
+            <div className="flex items-center gap-2 bg-slate-100 dark:bg-zinc-900 px-3.5 py-1.5 rounded-xl border border-black/10 dark:border-[#455468]">
+              <Clock className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
+              <span className="font-mono text-xs font-bold text-zinc-900 dark:text-white">
                 {formatarTempo(segundosCiclo)}
               </span>
               <button
@@ -590,7 +590,7 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
       {abaInterna === 'ciclo' && (
         <div className="space-y-4">
           {/* Card do Caso / Enunciado FGV */}
-          <div className="rounded-2xl border border-sky-500/50 bg-[#2b3646] p-4 shadow-sm space-y-3">
+          <div className="rounded-2xl border border-sky-500/40 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 p-4 shadow-sm space-y-3">
             <div className="flex items-start justify-between flex-wrap gap-2">
               <div>
                 <div className="flex items-center gap-2">
@@ -601,12 +601,12 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
                     Peça Cobrada: {provaAtual.peca}
                   </span>
                   {provaAtual.ano && (
-                    <span className="text-[11px] text-slate-400 font-mono">
+                    <span className="text-[11px] text-zinc-500 dark:text-slate-400 font-mono">
                       Ano: {provaAtual.ano}
                     </span>
                   )}
                 </div>
-                <h3 className="text-sm font-bold text-white mt-1.5">
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-white mt-1.5">
                   {provaAtual.titulo}
                 </h3>
               </div>
@@ -617,7 +617,7 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
                     setTextoFolha(provaAtual.esqueleto);
                     mostrarToast('Esqueleto recarregado na folha padrão!');
                   }}
-                  className="rounded-full border border-slate-500 bg-[#1b232e] px-3 py-1 text-[11px] font-semibold text-slate-300 hover:text-white hover:bg-slate-700 transition inline-flex items-center gap-1 cursor-pointer"
+                  className="rounded-full border border-black/10 dark:border-slate-500 bg-slate-100 dark:bg-[#1b232e] px-3 py-1 text-[11px] font-semibold text-zinc-700 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center gap-1 cursor-pointer"
                   title="Restaura a estrutura original de teses e fundamentos do esqueleto"
                 >
                   <RotateCcw className="h-3 w-3" /> Restaurar Esqueleto
@@ -626,37 +626,37 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
             </div>
 
             {/* Enunciado Oficial */}
-            <div className="rounded-xl border border-[#455468] bg-[#1b232e] p-3.5 text-xs leading-relaxed text-slate-200 space-y-1.5">
-              <span className="font-bold text-amber-400 flex items-center gap-1.5 text-xs">
+            <div className="rounded-xl border border-black/10 dark:border-[#455468] bg-slate-50 dark:bg-[#1b232e] p-3.5 text-xs leading-relaxed text-zinc-800 dark:text-slate-200 space-y-1.5">
+              <span className="font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5 text-xs">
                 <Scale className="h-3.5 w-3.5" /> Caso Prático FGV:
               </span>
-              <p className="whitespace-pre-line text-[11.5px] text-slate-200">
+              <p className="whitespace-pre-line text-[11.5px] text-zinc-700 dark:text-slate-200">
                 {provaAtual.enunciado}
               </p>
             </div>
 
             {/* Guia Rápido de Teses e Fundamentos Estruturados */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs pt-1">
-              <div className="rounded-xl border border-[#455468]/60 bg-[#344154] p-3">
-                <span className="font-bold text-sky-300 block mb-1">
+              <div className="rounded-xl border border-black/10 dark:border-[#455468]/60 bg-slate-50 dark:bg-[#344154] p-3">
+                <span className="font-bold text-sky-700 dark:text-sky-300 block mb-1">
                   🎯 Teses Materiais a Desenvolver:
                 </span>
-                <ul className="list-disc pl-4 space-y-0.5 text-slate-300 text-[11px]">
+                <ul className="list-disc pl-4 space-y-0.5 text-zinc-600 dark:text-slate-300 text-[11px]">
                   {provaAtual.tesesPrincipais.map((t, idx) => (
                     <li key={idx}>{t}</li>
                   ))}
                 </ul>
               </div>
 
-              <div className="rounded-xl border border-[#455468]/60 bg-[#344154] p-3">
-                <span className="font-bold text-emerald-300 block mb-1">
+              <div className="rounded-xl border border-black/10 dark:border-[#455468]/60 bg-slate-50 dark:bg-[#344154] p-3">
+                <span className="font-bold text-emerald-700 dark:text-emerald-300 block mb-1">
                   ⚖️ Fundamentos Normativos e Súmulas FGV:
                 </span>
                 <div className="flex flex-wrap gap-1.5 mt-1">
                   {provaAtual.fundamentosNormativos.map((f, idx) => (
                     <span
                       key={idx}
-                      className="rounded bg-[#1b232e] border border-emerald-500/40 px-2 py-0.5 text-[10.5px] font-mono text-emerald-300"
+                      className="rounded bg-emerald-50 dark:bg-[#1b232e] border border-emerald-500/40 px-2 py-0.5 text-[10.5px] font-mono text-emerald-800 dark:text-emerald-300"
                     >
                       {f}
                     </span>
@@ -667,24 +667,24 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
           </div>
 
           {/* FOLHA PADRÃO FGV DE 150 LINHAS COM ESQUELETO PRÉ-CARREGADO */}
-          <div className="win11-subcard p-4 space-y-3">
-            <div className="flex items-center justify-between flex-wrap gap-2 border-b border-[#455468] pb-2.5">
+          <div className="win11-subcard p-4 space-y-3 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-black/10 dark:border-white/10 rounded-xl">
+            <div className="flex items-center justify-between flex-wrap gap-2 border-b border-black/10 dark:border-white/10 pb-2.5">
               <div className="flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-500/20 text-amber-400 font-bold text-xs">
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-500/20 text-amber-500 font-bold text-xs">
                   §
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                  <h4 className="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-wider">
                     Folha Padrão de Resposta FGV (150 Linhas)
                   </h4>
-                  <p className="text-[10.5px] text-slate-400">
+                  <p className="text-[10.5px] text-zinc-500 dark:text-slate-400">
                     O esqueleto da peça já contém endereçamento, teses e fundamentos. Redija o desenvolvimento textual conectando o caso concreto à norma jurídica.
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="rounded-md bg-[#1b232e] border border-[#455468] px-2.5 py-1 font-mono text-[11px] text-sky-300">
+                <span className="rounded-md bg-slate-100 dark:bg-zinc-900 border border-black/10 dark:border-white/10 px-2.5 py-1 font-mono text-[11px] text-sky-600 dark:text-sky-300">
                   {contagemLinhas} / 150 Linhas • {contagemPalavras} Palavras
                 </span>
               </div>
@@ -692,7 +692,7 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
 
             {/* Editor de 150 Linhas Padrão FGV */}
             <div
-              className="fgv-editor-container border border-[#455468] rounded-xl overflow-hidden"
+              className="fgv-editor-container border border-black/15 dark:border-white/15 rounded-xl overflow-hidden"
               style={{ height: '520px' }}
             >
               <div className="fgv-line-numbers select-none">
@@ -756,22 +756,22 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
       {/* ABA 2: BANCO COMPLETO DE PROVAS FGV */}
       {abaInterna === 'biblioteca' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between gap-3 flex-wrap bg-[#2b3646] p-3.5 rounded-xl border border-[#455468]">
+          <div className="flex items-center justify-between gap-3 flex-wrap bg-slate-50 dark:bg-zinc-800 p-3.5 rounded-xl border border-black/10 dark:border-[#455468]">
             <div className="flex items-center gap-2 flex-1 min-w-[280px]">
-              <Search className="h-4 w-4 text-slate-400 ml-1" />
+              <Search className="h-4 w-4 text-zinc-400 dark:text-slate-400 ml-1" />
               <input
                 type="text"
                 value={buscaBiblioteca}
                 onChange={e => setBuscaBiblioteca(e.target.value)}
                 placeholder="Pesquisar entre as 32 provas por exame, peça ou tese..."
-                className="w-full bg-transparent text-xs text-white placeholder-slate-400 focus:outline-none"
+                className="w-full bg-transparent text-xs text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-slate-400 focus:outline-none"
               />
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={restaurar32Originais}
-                className="rounded-full border border-slate-600 bg-[#1b232e] px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white transition cursor-pointer"
+                className="rounded-full border border-black/10 dark:border-slate-600 bg-white dark:bg-[#1b232e] px-3 py-1.5 text-xs font-semibold text-zinc-700 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white transition cursor-pointer"
                 title="Restaura a base padrão com as 32 provas históricas oficiais da FGV"
               >
                 Restaurar 32 Originais FGV
@@ -793,8 +793,8 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
                   key={sim.id}
                   className={`rounded-xl border p-4 transition flex flex-col justify-between ${
                     isCurrent
-                      ? 'border-sky-400 bg-[#344154] shadow-md ring-1 ring-sky-400'
-                      : 'border-[#455468] bg-[#2b3646] hover:border-slate-400'
+                      ? 'border-sky-500 bg-sky-50/60 dark:bg-zinc-800 shadow-md ring-1 ring-sky-500'
+                      : 'border-black/10 dark:border-[#455468] bg-white dark:bg-zinc-800 hover:border-sky-400'
                   }`}
                 >
                   <div>
@@ -806,24 +806,24 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
                         <span className="badge b-VERDE text-[9.5px]">Ciclo Atual</span>
                       )}
                     </div>
-                    <div className="font-bold text-xs text-sky-300 mb-1">
+                    <div className="font-bold text-xs text-sky-700 dark:text-sky-300 mb-1">
                       {sim.peca}
                     </div>
-                    <div className="text-xs font-semibold text-white line-clamp-2 mb-1.5">
+                    <div className="text-xs font-semibold text-zinc-900 dark:text-white line-clamp-2 mb-1.5">
                       {sim.titulo}
                     </div>
-                    <p className="text-[11px] text-slate-300 line-clamp-3 leading-relaxed">
+                    <p className="text-[11px] text-zinc-600 dark:text-slate-300 line-clamp-3 leading-relaxed">
                       {sim.enunciado}
                     </p>
                   </div>
 
-                  <div className="mt-3 pt-2.5 border-t border-[#455468]/60 flex items-center justify-between">
-                    <span className="text-[10px] text-slate-400 font-mono">
+                  <div className="mt-3 pt-2.5 border-t border-black/10 dark:border-[#455468]/60 flex items-center justify-between">
+                    <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-mono">
                       {sim.fundamentosNormativos.length} fundamentos
                     </span>
                     <button
                       onClick={() => selecionarSimuladoDaBiblioteca(sim)}
-                      className="rounded-full bg-sky-600/90 hover:bg-sky-500 px-3 py-1 text-xs font-bold text-white transition inline-flex items-center gap-1 cursor-pointer"
+                      className="rounded-full bg-sky-600 hover:bg-sky-500 px-3 py-1 text-xs font-bold text-white transition inline-flex items-center gap-1 cursor-pointer"
                     >
                       Treinar esta Prova →
                     </button>
@@ -836,14 +836,15 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
       )}
 
       {/* ABA 3: HISTÓRICO DE CICLOS CONCLUÍDOS */}
+      {/* ABA 3: HISTÓRICO DE CICLOS CONCLUÍDOS */}
       {abaInterna === 'historico' && (
-        <div className="win11-subcard p-4 space-y-3">
-          <div className="flex items-center justify-between border-b border-[#455468] pb-2">
+        <div className="win11-subcard p-4 space-y-3 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-black/10 dark:border-white/10 rounded-xl">
+          <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-2">
             <div>
-              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+              <h4 className="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-wider">
                 Histórico de Simulados Realizados ({historicoCiclos.length})
               </h4>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-zinc-500 dark:text-slate-400">
                 Registro de notas estimadas pela IA e tempo dedicado em cada ciclo
               </p>
             </div>
@@ -856,7 +857,7 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
                     mostrarToast('Histórico limpo!');
                   }
                 }}
-                className="text-slate-400 hover:text-red-400 text-xs inline-flex items-center gap-1 cursor-pointer"
+                className="text-zinc-400 hover:text-red-500 text-xs inline-flex items-center gap-1 cursor-pointer"
               >
                 <Trash2 className="h-3 w-3" /> Limpar Histórico
               </button>
@@ -864,7 +865,7 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
           </div>
 
           {historicoCiclos.length === 0 ? (
-            <div className="py-12 text-center text-xs text-slate-400 space-y-2">
+            <div className="py-12 text-center text-xs text-zinc-400 space-y-2">
               <Info className="h-6 w-6 mx-auto opacity-50" />
               <p>Nenhum simulado finalizado ainda.</p>
               <button
@@ -875,18 +876,18 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
               </button>
             </div>
           ) : (
-            <div className="divide-y divide-[#455468]/60">
+            <div className="divide-y divide-black/5 dark:divide-white/10">
               {historicoCiclos.map(item => (
                 <div
                   key={item.id}
-                  className="py-3 flex items-center justify-between flex-wrap gap-2 hover:bg-[#1b232e]/40 px-2 rounded-lg"
+                  className="py-3 flex items-center justify-between flex-wrap gap-2 hover:bg-black/5 dark:hover:bg-white/5 px-2 rounded-lg"
                 >
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-xs text-white">{item.exame}</span>
-                      <span className="text-[11px] text-sky-300 font-semibold">• {item.peca}</span>
+                      <span className="font-bold text-xs text-zinc-900 dark:text-white">{item.exame}</span>
+                      <span className="text-[11px] text-sky-600 dark:text-sky-300 font-semibold">• {item.peca}</span>
                     </div>
-                    <div className="text-[10.5px] text-slate-400 mt-0.5 flex items-center gap-3">
+                    <div className="text-[10.5px] text-zinc-500 dark:text-slate-400 mt-0.5 flex items-center gap-3">
                       <span>Data: {item.data}</span>
                       <span>Tempo: {item.tempoGastoMinutos} min</span>
                     </div>
@@ -900,7 +901,7 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
                     >
                       Nota {item.notaFinal.toFixed(2)} / 5,00
                     </span>
-                    <span className="text-[11px] text-slate-300 font-semibold">
+                    <span className="text-[11px] text-zinc-600 dark:text-slate-300 font-semibold">
                       {item.aprovado ? 'Aprovado na Peça' : 'Em Evolução'}
                     </span>
                   </div>
@@ -913,23 +914,23 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
 
       {/* MODAL: CORREÇÃO ESTIMADA PELA IA COM ESPELHO OFICIAL FGV */}
       {modalCorrecaoAberto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-          <div className="win11-subcard max-h-[92vh] w-full max-w-4xl overflow-hidden flex flex-col p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-[#455468] pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border border-black/10 dark:border-white/10 rounded-2xl shadow-2xl max-h-[92vh] w-full max-w-4xl overflow-hidden flex flex-col p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-3">
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 font-bold">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold">
                   §
                 </div>
                 <div>
                   <span className="badge b-VERDE text-[10px]">Avaliação com Base na IA & Espelho FGV</span>
-                  <h3 className="text-base font-bold text-white">
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-white">
                     {provaAtual.exame} • {provaAtual.peca}
                   </h3>
                 </div>
               </div>
               <button
                 onClick={() => setModalCorrecaoAberto(false)}
-                className="text-slate-400 hover:text-white text-lg font-bold p-1 cursor-pointer"
+                className="text-zinc-400 hover:text-zinc-700 dark:hover:text-white text-lg font-bold p-1 cursor-pointer"
               >
                 ✕
               </button>
@@ -984,9 +985,9 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
                     Detalhamento dos Quesitos Pontuados
                   </h4>
-                  <div className="overflow-x-auto rounded-xl border border-[#455468] bg-[#1b232e]">
-                    <table className="w-full text-left text-xs text-slate-200">
-                      <thead className="bg-[#242e3e] text-[11px] uppercase text-slate-400">
+                  <div className="overflow-x-auto rounded-xl border border-black/10 dark:border-[#455468] bg-white dark:bg-[#1b232e]">
+                    <table className="w-full text-left text-xs text-zinc-800 dark:text-slate-200">
+                      <thead className="bg-slate-100 dark:bg-[#242e3e] text-[11px] uppercase text-zinc-500 dark:text-slate-400">
                         <tr>
                           <th className="px-3 py-2.5">Quesito</th>
                           <th className="px-3 py-2.5 text-center">Status</th>
@@ -994,10 +995,10 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
                           <th className="px-3 py-2.5">Comentário</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#455468]/60">
+                      <tbody className="divide-y divide-black/5 dark:divide-[#455468]/60">
                         {resultadoAtual.criteriosAvaliados.map((crit, idx) => (
-                          <tr key={idx} className="hover:bg-[#2b3646]/50">
-                            <td className="px-3 py-2.5 font-semibold text-white">
+                          <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-[#2b3646]/50">
+                            <td className="px-3 py-2.5 font-semibold text-zinc-900 dark:text-white">
                               {crit.item}
                             </td>
                             <td className="px-3 py-2.5 text-center">
@@ -1013,10 +1014,10 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
                                 {crit.status.toUpperCase()}
                               </span>
                             </td>
-                            <td className="px-3 py-2.5 text-center font-mono font-bold text-sky-300">
+                            <td className="px-3 py-2.5 text-center font-mono font-bold text-sky-600 dark:text-sky-300">
                               {crit.notaObtida.toFixed(2)} / {crit.notaMaxima.toFixed(2)}
                             </td>
-                            <td className="px-3 py-2.5 text-slate-300 text-[11px]">
+                            <td className="px-3 py-2.5 text-zinc-600 dark:text-slate-300 text-[11px]">
                               {crit.comentario}
                             </td>
                           </tr>
@@ -1028,22 +1029,22 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
 
                 {/* Strengths & Weaknesses */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-emerald-500/40 bg-emerald-950/20 p-3 text-xs">
-                    <span className="font-bold text-emerald-400 block mb-1">
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20 p-3 text-xs">
+                    <span className="font-bold text-emerald-700 dark:text-emerald-400 block mb-1">
                       ✓ Pontos Fortes Observados:
                     </span>
-                    <ul className="list-disc pl-4 space-y-1 text-slate-200 text-[11px]">
+                    <ul className="list-disc pl-4 space-y-1 text-zinc-700 dark:text-slate-200 text-[11px]">
                       {resultadoAtual.pontosFortes.map((p, idx) => (
                         <li key={idx}>{p}</li>
                       ))}
                     </ul>
                   </div>
 
-                  <div className="rounded-xl border border-amber-500/40 bg-amber-950/20 p-3 text-xs">
-                    <span className="font-bold text-amber-400 block mb-1">
+                  <div className="rounded-xl border border-amber-500/30 bg-amber-50 dark:bg-amber-950/20 p-3 text-xs">
+                    <span className="font-bold text-amber-700 dark:text-amber-400 block mb-1">
                       ⚠️ O que Faltou Desenvolver:
                     </span>
-                    <ul className="list-disc pl-4 space-y-1 text-slate-200 text-[11px]">
+                    <ul className="list-disc pl-4 space-y-1 text-zinc-700 dark:text-slate-200 text-[11px]">
                       {resultadoAtual.pontosMelhoria.map((m, idx) => (
                         <li key={idx}>{m}</li>
                       ))}
@@ -1052,18 +1053,18 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
                 </div>
 
                 {/* Examiner Statement */}
-                <div className="rounded-xl border border-[#455468] bg-[#344154] p-3 text-xs text-slate-200">
-                  <span className="font-bold text-sky-300 block mb-1">
+                <div className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 p-3 text-xs text-zinc-800 dark:text-slate-200">
+                  <span className="font-bold text-sky-700 dark:text-sky-300 block mb-1">
                     Parecer Geral da Banca Examinadora:
                   </span>
-                  <p className="leading-relaxed text-slate-300">
+                  <p className="leading-relaxed text-zinc-600 dark:text-slate-300">
                     {resultadoAtual.parecerBancaFGV}
                   </p>
                 </div>
               </div>
             ) : null}
 
-            <div className="flex items-center justify-between pt-2 border-t border-[#455468]">
+            <div className="flex items-center justify-between pt-2 border-t border-black/10 dark:border-white/10">
               <button
                 onClick={finalizarECalcularPontuacaoIA}
                 className="win11-btn-secondary text-xs inline-flex items-center gap-1.5"
@@ -1095,37 +1096,37 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
 
       {/* MODAL: IMPORTADOR DE ARQUIVOS DAS PROVAS */}
       {modalImportarAberto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="win11-subcard max-h-[85vh] w-full max-w-xl p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-[#455468] pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-zinc-900 border border-black/10 dark:border-white/10 rounded-2xl shadow-2xl max-h-[85vh] w-full max-w-xl p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-3">
               <div className="flex items-center gap-2">
-                <Upload className="h-5 w-5 text-sky-400" />
-                <h3 className="text-base font-bold text-white">
+                <Upload className="h-5 w-5 text-sky-500 dark:text-sky-400" />
+                <h3 className="text-base font-bold text-zinc-900 dark:text-white">
                   Importar Arquivos de Provas FGV
                 </h3>
               </div>
               <button
                 onClick={() => setModalImportarAberto(false)}
-                className="text-slate-400 hover:text-white text-lg font-bold p-1 cursor-pointer"
+                className="text-zinc-400 hover:text-zinc-800 dark:text-slate-400 dark:hover:text-white text-lg font-bold p-1 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <div className="text-xs text-slate-200 space-y-3 leading-relaxed">
+            <div className="text-xs text-zinc-700 dark:text-slate-200 space-y-3 leading-relaxed">
               <p>
                 Selecione os seus arquivos de provas (arquivos <strong>.txt</strong>, <strong>.json</strong> ou <strong>.md</strong>) para importá-los para o Gerenciador de Simulados.
               </p>
 
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="rounded-xl border-2 border-dashed border-sky-400/60 bg-sky-950/20 p-8 text-center cursor-pointer hover:border-sky-400 hover:bg-sky-950/30 transition space-y-2"
+                className="rounded-xl border-2 border-dashed border-sky-400/60 bg-sky-50 dark:bg-sky-950/20 p-8 text-center cursor-pointer hover:border-sky-500 hover:bg-sky-100/70 dark:hover:bg-sky-950/30 transition space-y-2"
               >
-                <Upload className="h-8 w-8 text-sky-400 mx-auto" />
-                <div className="text-xs font-semibold text-white">
+                <Upload className="h-8 w-8 text-sky-600 dark:text-sky-400 mx-auto" />
+                <div className="text-xs font-semibold text-zinc-900 dark:text-white">
                   Clique para selecionar seus 32 arquivos ou arraste-os para cá
                 </div>
-                <div className="text-[11px] text-slate-400">
+                <div className="text-[11px] text-zinc-500 dark:text-slate-400">
                   Formatos aceitos: .txt, .json, .md
                 </div>
                 <input
@@ -1138,12 +1139,12 @@ export const GerenciadorSimulados: React.FC<GerenciadorSimuladosProps> = ({
                 />
               </div>
 
-              <div className="rounded-xl border border-[#455468] bg-[#1b232e] p-3 text-[11px] text-slate-300 space-y-1">
+              <div className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 p-3 text-[11px] text-zinc-700 dark:text-slate-300 space-y-1">
                 <strong>Dica:</strong> O aplicativo já inclui por padrão <strong>32 Provas Históricas Oficiais da FGV</strong> (com enunciados completos, esqueletos pedagógicos e critérios de correção). Ao importar novos arquivos, eles serão adicionados ao seu banco de simulados.
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-[#455468]">
+            <div className="flex justify-end gap-2 pt-2 border-t border-black/10 dark:border-white/10">
               <button
                 onClick={() => setModalImportarAberto(false)}
                 className="win11-btn-secondary text-xs"

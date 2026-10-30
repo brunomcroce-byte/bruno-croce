@@ -108,30 +108,30 @@ export function BuscaGlobalModal({ aberta, onFechar, onSelecionarItem }: BuscaGl
         if (e.target === e.currentTarget) onFechar();
       }}
     >
-      <div className="relative w-full max-w-2xl rounded-2xl border border-sky-500/70 bg-[#1e293b] shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+      <div className="relative w-full max-w-2xl rounded-2xl border border-sky-500/50 dark:border-sky-500/70 bg-white dark:bg-[#1e293b] shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
         {/* Input Bar */}
-        <div className="flex items-center gap-3 border-b border-[#455468] p-3.5 bg-[#1b232e]">
-          <Search className="h-5 w-5 text-sky-400 shrink-0" />
+        <div className="flex items-center gap-3 border-b border-black/10 dark:border-[#455468] p-3.5 bg-slate-50 dark:bg-[#1b232e]">
+          <Search className="h-5 w-5 text-sky-500 dark:text-sky-400 shrink-0" />
           <input
             ref={inputRef}
             type="text"
             value={termo}
             onChange={e => setTermo(e.target.value)}
             placeholder="Digite para buscar em Peças, Súmulas, Vade Mecum, Teses, Impostos..."
-            className="flex-1 bg-transparent text-sm text-white placeholder-slate-400 focus:outline-none"
+            className="flex-1 bg-transparent text-sm text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-slate-400 focus:outline-none"
             aria-label="Campo de busca integrado"
           />
           {termo && (
             <button
               onClick={() => setTermo('')}
-              className="text-xs text-slate-400 hover:text-white px-1.5 py-0.5 rounded bg-slate-800"
+              className="text-xs text-zinc-500 hover:text-zinc-900 dark:text-slate-400 dark:hover:text-white px-2 py-0.5 rounded bg-zinc-200 dark:bg-slate-800"
             >
               Limpar
             </button>
           )}
           <button
             onClick={onFechar}
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition"
+            className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-slate-800 text-zinc-600 dark:text-slate-400 hover:text-zinc-900 dark:hover:text-white transition"
           >
             <X className="h-5 w-5" />
           </button>
@@ -167,7 +167,7 @@ export function BuscaGlobalModal({ aberta, onFechar, onSelecionarItem }: BuscaGl
                           onSelecionarItem({ aba: 'pecas', pecaCodigo: p.codigo });
                           onFechar();
                         }}
-                        className="w-full flex items-center justify-between p-2.5 rounded-xl border border-[#455468] bg-[#2b3646] hover:border-sky-400 hover:bg-[#344154] transition text-left group"
+                        className="w-full flex items-center justify-between p-2.5 rounded-xl border border-black/10 dark:border-[#455468] bg-slate-50 dark:bg-[#2b3646] hover:bg-slate-100 dark:hover:bg-[#344154] transition text-left group"
                       >
                         <div>
                           <div className="font-bold text-white group-hover:text-sky-300 transition">
@@ -185,7 +185,7 @@ export function BuscaGlobalModal({ aberta, onFechar, onSelecionarItem }: BuscaGl
               {/* Súmulas */}
               {resultados.sumulas.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-1.5 text-emerald-400 font-bold uppercase tracking-wider text-[10px] mb-2">
+                  <div className="flex items-center gap-1.5 text-emerald-500 dark:text-emerald-400 font-bold uppercase tracking-wider text-[10px] mb-2">
                     <Scale className="h-3.5 w-3.5" /> Súmulas STF / STJ ({resultados.sumulas.length})
                   </div>
                   <div className="space-y-1.5">
@@ -196,7 +196,7 @@ export function BuscaGlobalModal({ aberta, onFechar, onSelecionarItem }: BuscaGl
                           onSelecionarItem({ aba: 'sumulas', sumulaNum: s.num });
                           onFechar();
                         }}
-                        className="w-full flex items-center justify-between p-2.5 rounded-xl border border-[#455468] bg-[#2b3646] hover:border-emerald-400 hover:bg-[#344154] transition text-left group"
+                        className="w-full flex items-center justify-between p-2.5 rounded-xl border border-black/10 dark:border-[#455468] bg-slate-50 dark:bg-[#2b3646] hover:bg-slate-100 dark:hover:bg-[#344154] transition text-left group"
                       >
                         <div className="pr-2">
                           <div className="flex items-center gap-1.5 flex-wrap mb-1">
@@ -204,14 +204,14 @@ export function BuscaGlobalModal({ aberta, onFechar, onSelecionarItem }: BuscaGl
                               {s.tr === 'SV' ? `Súmula Vinculante ${s.num}` : `Súmula ${s.tr} ${s.num}`}
                             </span>
                             {s.recente && (
-                              <span className="badge bg-amber-400/20 text-amber-300 border border-amber-400 text-[9px] font-bold">
+                              <span className="badge bg-amber-400/20 text-amber-500 dark:text-amber-300 border border-amber-400 text-[9px] font-bold">
                                 ⚡ Recente
                               </span>
                             )}
                           </div>
-                          <div className="text-[11px] text-slate-200 line-clamp-1">{s.texto}</div>
+                          <div className="text-[11px] text-zinc-700 dark:text-slate-200 line-clamp-1">{s.texto}</div>
                         </div>
-                        <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-emerald-300 transition shrink-0" />
+                        <ArrowRight className="h-4 w-4 text-zinc-400 dark:text-slate-400 group-hover:text-emerald-500 dark:group-hover:text-emerald-300 transition shrink-0" />
                       </button>
                     ))}
                   </div>
@@ -221,7 +221,7 @@ export function BuscaGlobalModal({ aberta, onFechar, onSelecionarItem }: BuscaGl
               {/* Vade Mecum */}
               {resultados.vade.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-1.5 text-amber-400 font-bold uppercase tracking-wider text-[10px] mb-2">
+                  <div className="flex items-center gap-1.5 text-amber-500 dark:text-amber-400 font-bold uppercase tracking-wider text-[10px] mb-2">
                     <Highlighter className="h-3.5 w-3.5" /> Vade Mecum & Artigos Marcados ({resultados.vade.length})
                   </div>
                   <div className="space-y-1.5">
@@ -232,18 +232,18 @@ export function BuscaGlobalModal({ aberta, onFechar, onSelecionarItem }: BuscaGl
                           onSelecionarItem({ aba: 'vademecum', vadeCor: v.cor });
                           onFechar();
                         }}
-                        className="w-full flex items-center justify-between p-2.5 rounded-xl border border-[#455468] bg-[#2b3646] hover:border-amber-400 hover:bg-[#344154] transition text-left group"
+                        className="w-full flex items-center justify-between p-2.5 rounded-xl border border-black/10 dark:border-[#455468] bg-slate-50 dark:bg-[#2b3646] hover:bg-slate-100 dark:hover:bg-[#344154] transition text-left group"
                       >
                         <div className="pr-2">
                           <div className="flex items-center gap-1.5">
                             <span className={`badge b-${v.cor}`}>{v.cor}</span>
-                            <span className="font-bold text-white group-hover:text-amber-200 transition">
+                            <span className="font-bold text-zinc-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-200 transition">
                               {v.ref}
                             </span>
                           </div>
-                          {v.obs && <div className="text-[11px] text-slate-300 mt-1 line-clamp-1">{v.obs}</div>}
+                          {v.obs && <div className="text-[11px] text-zinc-600 dark:text-slate-300 mt-1 line-clamp-1">{v.obs}</div>}
                         </div>
-                        <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-amber-300 transition shrink-0" />
+                        <ArrowRight className="h-4 w-4 text-zinc-400 dark:text-slate-400 group-hover:text-amber-500 dark:group-hover:text-amber-300 transition shrink-0" />
                       </button>
                     ))}
                   </div>
@@ -253,7 +253,7 @@ export function BuscaGlobalModal({ aberta, onFechar, onSelecionarItem }: BuscaGl
               {/* Teses */}
               {resultados.teses.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-1.5 text-pink-400 font-bold uppercase tracking-wider text-[10px] mb-2">
+                  <div className="flex items-center gap-1.5 text-pink-500 dark:text-pink-400 font-bold uppercase tracking-wider text-[10px] mb-2">
                     <Award className="h-3.5 w-3.5" /> Teses Frequentes de Peça ({resultados.teses.length})
                   </div>
                   <div className="space-y-1.5">
@@ -264,17 +264,17 @@ export function BuscaGlobalModal({ aberta, onFechar, onSelecionarItem }: BuscaGl
                           onSelecionarItem({ aba: 'teses', teseCat: t.c });
                           onFechar();
                         }}
-                        className="w-full flex items-center justify-between p-2.5 rounded-xl border border-[#455468] bg-[#2b3646] hover:border-pink-400 hover:bg-[#344154] transition text-left group"
+                        className="w-full flex items-center justify-between p-2.5 rounded-xl border border-black/10 dark:border-[#455468] bg-slate-50 dark:bg-[#2b3646] hover:bg-slate-100 dark:hover:bg-[#344154] transition text-left group"
                       >
                         <div>
-                          <div className="font-bold text-white group-hover:text-pink-300 transition line-clamp-1">
+                          <div className="font-bold text-zinc-900 dark:text-white group-hover:text-pink-600 dark:group-hover:text-pink-300 transition line-clamp-1">
                             {t.t}
                           </div>
-                          <div className="text-[10px] text-slate-400 mt-0.5">
+                          <div className="text-[10px] text-zinc-500 dark:text-slate-400 mt-0.5">
                             {TESES_CONT[t.c]} • Cobrada {t.n}x (OAB {t.e})
                           </div>
                         </div>
-                        <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-pink-300 transition shrink-0 ml-2" />
+                        <ArrowRight className="h-4 w-4 text-zinc-400 dark:text-slate-400 group-hover:text-pink-500 dark:group-hover:text-pink-300 transition shrink-0 ml-2" />
                       </button>
                     ))}
                   </div>
@@ -284,7 +284,7 @@ export function BuscaGlobalModal({ aberta, onFechar, onSelecionarItem }: BuscaGl
               {/* Impostos */}
               {resultados.impostos.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-1.5 text-blue-400 font-bold uppercase tracking-wider text-[10px] mb-2">
+                  <div className="flex items-center gap-1.5 text-blue-500 dark:text-blue-400 font-bold uppercase tracking-wider text-[10px] mb-2">
                     <Layers className="h-3.5 w-3.5" /> Competência e Impostos ({resultados.impostos.length})
                   </div>
                   <div className="space-y-1.5">
@@ -295,15 +295,15 @@ export function BuscaGlobalModal({ aberta, onFechar, onSelecionarItem }: BuscaGl
                           onSelecionarItem({ aba: 'impostos', impostoNome: imp.ente });
                           onFechar();
                         }}
-                        className="w-full flex items-center justify-between p-2.5 rounded-xl border border-[#455468] bg-[#2b3646] hover:border-blue-400 hover:bg-[#344154] transition text-left group"
+                        className="w-full flex items-center justify-between p-2.5 rounded-xl border border-black/10 dark:border-[#455468] bg-slate-50 dark:bg-[#2b3646] hover:bg-slate-100 dark:hover:bg-[#344154] transition text-left group"
                       >
                         <div>
-                          <div className="font-bold text-white group-hover:text-blue-300 transition">
-                            {imp.nome} <span className="font-mono text-[10px] text-sky-300">({imp.base})</span>
+                          <div className="font-bold text-zinc-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-300 transition">
+                            {imp.nome} <span className="font-mono text-[10px] text-sky-500 dark:text-sky-300">({imp.base})</span>
                           </div>
-                          <div className="text-[11px] text-slate-300 line-clamp-1">{imp.desc}</div>
+                          <div className="text-[11px] text-zinc-600 dark:text-slate-300 line-clamp-1">{imp.desc}</div>
                         </div>
-                        <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-blue-300 transition shrink-0 ml-2" />
+                        <ArrowRight className="h-4 w-4 text-zinc-400 dark:text-slate-400 group-hover:text-blue-500 dark:group-hover:text-blue-300 transition shrink-0 ml-2" />
                       </button>
                     ))}
                   </div>
@@ -313,7 +313,7 @@ export function BuscaGlobalModal({ aberta, onFechar, onSelecionarItem }: BuscaGl
               {/* Casos do Simulador */}
               {resultados.casos.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-1.5 text-purple-400 font-bold uppercase tracking-wider text-[10px] mb-2">
+                  <div className="flex items-center gap-1.5 text-purple-500 dark:text-purple-400 font-bold uppercase tracking-wider text-[10px] mb-2">
                     <FileText className="h-3.5 w-3.5" /> Casos no Simulador 150L ({resultados.casos.length})
                   </div>
                   <div className="space-y-1.5">
@@ -324,15 +324,15 @@ export function BuscaGlobalModal({ aberta, onFechar, onSelecionarItem }: BuscaGl
                           onSelecionarItem({ aba: 'simulador', casoId: c.id });
                           onFechar();
                         }}
-                        className="w-full flex items-center justify-between p-2.5 rounded-xl border border-[#455468] bg-[#2b3646] hover:border-purple-400 hover:bg-[#344154] transition text-left group"
+                        className="w-full flex items-center justify-between p-2.5 rounded-xl border border-black/10 dark:border-[#455468] bg-slate-50 dark:bg-[#2b3646] hover:bg-slate-100 dark:hover:bg-[#344154] transition text-left group"
                       >
                         <div>
-                          <div className="font-bold text-white group-hover:text-purple-300 transition">
+                          <div className="font-bold text-zinc-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-300 transition">
                             {c.titulo}
                           </div>
-                          <div className="text-[11px] text-slate-300 line-clamp-1">{c.enunciado}</div>
+                          <div className="text-[11px] text-zinc-600 dark:text-slate-300 line-clamp-1">{c.enunciado}</div>
                         </div>
-                        <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-purple-300 transition shrink-0 ml-2" />
+                        <ArrowRight className="h-4 w-4 text-zinc-400 dark:text-slate-400 group-hover:text-purple-500 dark:group-hover:text-purple-300 transition shrink-0 ml-2" />
                       </button>
                     ))}
                   </div>
@@ -342,7 +342,7 @@ export function BuscaGlobalModal({ aberta, onFechar, onSelecionarItem }: BuscaGl
               {/* Flashcards */}
               {resultados.flashcards.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-1.5 text-yellow-400 font-bold uppercase tracking-wider text-[10px] mb-2">
+                  <div className="flex items-center gap-1.5 text-amber-500 dark:text-yellow-400 font-bold uppercase tracking-wider text-[10px] mb-2">
                     <Sparkles className="h-3.5 w-3.5" /> Flashcards ({resultados.flashcards.length})
                   </div>
                   <div className="space-y-1.5">
@@ -353,15 +353,15 @@ export function BuscaGlobalModal({ aberta, onFechar, onSelecionarItem }: BuscaGl
                           onSelecionarItem({ aba: 'flashcards', flashCat: f.c });
                           onFechar();
                         }}
-                        className="w-full flex items-center justify-between p-2.5 rounded-xl border border-[#455468] bg-[#2b3646] hover:border-yellow-400 hover:bg-[#344154] transition text-left group"
+                        className="w-full flex items-center justify-between p-2.5 rounded-xl border border-black/10 dark:border-[#455468] bg-slate-50 dark:bg-[#2b3646] hover:bg-slate-100 dark:hover:bg-[#344154] transition text-left group"
                       >
                         <div>
-                          <div className="font-bold text-white group-hover:text-yellow-300 transition line-clamp-1">
+                          <div className="font-bold text-zinc-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-yellow-300 transition line-clamp-1">
                             {f.p}
                           </div>
-                          <div className="text-[11px] text-emerald-300 line-clamp-1">✓ {f.r}</div>
+                          <div className="text-[11px] text-emerald-600 dark:text-emerald-300 line-clamp-1">✓ {f.r}</div>
                         </div>
-                        <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-yellow-300 transition shrink-0 ml-2" />
+                        <ArrowRight className="h-4 w-4 text-zinc-400 dark:text-slate-400 group-hover:text-amber-500 dark:group-hover:text-yellow-300 transition shrink-0 ml-2" />
                       </button>
                     ))}
                   </div>
@@ -372,7 +372,7 @@ export function BuscaGlobalModal({ aberta, onFechar, onSelecionarItem }: BuscaGl
         </div>
 
         {/* Footer shortcuts info */}
-        <div className="flex items-center justify-between border-t border-[#455468] px-4 py-2 bg-[#1b232e] text-[11px] text-slate-400">
+        <div className="flex items-center justify-between border-t border-black/10 dark:border-[#455468] px-4 py-2 bg-slate-100 dark:bg-[#1b232e] text-[11px] text-zinc-500 dark:text-slate-400">
           <span>Use <strong>Esc</strong> para fechar</span>
           <span>Navegue direto para qualquer peça, artigo ou súmula</span>
         </div>

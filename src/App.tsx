@@ -63,6 +63,7 @@ import {
 } from './utils/soundscapes';
 import { analisarPecaEmTempoReal } from './utils/pecaAnalyzer';
 import { SimuladorAnalisePecaCard } from './components/SimuladorAnalisePecaCard';
+import { CentralUnificadaDesempenhoCard } from './components/CentralUnificadaDesempenhoCard';
 import {
   BookOpen,
   Calendar,
@@ -2328,206 +2329,32 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 2. TRÊS CARDS DE KPI DE ALTO IMPACTO (FLUIDOS & REATIVOS) */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* KPI 1: Folha Padrão 150L & Análise Heurística da Peça */}
-                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-800/80 p-4.5 flex flex-col justify-between backdrop-blur-xl shadow-xs transition-all hover:shadow-md">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
-                        <FileText className="h-4 w-4" />
-                        Simulador 150 Linhas
-                      </span>
-                      <span className="text-[10px] font-mono font-bold text-blue-800 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border border-blue-300 dark:border-blue-500/30 px-2 py-0.5 rounded-full">
-                        {totalLinhasSemana >= 150 ? 'Meta 150L Concluída! 🎯' : 'Meta: 150L'}
-                      </span>
-                    </div>
+              {/* 2. CENTRAL UNIFICADA DE DESEMPENHO (CONCENTRA REDAÇÃO 150L, POMODORO, FLASHCARDS E RADAR EM 1 SÓ LUGAR) */}
+              <CentralUnificadaDesempenhoCard
+                totalLinhasSemana={totalLinhasSemana}
+                linhasCount={linhasCount}
+                pomodoroBlocosHoje={pomodoroBlocosHoje}
+                pomodoroModo={pomodoroModo}
+                pomodoroRunning={pomodoroRunning}
+                soundscapeTipo={soundscapeTipo}
+                taxaAcertoEstimada={taxaAcertoEstimada}
+                flashStats={flashStats}
+                tarefasConcluidas={tarefasConcluidas}
+                totalTarefas={totalTarefas}
+                analisePecaAtual={analisePecaAtual}
+                diasProva={diasProva}
+                onNavegarParaTab={(tab) => setActiveTab(tab as TabType)}
+                onAdicionarLinhas={adicionarLinhasAoTotalSemana}
+                onTogglePomodoro={() => {
+                  if (pomodoroRunning) pausarPomodoro();
+                  else iniciarPomodoro();
+                }}
+                onAjustarBlocos={ajustarBlocosPomodoroHoje}
+                onExportarPdf={handleGerarRelatorioSemanalPdf}
+                onExportarWord={() => exportarRedacaoNoWord(textoRedacao)}
+              />
 
-                    <div className="flex items-baseline gap-2 my-1.5">
-                      <span className="font-mono text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
-                        {totalLinhasSemana}
-                      </span>
-                      <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">/ 150 linhas</span>
-                      <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold ml-auto">
-                        {linhasCount}L no editor
-                      </span>
-                    </div>
-
-                    {/* Barra de Progresso Fluida */}
-                    <div className="space-y-1 my-2">
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/10">
-                        <div
-                          className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-500 rounded-full"
-                          style={{ width: `${Math.min(100, Math.round((totalLinhasSemana / 150) * 100))}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Chip de Análise em Tempo Real no Simulador */}
-                    <div className="mt-2.5 p-2 rounded-xl border border-blue-500/20 bg-blue-50/50 dark:bg-blue-950/30 text-[11px] text-zinc-700 dark:text-zinc-300 flex items-center justify-between gap-2">
-                      <span className="truncate">
-                        🎯 Peça Provável: <strong className="text-blue-600 dark:text-blue-400">{analisePecaAtual.pecaMaisProvavel?.nome || 'Analisando...'}</strong>
-                      </span>
-                      <span className="font-mono text-[10px] font-bold text-blue-700 dark:text-blue-300 shrink-0">
-                        {analisePecaAtual.pecaMaisProvavel?.probabilidade || 0}%
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-black/5 dark:border-white/10 flex items-center justify-between">
-                    <button
-                      onClick={() => setActiveTab('simulador')}
-                      className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      <span>Abrir Simulador</span>
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => adicionarLinhasAoTotalSemana(30)}
-                      className="rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 px-2 py-1 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
-                      title="Registrar +1 página (30 linhas) no histórico semanal"
-                    >
-                      +30L
-                    </button>
-                  </div>
-                </div>
-
-                {/* KPI 2: Pomodoro & Blocos Diários */}
-                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-800/80 p-4.5 flex flex-col justify-between backdrop-blur-xl shadow-xs transition-all hover:shadow-md">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
-                        <Clock className="h-4 w-4" />
-                        Sessão de Foco Pomodoro
-                      </span>
-                      <span className="text-[10px] font-mono font-bold text-rose-800 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-500/30 px-2 py-0.5 rounded-full">
-                        {pomodoroBlocosHoje >= 4 ? 'Meta Cumprida! 🔥' : 'Meta: 4 Blocos'}
-                      </span>
-                    </div>
-
-                    <div className="flex items-baseline gap-2 my-1.5">
-                      <span className="font-mono text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
-                        {pomodoroBlocosHoje}
-                      </span>
-                      <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">/ 4 blocos</span>
-                      <span className="text-xs text-rose-600 dark:text-rose-400 font-semibold ml-auto">
-                        {pomodoroBlocosHoje * (pomodoroModo === '25m' ? 25 : 50)} min de foco
-                      </span>
-                    </div>
-
-                    {/* 4 Blocos em Pill Slots Elegantes */}
-                    <div className="grid grid-cols-4 gap-1.5 my-2">
-                      {[0, 1, 2, 3].map(slotIdx => (
-                        <div
-                          key={slotIdx}
-                          className={`h-2 rounded-full transition-all duration-300 ${
-                            pomodoroBlocosHoje > slotIdx
-                              ? 'bg-rose-500 shadow-xs'
-                              : 'bg-black/5 dark:bg-white/10'
-                          }`}
-                        />
-                      ))}
-                    </div>
-
-                    {/* Chip de Soundscape Ativo */}
-                    <div className="mt-2.5 p-2 rounded-xl border border-rose-500/20 bg-rose-50/50 dark:bg-rose-950/30 text-[11px] text-zinc-700 dark:text-zinc-300 flex items-center justify-between gap-2">
-                      <span className="truncate flex items-center gap-1">
-                        <Headphones className="h-3 w-3 text-rose-500 shrink-0" />
-                        <span>Soundscape: <strong className="text-rose-600 dark:text-rose-400">{SOUNDSCAPE_OPCOES.find(o => o.id === soundscapeTipo)?.nome || 'Silencioso'}</strong></span>
-                      </span>
-                      <span className="text-[10px] text-zinc-400 font-mono">🌙 Auto-reset 00h</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-black/5 dark:border-white/10 flex items-center justify-between">
-                    <button
-                      onClick={() => {
-                        if (pomodoroRunning) {
-                          pausarPomodoro();
-                        } else {
-                          iniciarPomodoro();
-                        }
-                      }}
-                      className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      <Play className="h-3 w-3 fill-current" />
-                      <span>{pomodoroRunning ? 'Pausar Timer' : 'Focar Agora'}</span>
-                    </button>
-                    <button
-                      onClick={() => ajustarBlocosPomodoroHoje(1)}
-                      className="rounded-lg border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 px-2 py-1 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
-                      title="+1 bloco concluído"
-                    >
-                      +1 Bloco
-                    </button>
-                  </div>
-                </div>
-
-                {/* KPI 3: Retenção em Flashcards & Teses */}
-                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-800/80 p-4.5 flex flex-col justify-between backdrop-blur-xl shadow-xs transition-all hover:shadow-md">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                        <Sparkles className="h-4 w-4" />
-                        Acertos nos Flashcards
-                      </span>
-                      <span className="text-[10px] font-mono font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-500/30 px-2 py-0.5 rounded-full">
-                        {taxaAcertoEstimada >= 75 ? 'Excelente ✓' : 'Meta: 75%'}
-                      </span>
-                    </div>
-
-                    <div className="flex items-baseline gap-2 my-1.5">
-                      <span className="font-mono text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
-                        {taxaAcertoEstimada}%
-                      </span>
-                      <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">
-                        ({flashStats.acertos}/{flashStats.total} revisões)
-                      </span>
-                    </div>
-
-                    {/* Barra de Progresso Fluida */}
-                    <div className="space-y-1 my-2">
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/10">
-                        <div
-                          className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500 rounded-full"
-                          style={{ width: `${Math.min(100, taxaAcertoEstimada)}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Chip de Memorização Espaçada */}
-                    <div className="mt-2.5 p-2 rounded-xl border border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/30 text-[11px] text-zinc-700 dark:text-zinc-300 flex items-center justify-between gap-2">
-                      <span className="truncate">
-                        ⚡ 36 Flashcards com teses da 2ª Fase
-                      </span>
-                      <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Ativo</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-black/5 dark:border-white/10 flex items-center justify-between">
-                    <button
-                      onClick={() => setActiveTab('flashcards')}
-                      className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      <span>Praticar Flashcards</span>
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        const reset = { acertos: 0, total: 0 };
-                        setFlashStats(reset);
-                        SafeStorage.set('tributa_flash_stats', JSON.stringify(reset));
-                        mostrarToast('Contador de flashcards reiniciado!');
-                      }}
-                      className="text-[10px] text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 cursor-pointer"
-                    >
-                      Zerar
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* 3. WORKFLOW DIÁRIO: METAS DO DIA & DICA ESTRATÉGICA */}
+              {/* 3. WORKFLOW DO DIA: METAS DIÁRIAS & DICA ESTRATÉGICA (VISUAL LIMPO E AREJADO) */}
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
                 <MetasDiariasCard
                   onNavigateToTab={(tab) => setActiveTab(tab as TabType)}
@@ -2537,70 +2364,6 @@ export default function App() {
                   onNavigateToTab={(tab) => setActiveTab(tab as TabType)}
                   onMostrarToast={mostrarToast}
                 />
-              </div>
-
-              {/* 4. ANÁLISE GRÁFICA & EVOLUÇÃO SEMANAL */}
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
-                <CronogramaProgressoChart
-                  tarefasConcluidas={tarefasConcluidas}
-                  onNavigateToCronograma={() => setActiveTab('cronograma')}
-                />
-                <GraficoComparativoMensal
-                  taxaAtualFlashcards={taxaAcertoEstimada}
-                  linhasSemanaisSimulador={totalLinhasSemana}
-                  blocosHojePomodoro={pomodoroBlocosHoje}
-                  onNavegarParaSimulador={() => setActiveTab('simulador')}
-                  onNavegarParaFlashcards={() => setActiveTab('flashcards')}
-                />
-              </div>
-
-              {/* 5. RADAR HISTÓRICO FGV & DATAS OFICIAIS (BARRA LIMPA & LEVE) */}
-              <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-800/80 p-5 backdrop-blur-xl shadow-xs space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <Award className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
-                      Distribuição Histórica das Peças FGV (32 Exames)
-                    </h3>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="text-zinc-500 dark:text-zinc-400">Prova Oficial:</span>
-                    <strong className="font-mono text-blue-600 dark:text-blue-400">
-                      {diasProva >= 0 ? `${diasProva} dias` : 'Hoje'} (13h-18h)
-                    </strong>
-                    <button
-                      onClick={() => setActiveTab('pecas')}
-                      className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline ml-2 cursor-pointer"
-                    >
-                      Ver Catálogo Completo →
-                    </button>
-                  </div>
-                </div>
-
-                {/* Grid Compacta dos 6 Principais Modelos */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-                  {[
-                    { nome: 'Mandado de Segurança', freq: '10x', pct: '31%', cor: 'border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300' },
-                    { nome: 'Recurso de Apelação', freq: '9x', pct: '28%', cor: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' },
-                    { nome: 'Agravo de Instrumento', freq: '7x', pct: '22%', cor: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300' },
-                    { nome: 'Ação Anulatória', freq: '7x', pct: '22%', cor: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300' },
-                    { nome: 'Repetição de Indébito', freq: '6x', pct: '19%', cor: 'border-purple-500/30 bg-purple-500/10 text-purple-700 dark:text-purple-300' },
-                    { nome: 'Embargos à Execução', freq: '4x', pct: '13%', cor: 'border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300' }
-                  ].map(p => (
-                    <div
-                      key={p.nome}
-                      className={`p-2.5 rounded-xl border ${p.cor} flex flex-col justify-between cursor-pointer hover:opacity-90 transition`}
-                      onClick={() => setActiveTab('pecas')}
-                      title={`Clique para estudar o modelo padrão de ${p.nome}`}
-                    >
-                      <div className="text-[11px] font-bold truncate">{p.nome}</div>
-                      <div className="flex items-center justify-between mt-1 text-[10px] font-mono">
-                        <span>{p.freq}</span>
-                        <span className="opacity-75">{p.pct}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
 
               {/* 6. PREFERÊNCIAS & AUTOMAÇÕES (PAINEL COMPACTO & RETRÁTIL) */}
@@ -2800,7 +2563,7 @@ export default function App() {
               {/* Left Column: Peçômetro & Catalogo */}
               <div className="lg:col-span-4 space-y-4">
                 {/* Peçômetro */}
-                <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-4 shadow-sm">
+                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-4 shadow-sm">
                   <div className="flex items-center justify-between mb-3">
                     <span className="badge b-VERDE">🎯 Descobridor de Peça</span>
                     <button
@@ -2832,7 +2595,7 @@ export default function App() {
                           <button
                             key={idx}
                             onClick={() => handlePecometroEscolha(destino)}
-                            className="w-full text-left rounded-xl border border-[#475569] bg-[#222b38] px-3 py-2 text-xs font-medium text-sky-300 hover:border-sky-400 hover:bg-[#334155] transition"
+                            className="w-full text-left rounded-xl border border-[#475569] bg-slate-50 dark:bg-zinc-900/60 text-zinc-800 dark:text-zinc-100 px-3 py-2 text-xs font-medium text-sky-300 hover:border-sky-400 hover:bg-[#334155] transition"
                           >
                             {rotulo}
                           </button>
@@ -2843,7 +2606,7 @@ export default function App() {
                 </div>
 
                 {/* Lista de Peças com Favoritos no Topo */}
-                <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-4 shadow-sm space-y-3">
+                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-4 shadow-sm space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">
@@ -2876,7 +2639,7 @@ export default function App() {
                   </div>
 
                   {/* Filtro: Todas vs Apenas Favoritas */}
-                  <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#222b38] border border-[#455468]/60">
+                  <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-50 dark:bg-zinc-900/60 text-zinc-800 dark:text-zinc-100 border border-black/10 dark:border-white/10/60">
                     <button
                       onClick={() => setFiltroApenasFavoritasPecas(false)}
                       className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-semibold transition text-center ${
@@ -2908,7 +2671,7 @@ export default function App() {
 
                   <div className="space-y-1.5">
                     {pecasOrdenadas.length === 0 ? (
-                      <div className="rounded-xl border border-dashed border-[#455468] p-4 text-center">
+                      <div className="rounded-xl border border-dashed border-black/10 dark:border-white/10 p-4 text-center">
                         <Star className="w-6 h-6 text-slate-500 mx-auto mb-2" />
                         <p className="text-xs text-slate-300 font-medium">Nenhuma peça favoritada no momento.</p>
                         <p className="text-[11px] text-slate-400 mt-1">
@@ -2933,7 +2696,7 @@ export default function App() {
                         return (
                           <React.Fragment key={p.codigo}>
                             {isFirstNonFav && (
-                              <div className="pt-2 pb-1 border-t border-[#455468]/60 flex items-center justify-between text-[10px] uppercase tracking-wider text-slate-400 px-1 font-semibold">
+                              <div className="pt-2 pb-1 border-t border-black/10 dark:border-white/10/60 flex items-center justify-between text-[10px] uppercase tracking-wider text-slate-400 px-1 font-semibold">
                                 <span>Demais Modelos de Peça</span>
                                 <span>{CATALOGO_PECAS.length - pecasFavoritas.length}</span>
                               </div>
@@ -2944,8 +2707,8 @@ export default function App() {
                                 pecaSelecionada.codigo === p.codigo
                                   ? 'bg-sky-600 text-white font-semibold border border-sky-400 shadow-sm'
                                   : isFav
-                                  ? 'border border-amber-500/40 bg-[#344154] text-slate-100 hover:bg-slate-600'
-                                  : 'border border-[#455468] bg-[#344154] text-slate-200 hover:bg-slate-600'
+                                  ? 'border border-amber-500/40 bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100 text-slate-100 hover:bg-slate-600'
+                                  : 'border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100 text-slate-200 hover:bg-slate-600'
                               }`}
                             >
                               <div className="flex items-center gap-2 min-w-0 pr-2">
@@ -2985,7 +2748,7 @@ export default function App() {
 
               {/* Right Column: Detalhe da Peça */}
               <div className="lg:col-span-8 space-y-4">
-                <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-5 shadow-sm">
+                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-5 shadow-sm">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="badge b-VERDE">
@@ -3052,7 +2815,7 @@ export default function App() {
                 </div>
 
                 {/* Quesitos da Prova */}
-                <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-5 shadow-sm">
+                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-5 shadow-sm">
                   <h3 className="text-sm font-semibold text-white mb-3">Quesitos Exigidos no Espelho FGV</h3>
                   <div className="divide-y divide-[#455468]">
                     {pecaSelecionada.quesitosFGV.map((q, qIdx) => (
@@ -3072,13 +2835,13 @@ export default function App() {
                   {pecaSelecionada.blocos.map((bloco, bIdx) => (
                     <div
                       key={bIdx}
-                      className="rounded-xl border border-[#455468] bg-[#344154] p-4 shadow-sm"
+                      className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100 p-4 shadow-sm"
                     >
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="text-xs font-bold text-sky-300">{bloco.titulo}</h4>
                         <span className={`badge b-${bloco.cor}`}>{bloco.cor}</span>
                       </div>
-                      <div className="rounded-lg bg-[#222b38] border border-[#455468]/60 p-2.5 text-[11px] text-slate-300 mb-3">
+                      <div className="rounded-lg bg-slate-50 dark:bg-zinc-900/60 text-zinc-800 dark:text-zinc-100 border border-black/10 dark:border-white/10/60 p-2.5 text-[11px] text-slate-300 mb-3">
                         💡 <strong>Como pontuar na FGV:</strong> {bloco.dica}
                       </div>
                       <pre className="whitespace-pre-wrap font-sans text-xs leading-relaxed text-slate-100">
@@ -3090,7 +2853,7 @@ export default function App() {
 
                 {/* Roteiro especial (se houver) */}
                 {ROTEIROS[pecaSelecionada.codigo] && (
-                  <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-5 shadow-sm">
+                  <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-5 shadow-sm">
                     <h3 className="text-sm font-semibold text-white mb-3">
                       🧭 Roteiro Passo a Passo (Oficina de Recursos)
                     </h3>
@@ -3108,7 +2871,7 @@ export default function App() {
           {/* TAB 4: COMPETÊNCIA E IMPOSTOS */}
           {activeTab === 'impostos' && (
             <div className="space-y-5">
-              <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-5 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-5 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                   <h2 className="text-base font-semibold text-white">
                     Competência Tributária & Impostos em Espécie
@@ -3125,7 +2888,7 @@ export default function App() {
                       className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
                         filtroImposto === cat
                           ? 'bg-sky-600 text-white border border-sky-400'
-                          : 'border border-[#56677d] bg-[#3b495e] text-slate-200 hover:bg-slate-600'
+                          : 'border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-700/60 text-zinc-700 dark:text-zinc-200 text-slate-200 hover:bg-slate-600'
                       }`}
                     >
                       {cat === 'TODOS'
@@ -3157,7 +2920,7 @@ export default function App() {
                   return (
                     <div
                       key={idx}
-                      className="rounded-xl border border-[#455468] bg-[#344154] p-4 shadow-sm flex flex-col justify-between"
+                      className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100 p-4 shadow-sm flex flex-col justify-between"
                     >
                       <div>
                         <div className="flex items-center justify-between gap-2 mb-2">
@@ -3169,17 +2932,17 @@ export default function App() {
                       </div>
 
                       {/* Ações integradas do imposto */}
-                      <div className="mt-3 pt-2.5 border-t border-[#455468] flex items-center gap-1.5 flex-wrap">
+                      <div className="mt-3 pt-2.5 border-t border-black/10 dark:border-white/10 flex items-center gap-1.5 flex-wrap">
                         <button
                           onClick={() => navegarParaSumula(imp.nome.split(' ')[0])}
-                          className="rounded-full bg-[#1b232e] border border-[#56677d] px-2 py-0.5 text-[10px] text-sky-300 hover:bg-[#253243] transition"
+                          className="rounded-full bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 border border-black/15 dark:border-white/15 px-2 py-0.5 text-[10px] text-sky-300 hover:bg-[#253243] transition"
                           title={`Buscar súmulas de ${imp.nome}`}
                         >
                           ⚖️ Súmulas
                         </button>
                         <button
                           onClick={() => navegarParaVade(imp.ente === 'FEDERAL' ? 'AZUL' : imp.ente === 'ESTADUAL' ? 'VERDE' : 'AMARELO')}
-                          className="rounded-full bg-[#1b232e] border border-[#56677d] px-2 py-0.5 text-[10px] text-amber-300 hover:bg-[#253243] transition"
+                          className="rounded-full bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 border border-black/15 dark:border-white/15 px-2 py-0.5 text-[10px] text-amber-300 hover:bg-[#253243] transition"
                           title="Ver artigos no Vade Mecum"
                         >
                           📖 Vade Mecum
@@ -3194,7 +2957,7 @@ export default function App() {
                               navegarParaSimulado(0, true);
                             }
                           }}
-                          className="rounded-full bg-[#1b232e] border border-[#56677d] px-2 py-0.5 text-[10px] text-emerald-300 hover:bg-[#253243] transition"
+                          className="rounded-full bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 border border-black/15 dark:border-white/15 px-2 py-0.5 text-[10px] text-emerald-300 hover:bg-[#253243] transition"
                           title="Praticar no Simulador 150L"
                         >
                           ✍️ Simulado
@@ -3210,7 +2973,7 @@ export default function App() {
           {/* TAB 5: DIREITO MATERIAL & PRECEDENTES */}
           {activeTab === 'material' && (
             <div className="space-y-5">
-              <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-5 shadow-sm space-y-3">
+              <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-5 shadow-sm space-y-3">
                 <div className="relative">
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                   <input
@@ -3218,7 +2981,7 @@ export default function App() {
                     value={buscaMaterial}
                     onChange={e => setBuscaMaterial(e.target.value)}
                     placeholder="Pesquisar em todo o direito material e precedentes qualificados..."
-                    className="w-full rounded-xl border border-[#56677d] bg-[#1b232e] pl-9 pr-4 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-400"
+                    className="w-full rounded-xl border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 pl-9 pr-4 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-400"
                   />
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -3237,7 +3000,7 @@ export default function App() {
                       className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                         catMaterial === cat
                           ? 'bg-sky-600 text-white border border-sky-400'
-                          : 'border border-[#56677d] bg-[#3b495e] text-slate-200 hover:bg-slate-600'
+                          : 'border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-700/60 text-zinc-700 dark:text-zinc-200 text-slate-200 hover:bg-slate-600'
                       }`}
                     >
                       {cat}
@@ -3255,7 +3018,7 @@ export default function App() {
                 ).map((mat, idx) => (
                   <div
                     key={idx}
-                    className="rounded-xl border border-[#455468] bg-[#344154] p-4 shadow-sm"
+                    className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100 p-4 shadow-sm"
                   >
                     <span className="badge b-AMARELO mb-2">{mat.cat}</span>
                     <h3 className="text-xs font-bold text-white mb-2">{mat.titulo}</h3>
@@ -3265,7 +3028,7 @@ export default function App() {
               </div>
 
               {/* Seção Precedentes Qualificados */}
-              <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-5 shadow-sm space-y-4">
+              <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-5 shadow-sm space-y-4">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <h3 className="text-sm font-semibold text-white flex items-center gap-2">
                     <Scale className="h-4 w-4 text-pink-400" /> Precedentes Qualificados (STF Repercussão Geral & STJ Repetitivos)
@@ -3293,7 +3056,7 @@ export default function App() {
                       className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                         tribPrecedente === tr
                           ? 'bg-sky-600 text-white border border-sky-400'
-                          : 'border border-[#56677d] bg-[#3b495e] text-slate-200 hover:bg-slate-600'
+                          : 'border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-700/60 text-zinc-700 dark:text-zinc-200 text-slate-200 hover:bg-slate-600'
                       }`}
                     >
                       {tr}
@@ -3311,7 +3074,7 @@ export default function App() {
                         className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition ${
                           temaPrecedente === tema
                             ? 'bg-emerald-600 text-white border border-emerald-400'
-                            : 'border border-[#56677d] bg-[#1b232e] text-slate-300 hover:bg-slate-700'
+                            : 'border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 text-slate-300 hover:bg-slate-700'
                         }`}
                       >
                         {tema === 'TODOS' ? 'Todos os assuntos' : tema}
@@ -3330,7 +3093,7 @@ export default function App() {
                   ).map((prec, idx) => (
                     <div
                       key={idx}
-                      className="rounded-xl border border-[#455468] bg-[#344154] p-4 shadow-sm"
+                      className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100 p-4 shadow-sm"
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className={`badge ${prec.tr === 'STF' ? 'b-VERDE' : 'b-AZUL'}`}>
@@ -3350,7 +3113,7 @@ export default function App() {
           {activeTab === 'sumulas' && (
             <div className="space-y-4">
                 {/* Painel de Filtros e Busca */}
-                <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-4 lg:p-5 shadow-sm space-y-3">
+                <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-4 lg:p-5 shadow-sm space-y-3">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                     {/* Campo de Busca */}
                     <div className="relative flex-1">
@@ -3360,7 +3123,7 @@ export default function App() {
                         value={buscaSumula}
                         onChange={e => setBuscaSumula(e.target.value)}
                         placeholder="Pesquisar por número, assunto (ex: IRPF, ICMS, Prescrição) ou texto..."
-                        className="w-full rounded-xl border border-[#56677d] bg-[#1b232e] pl-9 pr-9 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-400"
+                        className="w-full rounded-xl border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 pl-9 pr-9 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-400"
                       />
                       {buscaSumula && (
                         <button
@@ -3379,7 +3142,7 @@ export default function App() {
                       className={`rounded-full px-3.5 py-2 text-xs font-semibold transition-all inline-flex items-center gap-2 shadow-sm shrink-0 cursor-pointer ${
                         filtroApenasRecentes
                           ? 'bg-amber-500 text-slate-950 font-bold border-2 border-amber-300 ring-2 ring-amber-400/40 shadow-[0_0_15px_rgba(245,158,11,0.4)] scale-[1.02]'
-                          : 'border border-amber-500/60 bg-[#1b232e] text-amber-300 hover:bg-amber-950/40 hover:border-amber-400'
+                          : 'border border-amber-500/60 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 text-amber-300 hover:bg-amber-950/40 hover:border-amber-400'
                       }`}
                       title="Exibir somente súmulas recentes editadas ou adicionadas nos últimos 6 meses"
                     >
@@ -3398,7 +3161,7 @@ export default function App() {
                   </div>
 
                   {/* Segunda linha de controles: Filtro de Tribunais e Status */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-[#455468]/60">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-black/10 dark:border-white/10/60">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-[11px] text-slate-400 mr-1 font-medium">Tribunal:</span>
                       {[
@@ -3415,7 +3178,7 @@ export default function App() {
                             className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                               ativo
                                 ? 'bg-sky-600 text-white border border-sky-400 shadow-sm'
-                                : 'border border-[#56677d] bg-[#344154] text-slate-200 hover:bg-slate-600'
+                                : 'border border-black/15 dark:border-white/15 bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100 text-slate-200 hover:bg-slate-600'
                             }`}
                           >
                             {tr.label}
@@ -3471,7 +3234,7 @@ export default function App() {
                     </div>
                     <button
                       onClick={() => setFiltroApenasRecentes(false)}
-                      className="rounded-lg bg-[#1b232e] border border-amber-500/50 px-3 py-1.5 text-xs font-semibold text-amber-300 hover:text-white hover:bg-amber-950/40 transition shrink-0"
+                      className="rounded-lg bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 border border-amber-500/50 px-3 py-1.5 text-xs font-semibold text-amber-300 hover:text-white hover:bg-amber-950/40 transition shrink-0"
                     >
                       Mostrar Todas ({SUMULAS_DATA.length})
                     </button>
@@ -3496,7 +3259,7 @@ export default function App() {
                           className={`rounded-xl border p-4 shadow-sm flex flex-col justify-between transition-all ${
                             isRecente
                               ? 'border-amber-400/60 bg-gradient-to-b from-[#344154] to-[#25303e] ring-1 ring-amber-400/20 shadow-[0_4px_14px_rgba(0,0,0,0.25)]'
-                              : 'border-[#455468] bg-[#344154]'
+                              : 'border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100'
                           }`}
                         >
                           <div>
@@ -3521,7 +3284,7 @@ export default function App() {
                           </div>
 
                           {/* Ações integradas da Súmula */}
-                          <div className="mt-3.5 pt-2.5 border-t border-[#455468]/80 flex items-center justify-between gap-2">
+                          <div className="mt-3.5 pt-2.5 border-t border-black/10 dark:border-white/10/80 flex items-center justify-between gap-2">
                             <button
                               onClick={() => {
                                 const citacao = `\n\nNesse sentido, prevê a ${title}: "${sum.texto}".\n`;
@@ -3549,7 +3312,7 @@ export default function App() {
                   </div>
                 ) : (
                   /* Estado Vazio */
-                  <div className="rounded-2xl border border-dashed border-[#56677d] bg-[#222b38] p-8 text-center space-y-3">
+                  <div className="rounded-2xl border border-dashed border-black/15 dark:border-white/15 bg-slate-50 dark:bg-zinc-900/60 text-zinc-800 dark:text-zinc-100 p-8 text-center space-y-3">
                     <div className="text-3xl">⚖️</div>
                     <h4 className="text-sm font-bold text-white">
                       Nenhuma súmula encontrada com os filtros selecionados
@@ -3956,7 +3719,7 @@ export default function App() {
           {/* TAB 8: FLASHCARDS */}
           {activeTab === 'flashcards' && (
             <div className="space-y-5">
-              <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-5 shadow-sm space-y-4">
+              <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-5 shadow-sm space-y-4">
                 <div className="flex items-center justify-between flex-wrap gap-3">
                   <div>
                     <span className="badge b-AMARELO">Cartões Oficiais</span>
@@ -3973,7 +3736,7 @@ export default function App() {
                 </div>
 
                 {/* Categorias */}
-                <div className="flex items-center gap-2 flex-wrap border-t border-[#455468] pt-3">
+                <div className="flex items-center gap-2 flex-wrap border-t border-black/10 dark:border-white/10 pt-3">
                   {['TODOS', 'IMUNIDADES', 'IMPOSTOS', 'EXECUCAO', 'CREDITO', 'REFORMA'].map(cat => (
                     <button
                       key={cat}
@@ -3985,7 +3748,7 @@ export default function App() {
                       className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                         filtroCatFlash === cat
                           ? 'bg-sky-600 text-white border border-sky-400'
-                          : 'border border-[#56677d] bg-[#3b495e] text-slate-200 hover:bg-slate-600'
+                          : 'border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-700/60 text-zinc-700 dark:text-zinc-200 text-slate-200 hover:bg-slate-600'
                       }`}
                     >
                       {cat === 'TODOS'
@@ -4005,7 +3768,7 @@ export default function App() {
 
                 {/* Flashcard Viewer */}
                 {flashcardAtual ? (
-                  <div className="rounded-2xl border border-sky-400/80 bg-[#344154] p-6 shadow-md">
+                  <div className="rounded-2xl border border-sky-400/80 bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100 p-6 shadow-md">
                     <div className="flex items-center justify-between mb-4">
                       <span className="badge b-AMARELO">{flashcardAtual.c}</span>
                       <span className="badge b-AZUL font-mono">
@@ -4018,7 +3781,7 @@ export default function App() {
                     </p>
 
                     {revelado && (
-                      <div className="mt-4 border-t border-[#455468] pt-4 space-y-3.5">
+                      <div className="mt-4 border-t border-black/10 dark:border-white/10 pt-4 space-y-3.5">
                         <div className="text-xs md:text-sm leading-relaxed text-emerald-300 bg-emerald-950/30 p-3 rounded-xl border border-emerald-500/30">
                           <strong className="text-emerald-200">✓ Gabarito FGV:</strong> {flashcardAtual.r}
                         </div>
@@ -4052,7 +3815,7 @@ export default function App() {
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between border-t border-[#455468] pt-4 mt-6 flex-wrap gap-2">
+                    <div className="flex items-center justify-between border-t border-black/10 dark:border-white/10 pt-4 mt-6 flex-wrap gap-2">
                       <button
                         onClick={anteriorFlashcard}
                         className="rounded-full border border-slate-600 bg-slate-700/80 px-3 py-1.5 text-xs text-white hover:bg-slate-600 transition"
@@ -4097,7 +3860,7 @@ export default function App() {
                     className={`rounded-xl border p-3 cursor-pointer transition ${
                       idxFlash === i
                         ? 'border-sky-400 bg-sky-950/40'
-                        : 'border-[#455468] bg-[#344154] hover:bg-[#3d4d63]'
+                        : 'border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100 hover:bg-slate-200 dark:bg-zinc-700'
                     }`}
                   >
                     <span className="badge b-AMARELO text-[9px] mb-1">{fc.c}</span>
@@ -4112,7 +3875,7 @@ export default function App() {
           {activeTab === 'vademecum' && (
             <div className="space-y-4">
               {/* Painel de Controle, Busca Textual e Filtros */}
-              <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-4 lg:p-5 shadow-sm space-y-3.5">
+              <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-4 lg:p-5 shadow-sm space-y-3.5">
                 <div className="flex items-center justify-between flex-wrap gap-3">
                   <div>
                     <span className="badge b-AMARELO text-[10px]">
@@ -4147,7 +3910,7 @@ export default function App() {
                       value={buscaVade}
                       onChange={e => setBuscaVade(e.target.value)}
                       placeholder="Pesquisar por artigo, código, tema (ex: Art. 151, CTN, Prescrição, Decadência, Reforma)..."
-                      className="w-full rounded-xl border border-[#56677d] bg-[#1b232e] pl-9 pr-9 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
+                      className="w-full rounded-xl border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 pl-9 pr-9 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
                     />
                     {buscaVade && (
                       <button
@@ -4166,7 +3929,7 @@ export default function App() {
                     className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition-all inline-flex items-center gap-1.5 shrink-0 cursor-pointer ${
                       filtroApenasMarcadosVade
                         ? 'bg-emerald-600 text-white border border-emerald-400 shadow-sm'
-                        : 'border border-[#56677d] bg-[#1b232e] text-slate-300 hover:bg-slate-800'
+                        : 'border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 text-slate-300 hover:bg-slate-800'
                     }`}
                     title="Exibir apenas os artigos marcados no seu Vade"
                   >
@@ -4179,7 +3942,7 @@ export default function App() {
                 </div>
 
                 {/* Filtros de Cores com Contadores Dinâmicos */}
-                <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-[#455468]/60">
+                <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-black/10 dark:border-white/10/60">
                   <span className="text-[11px] text-slate-400 mr-1 font-medium">Categorias:</span>
                   {[
                     { val: 'TODAS', label: 'Todas as Cores', corClass: 'b-AMARELO', count: contagemCoresVade.TODAS },
@@ -4197,7 +3960,7 @@ export default function App() {
                         className={`rounded-full px-2.5 py-1 text-xs font-semibold transition-all inline-flex items-center gap-1.5 cursor-pointer ${
                           ativo
                             ? 'bg-amber-500 text-slate-950 font-bold border-2 border-amber-300 shadow-sm'
-                            : 'border border-[#56677d] bg-[#344154] text-slate-200 hover:bg-slate-600'
+                            : 'border border-black/15 dark:border-white/15 bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100 text-slate-200 hover:bg-slate-600'
                         }`}
                       >
                         <span>{cat.label}</span>
@@ -4214,7 +3977,7 @@ export default function App() {
                 </div>
 
                 {/* Barra de Status e Progresso de Marcação */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-[#455468]/60 text-xs text-slate-300">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-black/10 dark:border-white/10/60 text-xs text-slate-300">
                   <div className="flex items-center gap-2">
                     <span>
                       Exibindo <strong className="text-white font-mono">{vadeFiltrados.length}</strong> de {VADE_DATA.length} dispositivos
@@ -4238,7 +4001,7 @@ export default function App() {
                     <strong className="text-emerald-400 font-mono text-[11px]">
                       {vadeMarcados.length} de {VADE_DATA.length} ({Math.round((vadeMarcados.length / VADE_DATA.length) * 100)}%)
                     </strong>
-                    <div className="w-20 h-2 bg-[#1b232e] rounded-full overflow-hidden border border-[#455468]">
+                    <div className="w-20 h-2 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-full overflow-hidden border border-black/10 dark:border-white/10">
                       <div
                         className="h-full bg-emerald-500 transition-all duration-300"
                         style={{ width: `${(vadeMarcados.length / VADE_DATA.length) * 100}%` }}
@@ -4259,7 +4022,7 @@ export default function App() {
                         className={`flex items-start gap-2.5 rounded-xl border p-3.5 cursor-pointer transition select-none ${
                           isChecked
                             ? 'border-emerald-500/80 bg-emerald-950/25 ring-1 ring-emerald-500/30 shadow-sm'
-                            : 'border-[#455468] bg-[#344154] hover:bg-[#3d4d63]'
+                            : 'border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100 hover:bg-slate-200 dark:bg-zinc-700'
                         }`}
                       >
                         <input
@@ -4283,7 +4046,7 @@ export default function App() {
                               {item.obs}
                             </div>
                           )}
-                          <div className="flex items-center justify-between mt-2 pt-1 border-t border-[#455468]/50">
+                          <div className="flex items-center justify-between mt-2 pt-1 border-t border-black/10 dark:border-white/10/50">
                             <button
                               type="button"
                               onClick={(e) => {
@@ -4292,7 +4055,7 @@ export default function App() {
                                 const citacao = `\n\nConforme estabelece o ${item.ref}${item.obs ? ` (${item.obs})` : ''}.\n`;
                                 inserirTextoNaRedacao(citacao, false);
                               }}
-                              className="rounded bg-[#1b232e] border border-[#56677d] px-2 py-0.5 text-[9px] font-semibold text-amber-300 hover:bg-[#253243] inline-flex items-center gap-1 cursor-pointer"
+                              className="rounded bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 border border-black/15 dark:border-white/15 px-2 py-0.5 text-[9px] font-semibold text-amber-300 hover:bg-[#253243] inline-flex items-center gap-1 cursor-pointer"
                               title="Citar este artigo na folha de 150 linhas do Simulador"
                             >
                               <Plus className="h-2.5 w-2.5" /> Citar no Simulador
@@ -4308,7 +4071,7 @@ export default function App() {
                 </div>
               ) : (
                 /* Estado Vazio */
-                <div className="rounded-2xl border border-dashed border-[#56677d] bg-[#222b38] p-8 text-center space-y-3">
+                <div className="rounded-2xl border border-dashed border-black/15 dark:border-white/15 bg-slate-50 dark:bg-zinc-900/60 text-zinc-800 dark:text-zinc-100 p-8 text-center space-y-3">
                   <div className="text-3xl">📖</div>
                   <h4 className="text-sm font-bold text-white">
                     Nenhum dispositivo encontrado
@@ -4338,7 +4101,7 @@ export default function App() {
           {/* TAB 10: LEGISLAÇÃO */}
           {activeTab === 'legislacao' && (
             <div className="space-y-5">
-              <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-5 shadow-sm">
+              <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-5 shadow-sm">
                 <h2 className="text-base font-semibold text-white">
                   Central de Legislação Compilada (Portal da Legislação Planalto)
                 </h2>
@@ -4403,7 +4166,7 @@ export default function App() {
                     href={item.link}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex flex-col justify-between rounded-xl border border-[#455468] bg-[#344154] p-4 hover:border-sky-400 hover:bg-[#3d4d63] transition shadow-sm group"
+                    className="flex flex-col justify-between rounded-xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100 p-4 hover:border-sky-400 hover:bg-slate-200 dark:bg-zinc-700 transition shadow-sm group"
                   >
                     <div>
                       <div className="flex items-center justify-between mb-2">
@@ -4424,7 +4187,7 @@ export default function App() {
           {/* TAB 11: MAPAS MENTAIS (PDF VIEWER) */}
           {activeTab === 'mapas' && (
             <div className="flex flex-col h-[calc(100vh-100px)] space-y-3">
-              <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-4 shadow-sm flex items-center justify-between flex-wrap gap-3">
+              <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-4 shadow-sm flex items-center justify-between flex-wrap gap-3">
                 <div>
                   <span className="badge b-AMARELO">Leitor Integrado</span>
                   <h2 className="text-base font-semibold text-white mt-1">
@@ -4444,7 +4207,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="flex-1 rounded-2xl border border-[#455468] bg-[#FAF8F5] overflow-hidden flex flex-col items-center justify-center relative shadow-inner">
+              <div className="flex-1 rounded-2xl border border-black/10 dark:border-white/10 bg-[#FAF8F5] overflow-hidden flex flex-col items-center justify-center relative shadow-inner">
                 {pdfUrl ? (
                   <iframe
                     src={pdfUrl}
@@ -4470,7 +4233,7 @@ export default function App() {
           {/* TAB 12: TESES DE PEÇAS */}
           {activeTab === 'teses' && (
             <div className="space-y-5">
-              <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-5 shadow-sm space-y-3">
+              <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-5 shadow-sm space-y-3">
                 <div className="relative">
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                   <input
@@ -4478,7 +4241,7 @@ export default function App() {
                     value={buscaTese}
                     onChange={e => setBuscaTese(e.target.value)}
                     placeholder="Pesquisar tese, artigo ou súmula..."
-                    className="w-full rounded-xl border border-[#56677d] bg-[#1b232e] pl-9 pr-4 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-400"
+                    className="w-full rounded-xl border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 pl-9 pr-4 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-400"
                   />
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -4487,7 +4250,7 @@ export default function App() {
                     className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                       filtroTeseCat === 0
                         ? 'bg-sky-600 text-white border border-sky-400'
-                        : 'border border-[#56677d] bg-[#3b495e] text-slate-200 hover:bg-slate-600'
+                        : 'border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-700/60 text-zinc-700 dark:text-zinc-200 text-slate-200 hover:bg-slate-600'
                     }`}
                   >
                     Todas as Teses
@@ -4499,7 +4262,7 @@ export default function App() {
                       className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                         filtroTeseCat === Number(catNum)
                           ? 'bg-sky-600 text-white border border-sky-400'
-                          : 'border border-[#56677d] bg-[#3b495e] text-slate-200 hover:bg-slate-600'
+                          : 'border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-700/60 text-zinc-700 dark:text-zinc-200 text-slate-200 hover:bg-slate-600'
                       }`}
                     >
                       {rotulo}
@@ -4516,7 +4279,7 @@ export default function App() {
                 ).map((tese, idx) => (
                   <div
                     key={idx}
-                    className="rounded-xl border border-[#455468] bg-[#344154] p-4 shadow-sm flex flex-col justify-between"
+                    className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100 p-4 shadow-sm flex flex-col justify-between"
                   >
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-2">
@@ -4526,14 +4289,14 @@ export default function App() {
                       <h3 className="text-xs font-bold text-white mb-2.5 leading-snug">{tese.t}</h3>
                       <div className="space-y-2 text-xs">
                         {tese.s.map((sub, sIdx) => (
-                          <div key={sIdx} className="rounded-lg bg-[#222b38] p-2.5 border border-[#455468]/60">
+                          <div key={sIdx} className="rounded-lg bg-slate-50 dark:bg-zinc-900/60 text-zinc-800 dark:text-zinc-100 p-2.5 border border-black/10 dark:border-white/10/60">
                             <strong className="text-sky-300 block mb-1">{sub[0]}</strong>
                             <span className="text-slate-300 leading-relaxed text-[11px]">{sub[1]}</span>
                           </div>
                         ))}
                       </div>
                     </div>
-                    <div className="mt-3 border-t border-[#455468] pt-2 flex items-center justify-between gap-2">
+                    <div className="mt-3 border-t border-black/10 dark:border-white/10 pt-2 flex items-center justify-between gap-2">
                       <button
                         onClick={() => {
                           const textoTese = `\n\nDO DIREITO: ${tese.t.toUpperCase()}\n${tese.s.map(sub => `${sub[0]}: ${sub[1]}`).join('\n')}\n`;
@@ -4563,7 +4326,7 @@ export default function App() {
           {/* TAB 13: PLANNER NATIVO */}
           {activeTab === 'planner' && (
             <div className="space-y-4">
-              <div className="rounded-2xl border border-[#455468] bg-[#2b3646] p-5 shadow-sm space-y-4">
+              <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-5 shadow-sm space-y-4">
                 <div className="flex items-center justify-between flex-wrap gap-3">
                   <div>
                     <span className="badge b-AZUL">Integração Nativa 100% Editável</span>
@@ -4589,7 +4352,7 @@ export default function App() {
                 </div>
 
                 {/* Sub tabs do Planner */}
-                <div className="flex items-center gap-2 border-b border-[#455468] pb-3 flex-wrap">
+                <div className="flex items-center gap-2 border-b border-black/10 dark:border-white/10 pb-3 flex-wrap">
                   {[
                     ['mensal', '📅 Planejamento Mensal'],
                     ['semanal', '📆 Planejamento Semanal'],
@@ -4602,7 +4365,7 @@ export default function App() {
                       className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
                         subAbaPlanner === sub
                           ? 'bg-sky-600 text-white border border-sky-400'
-                          : 'border border-[#56677d] bg-[#3b495e] text-slate-200 hover:bg-slate-600'
+                          : 'border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-700/60 text-zinc-700 dark:text-zinc-200 text-slate-200 hover:bg-slate-600'
                       }`}
                     >
                       {rotulo}
@@ -4619,21 +4382,21 @@ export default function App() {
                         placeholder="Mês (Ex: Novembro / Dezembro)"
                         value={plannerData['plM_mes'] || ''}
                         onChange={e => handlePlannerUpdate('plM_mes', e.target.value)}
-                        className="rounded-lg border border-[#56677d] bg-[#1b232e] px-3 py-1.5 text-xs font-bold text-white w-52"
+                        className="rounded-lg border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 px-3 py-1.5 text-xs font-bold text-white w-52"
                       />
                       <input
                         type="text"
                         placeholder="Foco prioritário do mês..."
                         value={plannerData['plM_foco'] || ''}
                         onChange={e => handlePlannerUpdate('plM_foco', e.target.value)}
-                        className="flex-1 min-w-[200px] rounded-lg border border-[#56677d] bg-[#1b232e] px-3 py-1.5 text-xs text-white"
+                        className="flex-1 min-w-[200px] rounded-lg border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 px-3 py-1.5 text-xs text-white"
                       />
                     </div>
                     <textarea
                       placeholder="Tarefas e metas importantes do mês..."
                       value={plannerData['plM_tarefas'] || ''}
                       onChange={e => handlePlannerUpdate('plM_tarefas', e.target.value)}
-                      className="w-full h-16 rounded-xl border border-[#56677d] bg-[#1b232e] p-2.5 text-xs text-white resize-none"
+                      className="w-full h-16 rounded-xl border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 p-2.5 text-xs text-white resize-none"
                     />
 
                     {/* 35 Days Grid */}
@@ -4649,14 +4412,14 @@ export default function App() {
                       {Array.from({ length: 35 }).map((_, i) => (
                         <div
                           key={i}
-                          className="rounded-xl border border-[#455468] bg-[#1b232e] p-2 min-h-[85px] flex flex-col"
+                          className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 p-2 min-h-[85px] flex flex-col"
                         >
                           <input
                             type="text"
                             placeholder="Dia"
                             value={plannerData[`plM_dia_${i}`] || ''}
                             onChange={e => handlePlannerUpdate(`plM_dia_${i}`, e.target.value)}
-                            className="w-8 border-b border-[#455468] bg-transparent text-[10px] text-sky-400 font-bold focus:outline-none mb-1"
+                            className="w-8 border-b border-black/10 dark:border-white/10 bg-transparent text-[10px] text-sky-400 font-bold focus:outline-none mb-1"
                           />
                           <textarea
                             placeholder="..."
@@ -4677,16 +4440,16 @@ export default function App() {
                       placeholder="Metas da semana e horários disponíveis..."
                       value={plannerData['plS_metas'] || ''}
                       onChange={e => handlePlannerUpdate('plS_metas', e.target.value)}
-                      className="w-full h-16 rounded-xl border border-[#56677d] bg-[#1b232e] p-2.5 text-xs text-white resize-none"
+                      className="w-full h-16 rounded-xl border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 p-2.5 text-xs text-white resize-none"
                     />
 
-                    <div className="overflow-x-auto rounded-xl border border-[#455468]">
+                    <div className="overflow-x-auto rounded-xl border border-black/10 dark:border-white/10">
                       <table className="w-full border-collapse text-xs">
                         <thead>
-                          <tr className="bg-[#344154] text-sky-300">
-                            <th className="border border-[#455468] p-2 text-center w-20">Turno</th>
+                          <tr className="bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100 text-sky-300">
+                            <th className="border border-black/10 dark:border-white/10 p-2 text-center w-20">Turno</th>
                             {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map(d => (
-                              <th key={d} className="border border-[#455468] p-2 text-left">
+                              <th key={d} className="border border-black/10 dark:border-white/10 p-2 text-left">
                                 {d}
                               </th>
                             ))}
@@ -4694,12 +4457,12 @@ export default function App() {
                         </thead>
                         <tbody>
                           {['MANHÃ', 'TARDE', 'NOITE'].map(t => (
-                            <tr key={t} className="bg-[#1b232e]">
-                              <td className="border border-[#455468] p-2 text-center font-bold text-slate-300 bg-[#2b3646]">
+                            <tr key={t} className="bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100">
+                              <td className="border border-black/10 dark:border-white/10 p-2 text-center font-bold text-slate-300 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100">
                                 {t}
                               </td>
                               {Array.from({ length: 7 }).map((_, dIdx) => (
-                                <td key={dIdx} className="border border-[#455468] p-1.5 align-top">
+                                <td key={dIdx} className="border border-black/10 dark:border-white/10 p-1.5 align-top">
                                   <textarea
                                     value={plannerData[`plS_${t[0]}_${dIdx}`] || ''}
                                     onChange={e =>
@@ -4721,8 +4484,8 @@ export default function App() {
                 {subAbaPlanner === 'diario' && (
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                     {/* Checklist de Tarefas do Dia */}
-                    <div className="md:col-span-6 rounded-xl border border-[#455468] bg-[#1b232e] p-4">
-                      <h3 className="text-xs font-bold text-sky-300 mb-3 border-b border-[#455468] pb-2">
+                    <div className="md:col-span-6 rounded-xl border border-black/10 dark:border-white/10 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 p-4">
+                      <h3 className="text-xs font-bold text-sky-300 mb-3 border-b border-black/10 dark:border-white/10 pb-2">
                         Tarefas do Dia
                       </h3>
                       <div className="space-y-2">
@@ -4739,7 +4502,7 @@ export default function App() {
                               placeholder={`Tarefa ${i + 1}...`}
                               value={plannerData[`plD_txt_${i}`] || ''}
                               onChange={e => handlePlannerUpdate(`plD_txt_${i}`, e.target.value)}
-                              className="flex-1 border-b border-[#455468] bg-transparent text-xs text-white focus:outline-none pb-0.5"
+                              className="flex-1 border-b border-black/10 dark:border-white/10 bg-transparent text-xs text-white focus:outline-none pb-0.5"
                             />
                           </div>
                         ))}
@@ -4748,13 +4511,13 @@ export default function App() {
 
                     {/* Aulas do Dia & Anotações */}
                     <div className="md:col-span-6 space-y-4">
-                      <div className="rounded-xl border border-[#455468] bg-[#1b232e] p-4">
-                        <h3 className="text-xs font-bold text-emerald-300 mb-3 border-b border-[#455468] pb-2">
+                      <div className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 p-4">
+                        <h3 className="text-xs font-bold text-emerald-300 mb-3 border-b border-black/10 dark:border-white/10 pb-2">
                           Aulas do Dia
                         </h3>
                         <table className="w-full text-xs">
                           <thead>
-                            <tr className="text-slate-400 border-b border-[#455468]">
+                            <tr className="text-slate-400 border-b border-black/10 dark:border-white/10">
                               <th className="text-left py-1">Aula / Conteúdo</th>
                               <th className="text-left py-1 w-20">EAD</th>
                               <th className="text-left py-1 w-20">Horário</th>
@@ -4762,7 +4525,7 @@ export default function App() {
                           </thead>
                           <tbody>
                             {Array.from({ length: 4 }).map((_, i) => (
-                              <tr key={i} className="border-b border-[#455468]/50">
+                              <tr key={i} className="border-b border-black/10 dark:border-white/10/50">
                                 <td className="py-1 pr-2">
                                   <input
                                     type="text"
@@ -4793,8 +4556,8 @@ export default function App() {
                         </table>
                       </div>
 
-                      <div className="rounded-xl border border-[#455468] bg-[#1b232e] p-4">
-                        <h3 className="text-xs font-bold text-amber-300 mb-2 border-b border-[#455468] pb-1">
+                      <div className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 p-4">
+                        <h3 className="text-xs font-bold text-amber-300 mb-2 border-b border-black/10 dark:border-white/10 pb-1">
                           Anotações & Insights
                         </h3>
                         <textarea
@@ -4818,9 +4581,9 @@ export default function App() {
                       {ESTRUTURA_CONTROLE_AULAS.map((sec, secIdx) => (
                         <div
                           key={secIdx}
-                          className="rounded-xl border border-[#455468] bg-[#1b232e] p-4"
+                          className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 p-4"
                         >
-                          <h3 className="text-xs font-bold text-sky-300 border-b border-[#455468] pb-2 mb-3">
+                          <h3 className="text-xs font-bold text-sky-300 border-b border-black/10 dark:border-white/10 pb-2 mb-3">
                             {sec.titulo}
                           </h3>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -4994,7 +4757,7 @@ export default function App() {
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-16 right-5 z-50 flex items-center gap-2 rounded-xl border border-sky-400 bg-[#1b232e] px-4 py-2.5 text-xs font-semibold text-white shadow-2xl animate-bounce"
+          className="fixed bottom-16 right-5 z-50 flex items-center gap-2 rounded-xl border border-sky-400 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 px-4 py-2.5 text-xs font-semibold text-white shadow-2xl animate-bounce"
         >
           <Sparkles className="h-4 w-4 text-sky-400 animate-spin" />
           <span>{toastMsg}</span>
