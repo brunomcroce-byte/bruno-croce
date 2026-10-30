@@ -2283,47 +2283,53 @@ export default function App() {
           {/* TAB 1: DASHBOARD (FLUIDO, INTUITIVO & LIMPO - macOS SEQUOIA) */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6 macos-animate">
-              {/* 1. HERO HEADER: GREETING & STATUS ESSENCIAL */}
-              <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-800/80 p-5 lg:p-6 backdrop-blur-xl shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 font-mono">
-                      2ª Fase OAB • Direito Tributário
+              {/* 1. HERO HEADER: GREETING AMIGÁVEL & STATUS ESSENCIAL */}
+              <div className="rounded-3xl border border-blue-100 dark:border-white/10 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-purple-50/30 dark:from-zinc-800/95 dark:via-zinc-800/85 dark:to-zinc-800/95 p-6 lg:p-7 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-5 transition-all">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-100/70 dark:bg-blue-950/60 px-3 py-0.5 rounded-full border border-blue-300/60 dark:border-blue-700/60 inline-flex items-center gap-1.5">
+                      <span>⚖️ 2ª Fase OAB</span>
+                      <span>•</span>
+                      <span>Direito Tributário</span>
                     </span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-                      {statusConexao.online ? 'Base FGV Online' : 'Offline'}
+                    <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/60 px-3 py-0.5 rounded-full border border-emerald-300/60 dark:border-emerald-700/60 inline-flex items-center gap-1">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                      {statusConexao.online ? 'Base FGV Sincronizada' : 'Modo Offline'}
+                    </span>
+                    <span className="text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-100/70 dark:bg-amber-950/60 px-3 py-0.5 rounded-full border border-amber-300/60 dark:border-amber-700/60">
+                      ⏳ {diasProva >= 0 ? `Faltam ${diasProva} dias` : 'Hoje é o dia!'}
                     </span>
                   </div>
-                  <h1 className="text-xl lg:text-2xl font-bold text-zinc-900 dark:text-white tracking-tight">
-                    Painel de Preparação Estratégica
+                  <h1 className="text-xl sm:text-2xl font-extrabold text-zinc-900 dark:text-white tracking-tight pt-0.5">
+                    Olá, Futuro(a) Advogado(a) Tributarista! 🎯
                   </h1>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-xl">
-                    Visão unificada do seu ciclo de estudos: redação das 150 linhas com análise de peça em tempo real, sessões de foco e retenção das teses da FGV.
+                  <p className="text-xs text-zinc-600 dark:text-zinc-300 max-w-2xl leading-relaxed">
+                    Tudo pronto para mais uma sessão de alto rendimento? Pratique na folha padrão de 150 linhas com detecção heurística de peça, mantenha o foco nos blocos Pomodoro e domine as teses da FGV.
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2.5 flex-wrap shrink-0">
                   <button
                     onClick={() => setActiveTab('cronograma')}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-xs transition cursor-pointer active:scale-95"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-sm hover:shadow transition-all cursor-pointer active:scale-95"
                   >
-                    <Calendar className="h-3.5 w-3.5" />
+                    <Calendar className="h-4 w-4" />
                     <span>Simulado Semanal FGV</span>
                   </button>
                   <button
                     onClick={handleGerarRelatorioSemanalPdf}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-200 text-xs font-medium shadow-xs transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold shadow-xs transition-all cursor-pointer"
                     title="Exportar relatório completo em PDF"
                   >
-                    <Download className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
+                    <Download className="h-4 w-4 text-blue-500 dark:text-blue-400" />
                     <span>Relatório PDF</span>
                   </button>
                   <button
                     onClick={() => exportarRedacaoNoWord(textoRedacao)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-zinc-800 dark:text-zinc-200 text-xs font-medium shadow-xs transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold shadow-xs transition-all cursor-pointer"
                     title="Backup da redação no Word (.doc)"
                   >
-                    <FileText className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
+                    <FileText className="h-4 w-4 text-blue-500 dark:text-blue-400" />
                     <span>Backup Word</span>
                   </button>
                 </div>
@@ -2359,6 +2365,8 @@ export default function App() {
                 <MetasDiariasCard
                   onNavigateToTab={(tab) => setActiveTab(tab as TabType)}
                   onMostrarToast={mostrarToast}
+                  totalLinhasSemana={totalLinhasSemana}
+                  pomodoroBlocosHoje={pomodoroBlocosHoje}
                 />
                 <DicaDoDiaCard
                   onNavigateToTab={(tab) => setActiveTab(tab as TabType)}
@@ -2367,7 +2375,7 @@ export default function App() {
               </div>
 
               {/* 6. PREFERÊNCIAS & AUTOMAÇÕES (PAINEL COMPACTO & RETRÁTIL) */}
-              <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-800/80 backdrop-blur-xl shadow-xs overflow-hidden">
+              <div className="rounded-3xl border border-black/5 dark:border-white/10 bg-white dark:bg-zinc-800/90 shadow-sm overflow-hidden transition-all">
                 <button
                   type="button"
                   onClick={() => setPainelAutomacoesAberto(!painelAutomacoesAberto)}
