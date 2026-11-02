@@ -217,15 +217,15 @@ Categoria: ${dicaAtual.categoria} | Relevância: ${dicaAtual.relevanciaFGV}`;
 
   return (
     <div className="macos-card-interactive rounded-3xl border border-black/5 dark:border-white/10 bg-white/80 dark:bg-zinc-800/90 backdrop-blur-xl p-6 lg:p-7 space-y-6 shadow-sm transition-all duration-300">
-      {/* 1. TOPO: INSIGHTS HERO HEADER */}
+      {/* 1. TOPO: INSIGHTS HERO HEADER (PADRONIZADO) */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-md shadow-amber-500/25 shrink-0 animate-amber-aura">
-            <Lightbulb className="h-6 w-6" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#0078d4]/10 dark:bg-[#4cc2ff]/15 text-[#0078d4] dark:text-[#4cc2ff] border border-[#0078d4]/20 shrink-0">
+            <Lightbulb className="h-5 w-5" />
           </div>
           <div>
             <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 font-medium flex-wrap">
-              <span className="font-semibold text-amber-600 dark:text-amber-400">Insights da Banca FGV</span>
+              <span className="font-semibold text-[#0078d4] dark:text-[#4cc2ff]">Insights da Banca FGV</span>
               <span aria-hidden="true">·</span>
               <span>Relevância {dicaAtual.relevanciaFGV}</span>
               <span aria-hidden="true">·</span>
@@ -271,7 +271,7 @@ Categoria: ${dicaAtual.categoria} | Relevância: ${dicaAtual.relevanciaFGV}`;
             <span aria-hidden="true">·</span>
             <span className="font-mono">{dicaAtual.tag}</span>
           </div>
-          <span className="font-mono font-semibold text-amber-600 dark:text-amber-400">{dicaAtual.artigoSumula}</span>
+          <span className="font-mono font-semibold text-[#0078d4] dark:text-[#4cc2ff]">{dicaAtual.artigoSumula}</span>
         </div>
 
         {/* Título do Insight */}

@@ -256,7 +256,7 @@ export const CentralUnificadaDesempenhoCard: React.FC<CentralUnificadaDesempenho
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => onNavegarParaTab('simulador')}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-xs transition cursor-pointer active:scale-95"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0078d4] hover:bg-[#006cbd] text-white text-xs font-semibold shadow-xs transition cursor-pointer active:scale-95"
           >
             <FileText className="h-3.5 w-3.5" />
             <span>Simulador 150L</span>
@@ -264,7 +264,7 @@ export const CentralUnificadaDesempenhoCard: React.FC<CentralUnificadaDesempenho
 
           <button
             onClick={onExportarPdf}
-            className="p-1.5 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition cursor-pointer shadow-xs"
+            className="p-1.5 rounded-xl border border-black/10 dark:border-white/10 bg-white/70 dark:bg-zinc-800/70 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition cursor-pointer shadow-xs"
             title="Exportar Relatório Semanal em PDF"
           >
             <Download className="h-4 w-4" />
@@ -292,16 +292,16 @@ export const CentralUnificadaDesempenhoCard: React.FC<CentralUnificadaDesempenho
             <svg className="w-36 h-36 sm:w-40 sm:h-40 transform -rotate-90 overflow-visible" viewBox="0 0 180 180">
               <defs>
                 <linearGradient id="ringLinhasGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#3b82f6" />
-                  <stop offset="100%" stopColor="#06b6d4" />
+                  <stop offset="0%" stopColor="#0078d4" />
+                  <stop offset="100%" stopColor="#4cc2ff" />
                 </linearGradient>
                 <linearGradient id="ringRetencaoGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#10b981" />
-                  <stop offset="100%" stopColor="#34d399" />
+                  <stop offset="0%" stopColor="#0284c7" />
+                  <stop offset="100%" stopColor="#38bdf8" />
                 </linearGradient>
                 <linearGradient id="ringFocoGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#f59e0b" />
-                  <stop offset="100%" stopColor="#f43f5e" />
+                  <stop offset="0%" stopColor="#2563eb" />
+                  <stop offset="100%" stopColor="#60a5fa" />
                 </linearGradient>
               </defs>
 
@@ -379,15 +379,15 @@ export const CentralUnificadaDesempenhoCard: React.FC<CentralUnificadaDesempenho
           >
             <div className="cursor-pointer transition-transform hover:scale-105" onMouseEnter={() => setAnelAtivo('linhas')} onMouseLeave={() => setAnelAtivo(null)}>
               <span className="text-[10px] text-zinc-500 dark:text-zinc-400 block">Redação</span>
-              <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">{totalLinhasSemana}/150L</span>
+              <span className="font-mono text-xs font-bold text-[#0078d4] dark:text-[#4cc2ff]">{totalLinhasSemana}/150L</span>
             </div>
             <div className="cursor-pointer transition-transform hover:scale-105" onMouseEnter={() => setAnelAtivo('retencao')} onMouseLeave={() => setAnelAtivo(null)}>
               <span className="text-[10px] text-zinc-500 dark:text-zinc-400 block">Retenção</span>
-              <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">{taxaAcertoEstimada}%</span>
+              <span className="font-mono text-xs font-bold text-sky-600 dark:text-sky-400">{taxaAcertoEstimada}%</span>
             </div>
             <div className="cursor-pointer transition-transform hover:scale-105" onMouseEnter={() => setAnelAtivo('foco')} onMouseLeave={() => setAnelAtivo(null)}>
               <span className="text-[10px] text-zinc-500 dark:text-zinc-400 block">Foco</span>
-              <span className="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">{pomodoroBlocosHoje}/4🍅</span>
+              <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">{pomodoroBlocosHoje}/4🍅</span>
             </div>
           </motion.div>
         </motion.div>
@@ -404,7 +404,7 @@ export const CentralUnificadaDesempenhoCard: React.FC<CentralUnificadaDesempenho
           <div className="p-3 rounded-2xl bg-zinc-50/70 dark:bg-zinc-900/60 border border-black/5 dark:border-white/5 space-y-2 transition-all">
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
-                <SlidersHorizontal className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 animate-pulse" />
+                <SlidersHorizontal className="h-3.5 w-3.5 text-[#0078d4] dark:text-[#4cc2ff]" />
                 <span>Precisão Jurídica Heurística:</span>
                 <strong className="text-zinc-900 dark:text-white font-bold">{mediaPrecisao}% Conforme</strong>
               </span>
@@ -413,20 +413,20 @@ export const CentralUnificadaDesempenhoCard: React.FC<CentralUnificadaDesempenho
               </span>
             </div>
 
-            {/* Barra Termômetro Suave Segmentada com Animação Gradiente */}
-            <div className="h-2.5 w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden flex shadow-inner">
+            {/* Barra Termômetro Suave Segmentada com Visual Fluent Padronizado */}
+            <div className="h-2 w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden flex shadow-inner">
               <div
-                className="h-full bg-gradient-to-r from-blue-500 to-sky-400 animate-gradient-flow transition-all duration-700"
+                className="h-full bg-[#0078d4] transition-all duration-700"
                 style={{ width: `${pilares[0].scorePct / 3}%` }}
                 title="Estrutura & Rito"
               />
               <div
-                className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 animate-gradient-flow transition-all duration-700"
+                className="h-full bg-[#0284c7] transition-all duration-700"
                 style={{ width: `${pilares[1].scorePct / 3}%` }}
                 title="Fundamentação Material"
               />
               <div
-                className="h-full bg-gradient-to-r from-indigo-500 to-purple-400 animate-gradient-flow transition-all duration-700"
+                className="h-full bg-[#38bdf8] transition-all duration-700"
                 style={{ width: `${pilares[2].scorePct / 3}%` }}
                 title="Tutela & Pedidos"
               />

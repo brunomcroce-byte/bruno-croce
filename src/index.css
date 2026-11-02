@@ -1,22 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  /* 🎨 Cores Oficiais do Tema do Windows 11 26H2 (Fluent Design 2.0 / Mica Alt) */
+  /* 🎨 Cores Oficiais do Tema do Windows 11 26H2 (Fluent Design 2.0 / Mica Alt com Transparência Blur) */
   --win11-bg: #f3f3f3;
-  --win11-surface: #ffffff;
-  --win11-card: #f9f9f9;
+  --win11-surface: rgba(255, 255, 255, 0.82);
+  --win11-card: rgba(255, 255, 255, 0.72);
   --win11-text: #202020;
   --win11-text-secondary: #5d5d5d;
   --win11-accent: #0078d4; /* Azul clássico Fluent */
   --win11-accent-glow: rgba(0, 120, 212, 0.25);
-  --win11-border: #e5e5e5;
-  --win11-border-subtle: rgba(0, 0, 0, 0.06);
+  --win11-border: rgba(0, 0, 0, 0.08);
+  --win11-border-subtle: rgba(0, 0, 0, 0.05);
 
   --bg-main: #f3f3f3;
-  --bg-sidebar: #f8fafc;
-  --bg-panel: #ffffff;
-  --bg-card: #ffffff;
-  --border: #e2e8f0;
+  --bg-sidebar: rgba(248, 250, 252, 0.85);
+  --bg-panel: rgba(255, 255, 255, 0.85);
+  --bg-card: rgba(255, 255, 255, 0.75);
+  --border: rgba(0, 0, 0, 0.08);
   --text-main: #0f172a;
   --text-muted: #475569;
   --cor-amarelo-bg: #fef9c3;
@@ -39,34 +39,34 @@
 /* Windows 11 26H2 Dark Theme (Wpf.Ui.Appearance.ThemeType.Dark Mica Alt) */
 @media (prefers-color-scheme: dark) {
   :root {
-    --win11-bg: #181818;
-    --win11-surface: #202020;
-    --win11-card: #272727;
+    --win11-bg: #141414;
+    --win11-surface: rgba(32, 32, 32, 0.80);
+    --win11-card: rgba(39, 39, 39, 0.72);
     --win11-text: #ffffff;
     --win11-text-secondary: #b0b0b0;
     --win11-accent: #4cc2ff; /* Azul Ciano Fluent 2.0 Alto Contraste */
     --win11-accent-glow: rgba(76, 194, 255, 0.3);
-    --win11-border: rgba(255, 255, 255, 0.08);
-    --win11-border-subtle: rgba(255, 255, 255, 0.05);
+    --win11-border: rgba(255, 255, 255, 0.09);
+    --win11-border-subtle: rgba(255, 255, 255, 0.06);
   }
 }
 
 .theme-dark,
 .dark {
-  --win11-bg: #181818;
-  --win11-surface: #202020;
-  --win11-card: #272727;
+  --win11-bg: #141414;
+  --win11-surface: rgba(32, 32, 32, 0.80);
+  --win11-card: rgba(39, 39, 39, 0.72);
   --win11-text: #ffffff;
   --win11-text-secondary: #b0b0b0;
   --win11-accent: #4cc2ff;
   --win11-accent-glow: rgba(76, 194, 255, 0.3);
-  --win11-border: rgba(255, 255, 255, 0.08);
-  --win11-border-subtle: rgba(255, 255, 255, 0.05);
-  --bg-main: #181818;
-  --bg-sidebar: #1f1f1f;
-  --bg-panel: #242424;
-  --bg-card: #2b2b2b;
-  --border: rgba(255, 255, 255, 0.08);
+  --win11-border: rgba(255, 255, 255, 0.09);
+  --win11-border-subtle: rgba(255, 255, 255, 0.06);
+  --bg-main: #141414;
+  --bg-sidebar: rgba(31, 31, 31, 0.82);
+  --bg-panel: rgba(36, 36, 36, 0.80);
+  --bg-card: rgba(43, 43, 43, 0.75);
+  --border: rgba(255, 255, 255, 0.09);
   --text-main: #ffffff;
   --text-muted: #a1a1aa;
 }
@@ -149,14 +149,49 @@
   background-color: var(--win11-accent);
 }
 
-/* Estilo para caixas, containers ou cards (estilo Windows 11 Fluent) */
+/* Estilo para caixas, containers ou cards (estilo Windows 11 Fluent Mica 26H2) */
 .card-projeto {
   background-color: var(--win11-surface);
   border: 1px solid var(--win11-border);
   border-radius: 8px; /* Cantos arredondados característicos do Win 11 */
   padding: 16px;
   color: var(--win11-text);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(28px) saturate(135%);
+  -webkit-backdrop-filter: blur(28px) saturate(135%);
+}
+
+/* ==========================================================================
+   EFEITO BLUR UNIVERSAL (WINDOWS 11 26H2 FLUENT MICA ALT)
+   Garante backdrop-filter blur em todos os cards, barras, gavetas e modais do aplicativo
+   ========================================================================== */
+.card-projeto,
+.win11-mica-card,
+.win11-widget-card,
+.win11-focus-card,
+.macos-card,
+.macos-card-interactive,
+.macos-subcard,
+.win11-subcard {
+  backdrop-filter: blur(28px) saturate(135%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(135%) !important;
+}
+
+.win11-titlebar,
+.win11-commandbar,
+.win11-statusbar,
+.win11-sidebar {
+  backdrop-filter: blur(30px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(140%) !important;
+}
+
+/* Modais, Overlays, Toasts e Gavetas de Apoio com Blur Total */
+.modal-backdrop,
+div[role="dialog"],
+.fixed.inset-0.z-\[100\],
+.fixed.inset-0.z-50 {
+  backdrop-filter: blur(20px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(130%) !important;
 }
 
 /* Botão no estilo Windows 11 Fluent */

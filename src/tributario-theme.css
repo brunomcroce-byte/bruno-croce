@@ -1,81 +1,127 @@
 /* ==========================================================================
-   TRIBUTAOAB DESKTOP PRO — macOS SEQUOIA / SONOMA DESIGN SYSTEM
-   Vibrant Frosted Glass, Traffic Light Window Controls, SF Pro Typography & Liquid macOS Surfaces
+   TRIBUTAOAB DESKTOP PRO — WINDOWS 11 26H2 & FLUENT 2 DESIGN SYSTEM
+   Sober Slate-Blue & Neutral Slate Palette | Mica & Acrylic Translucency
+   Sistema de 4 Cores Pedagógico Exclusivo para o Vade Mecum (CF/CTN/Súmulas)
    ========================================================================== */
 
 :root {
-  /* macOS Sequoia Light Mode Palette */
-  --macos-window-bg: #f6f6f7;
-  --macos-titlebar-bg: rgba(246, 246, 247, 0.82);
-  --macos-sidebar-bg: rgba(239, 240, 243, 0.75);
-  --macos-card-bg: rgba(255, 255, 255, 0.85);
-  --macos-card-subtle: rgba(244, 245, 248, 0.7);
-  --macos-card-hover: rgba(255, 255, 255, 0.96);
-  --macos-border-subtle: rgba(0, 0, 0, 0.08);
-  --macos-border-card: rgba(0, 0, 0, 0.07);
-  --macos-text-primary: #1d1d1f;
-  --macos-text-secondary: #6e6e73;
-  --macos-text-muted: #86868b;
+  /* Windows 11 26H2 Light Mode Palette */
+  --win-window-bg: #f8fafc;
+  --win-titlebar-bg: rgba(248, 250, 252, 0.88);
+  --win-sidebar-bg: rgba(241, 245, 249, 0.82);
+  --win-surface: rgba(255, 255, 255, 0.92);
+  --win-surface-alt: rgba(241, 245, 249, 0.75);
+  --win-card-bg: rgba(255, 255, 255, 0.9);
+  --win-card-subtle: rgba(241, 245, 249, 0.8);
+  --win-card-hover: rgba(255, 255, 255, 0.98);
+  --win-border-subtle: rgba(15, 23, 42, 0.08);
+  --win-border-card: rgba(15, 23, 42, 0.07);
+  --win-text-primary: #0f172a;
+  --win-text-secondary: #475569;
+  --win-text-muted: #64748b;
   
-  /* Apple System Blue Accent */
-  --macos-accent: #007aff;
-  --macos-accent-hover: #0062cc;
-  --macos-accent-active: #0051a8;
-  --macos-accent-light: #5ac8fa;
-  --macos-accent-subtle: rgba(0, 122, 255, 0.1);
+  /* Sober Slate-Blue Fluent Accent */
+  --win-accent: #0078d4;
+  --win-accent-hover: #006cbd;
+  --win-accent-active: #005a9e;
+  --win-accent-light: #38bdf8;
+  --win-accent-subtle: rgba(0, 120, 212, 0.09);
   
-  /* macOS Status Colors */
-  --macos-success: #34c759;
-  --macos-warning: #ff9500;
-  --macos-danger: #ff3b30;
-  --macos-purple: #af52de;
-  --macos-indigo: #5856d6;
-  
-  /* Chart helpers */
-  --chart-grid: #e5e5ea;
-  --chart-axis: #6e6e73;
+  /* Sober Semantic Status Colors (Low-saturation) */
+  --status-success: #15803d;
+  --status-warning: #b45309;
+  --status-danger: #b91c1c;
+  --status-info: #0284c7;
 
-  /* Typography: Apple San Francisco Pro */
-  --font-macos: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-mono: "SF Mono", "Menlo", "Monaco", "Consolas", monospace;
+  /* Aliases for macOS / Win11 cross-compatibility */
+  --macos-window-bg: var(--win-window-bg);
+  --macos-titlebar-bg: var(--win-titlebar-bg);
+  --macos-sidebar-bg: var(--win-sidebar-bg);
+  --macos-card-bg: var(--win-card-bg);
+  --macos-card-subtle: var(--win-card-subtle);
+  --macos-card-hover: var(--win-card-hover);
+  --macos-border-subtle: var(--win-border-subtle);
+  --macos-border-card: var(--win-border-card);
+  --macos-text-primary: var(--win-text-primary);
+  --macos-text-secondary: var(--win-text-secondary);
+  --macos-text-muted: var(--win-text-muted);
+  --macos-accent: var(--win-accent);
+  --macos-accent-hover: var(--win-accent-hover);
+  --macos-accent-active: var(--win-accent-active);
+  --macos-accent-light: var(--win-accent-light);
+  --macos-accent-subtle: var(--win-accent-subtle);
 
-  /* Aliases for compatibility */
-  --win11-desktop-bg: var(--macos-window-bg);
-  --win11-card-bg: var(--macos-card-bg);
-  --win11-accent: var(--macos-accent);
-  --win11-accent-subtle: var(--macos-accent-subtle);
-  --win11-border-subtle: var(--macos-border-subtle);
-  --win11-border-card: var(--macos-border-card);
+  /* Chart & Grid */
+  --chart-grid: #e2e8f0;
+  --chart-axis: #64748b;
+
+  /* Typography */
+  --font-fluent: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "Cascadia Code", "Consolas", monospace;
+  --font-macos: var(--font-fluent);
+
+  --win11-desktop-bg: var(--win-window-bg);
+  --win11-card-bg: var(--win-card-bg);
+  --win11-accent: var(--win-accent);
+  --win11-accent-subtle: var(--win-accent-subtle);
+  --win11-border-subtle: var(--win-border-subtle);
+  --win11-border-card: var(--win-border-card);
 }
 
-/* macOS Sequoia Dark Mode Palette */
+/* Windows 11 26H2 Dark Mode Palette */
 .theme-dark {
-  --macos-window-bg: #1e1e20;
-  --macos-titlebar-bg: rgba(30, 30, 32, 0.82);
-  --macos-sidebar-bg: rgba(24, 24, 27, 0.78);
-  --macos-card-bg: rgba(38, 38, 42, 0.82);
-  --macos-card-subtle: rgba(45, 45, 50, 0.7);
-  --macos-card-hover: rgba(50, 50, 55, 0.95);
-  --macos-border-subtle: rgba(255, 255, 255, 0.09);
-  --macos-border-card: rgba(255, 255, 255, 0.08);
-  --macos-text-primary: #f5f5f7;
-  --macos-text-secondary: #a1a1a6;
-  --macos-text-muted: #86868b;
-  --macos-accent: #0a84ff;
-  --macos-accent-hover: #409cff;
-  --macos-accent-active: #0071e3;
-  --macos-accent-light: #64d2ff;
-  --macos-accent-subtle: rgba(10, 132, 255, 0.16);
-  --chart-grid: #2c2c2e;
-  --chart-axis: #8e8e93;
+  --win-window-bg: #11141a;
+  --win-titlebar-bg: rgba(17, 20, 26, 0.9);
+  --win-sidebar-bg: rgba(21, 25, 33, 0.88);
+  --win-surface: rgba(26, 32, 44, 0.85);
+  --win-surface-alt: rgba(22, 27, 36, 0.75);
+  --win-card-bg: rgba(26, 31, 41, 0.85);
+  --win-card-subtle: rgba(33, 39, 52, 0.7);
+  --win-card-hover: rgba(36, 44, 58, 0.95);
+  --win-border-subtle: rgba(255, 255, 255, 0.08);
+  --win-border-card: rgba(255, 255, 255, 0.09);
+  --win-text-primary: #f8fafc;
+  --win-text-secondary: #94a3b8;
+  --win-text-muted: #64748b;
+  
+  /* Sober Slate-Blue / Sky Accent */
+  --win-accent: #38bdf8;
+  --win-accent-hover: #7dd3fc;
+  --win-accent-active: #0284c7;
+  --win-accent-light: #bae6fd;
+  --win-accent-subtle: rgba(56, 189, 248, 0.12);
 
-  /* Aliases */
-  --win11-desktop-bg: var(--macos-window-bg);
-  --win11-card-bg: var(--macos-card-bg);
-  --win11-accent: var(--macos-accent);
-  --win11-accent-subtle: var(--macos-accent-subtle);
-  --win11-border-subtle: var(--macos-border-subtle);
-  --win11-border-card: var(--macos-border-card);
+  --status-success: #22c55e;
+  --status-warning: #f59e0b;
+  --status-danger: #ef4444;
+  --status-info: #38bdf8;
+
+  --macos-window-bg: var(--win-window-bg);
+  --macos-titlebar-bg: var(--win-titlebar-bg);
+  --macos-sidebar-bg: var(--win-sidebar-bg);
+  --macos-card-bg: var(--win-card-bg);
+  --macos-card-subtle: var(--win-card-subtle);
+  --macos-card-hover: var(--win-card-hover);
+  --macos-border-subtle: var(--win-border-subtle);
+  --macos-border-card: var(--win-border-card);
+  --macos-text-primary: var(--win-text-primary);
+  --macos-text-secondary: var(--win-text-secondary);
+  --macos-text-muted: var(--win-text-muted);
+  --macos-accent: var(--win-accent);
+  --macos-accent-hover: var(--win-accent-hover);
+  --macos-accent-active: var(--win-accent-active);
+  --macos-accent-light: var(--win-accent-light);
+  --macos-accent-subtle: var(--win-accent-subtle);
+
+  --chart-grid: #1e293b;
+  --chart-axis: #64748b;
+
+  --win11-desktop-bg: var(--win-window-bg);
+  --win11-card-bg: var(--win-card-bg);
+  --win11-accent: var(--win-accent);
+  --win11-accent-subtle: var(--win-accent-subtle);
+  --win11-border-subtle: var(--win-border-subtle);
+  --win11-border-card: var(--win-border-card);
 }
 
 *, *::before, *::after {
@@ -83,7 +129,7 @@
 }
 
 html {
-  font-family: var(--font-macos);
+  font-family: var(--font-fluent);
   color-scheme: light;
   scroll-behavior: smooth;
   text-rendering: optimizeLegibility;
@@ -98,13 +144,12 @@ html.theme-dark {
 body {
   margin: 0;
   padding: 0;
-  background-color: var(--macos-window-bg);
+  background-color: var(--win-window-bg);
   background-image: 
-    radial-gradient(circle at 10% 10%, rgba(0, 122, 255, 0.05) 0%, transparent 40%),
-    radial-gradient(circle at 90% 90%, rgba(175, 82, 222, 0.03) 0%, transparent 45%),
-    linear-gradient(180deg, #fbfbfd 0%, #f1f1f4 100%);
+    radial-gradient(circle at 15% 15%, rgba(0, 120, 212, 0.03) 0%, transparent 45%),
+    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
   background-attachment: fixed;
-  color: var(--macos-text-primary);
+  color: var(--win-text-primary);
   line-height: 1.5;
   overflow: hidden;
   height: 100vh;
@@ -112,52 +157,52 @@ body {
 }
 
 body.theme-dark {
-  background-color: var(--macos-window-bg);
+  background-color: var(--win-window-bg);
   background-image: 
-    radial-gradient(circle at 12% 12%, rgba(10, 132, 255, 0.07) 0%, transparent 35%),
-    radial-gradient(circle at 88% 85%, rgba(175, 82, 222, 0.05) 0%, transparent 40%),
-    linear-gradient(180deg, #18181a 0%, #202023 100%);
-  color: #f5f5f7;
+    radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.04) 0%, transparent 40%),
+    linear-gradient(180deg, #0f131a 0%, #151922 100%);
+  color: #f8fafc;
 }
 
 /* ==========================================================================
-   macOS Window Chrome (Traffic Lights & Unified Toolbar)
+   Windows 11 Mica & Acrylic Chrome (Titlebar & CommandBar)
    ========================================================================== */
 .macos-titlebar,
 .win11-titlebar {
-  height: 44px;
-  background: var(--macos-titlebar-bg);
-  backdrop-filter: blur(28px) saturate(180%);
-  border-bottom: 1px solid var(--macos-border-subtle);
+  height: 42px;
+  background: var(--win-titlebar-bg);
+  backdrop-filter: blur(28px) saturate(140%);
+  -webkit-backdrop-filter: blur(28px) saturate(140%);
+  border-bottom: 1px solid var(--win-border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
   user-select: none;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 500;
-  color: var(--macos-text-primary);
+  color: var(--win-text-primary);
   z-index: 50;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 .theme-dark .macos-titlebar,
 .theme-dark .win11-titlebar {
-  background: var(--macos-titlebar-bg);
-  border-bottom-color: var(--macos-border-subtle);
+  background: var(--win-titlebar-bg);
+  border-bottom-color: var(--win-border-subtle);
   color: #ffffff;
 }
 
-/* Authentic macOS Traffic Lights */
+/* Traffic Lights & Window Controls */
 .macos-traffic-lights {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
 }
 
 .macos-traffic-btn {
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
   border-radius: 9999px;
   display: inline-flex;
   align-items: center;
@@ -171,100 +216,86 @@ body.theme-dark {
 }
 
 .macos-traffic-btn.close {
-  background-color: #ff5f57;
-  border-color: #e0443e;
+  background-color: #ef4444;
+  border-color: #dc2626;
 }
 
 .macos-traffic-btn.minimize {
-  background-color: #febc2e;
-  border-color: #d89e24;
+  background-color: #f59e0b;
+  border-color: #d97706;
 }
 
 .macos-traffic-btn.zoom {
-  background-color: #28c840;
-  border-color: #1aab29;
+  background-color: #10b981;
+  border-color: #059669;
 }
 
 .macos-traffic-btn:hover {
-  filter: brightness(0.92);
-}
-
-.macos-traffic-btn svg,
-.macos-traffic-btn span {
-  opacity: 0;
-  transition: opacity 0.12s ease;
-  color: rgba(0, 0, 0, 0.65);
-  font-size: 9px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.macos-traffic-lights:hover .macos-traffic-btn svg,
-.macos-traffic-lights:hover .macos-traffic-btn span {
-  opacity: 1;
+  filter: brightness(0.9);
 }
 
 /* ==========================================================================
-   macOS Sidebar Navigation View
+   Navigation View / Sidebar
    ========================================================================== */
 .macos-sidebar,
 .win11-sidebar {
-  background: var(--macos-sidebar-bg);
-  backdrop-filter: blur(32px) saturate(160%);
-  border-right: 1px solid var(--macos-border-subtle);
+  background: var(--win-sidebar-bg);
+  backdrop-filter: blur(30px) saturate(130%);
+  -webkit-backdrop-filter: blur(30px) saturate(130%);
+  border-right: 1px solid var(--win-border-subtle);
 }
 
 .theme-dark .macos-sidebar,
 .theme-dark .win11-sidebar {
-  background: var(--macos-sidebar-bg);
-  border-right-color: var(--macos-border-subtle);
+  background: var(--win-sidebar-bg);
+  border-right-color: var(--win-border-subtle);
 }
 
 .macos-nav-item,
 .win11-nav-item {
   position: relative;
-  border-radius: 10px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
   transition: all 0.14s ease;
   display: flex;
   align-items: center;
   padding: 7px 11px;
-  color: var(--macos-text-secondary);
+  color: var(--win-text-secondary);
   cursor: pointer;
 }
 
 .theme-dark .macos-nav-item,
 .theme-dark .win11-nav-item {
-  color: #a1a1a6;
+  color: #94a3b8;
 }
 
 .macos-nav-item:hover,
 .win11-nav-item:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-  color: var(--macos-text-primary);
+  background-color: rgba(15, 23, 42, 0.05);
+  color: var(--win-text-primary);
 }
 
 .theme-dark .macos-nav-item:hover,
 .theme-dark .win11-nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.07);
+  background-color: rgba(255, 255, 255, 0.06);
   color: #ffffff;
 }
 
-/* macOS Active selection pill */
+/* Sober Fluent Active Selection */
 .macos-nav-item.active,
 .win11-nav-item.active {
-  background-color: var(--macos-accent);
+  background-color: var(--win-accent);
   color: #ffffff !important;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.28);
+  box-shadow: 0 1px 4px rgba(0, 120, 212, 0.25);
 }
 
 .theme-dark .macos-nav-item.active,
 .theme-dark .win11-nav-item.active {
-  background-color: var(--macos-accent);
+  background-color: #0284c7;
   color: #ffffff !important;
-  box-shadow: 0 2px 10px rgba(10, 132, 255, 0.35);
+  box-shadow: 0 1px 6px rgba(2, 132, 199, 0.35);
 }
 
 .macos-nav-item.active svg,
@@ -273,62 +304,63 @@ body.theme-dark {
 }
 
 /* ==========================================================================
-   macOS Frosted Glass Cards & Widgets
+   Fluent 2 & Mica Cards & Widgets
    ========================================================================== */
 .macos-card,
 .win11-widget-card {
-  background: var(--macos-card-bg);
-  backdrop-filter: blur(28px) saturate(170%);
-  border: 1px solid var(--macos-border-card);
-  border-radius: 16px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
-  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease, border-color 0.18s ease;
+  background: var(--win-card-bg);
+  backdrop-filter: blur(24px) saturate(130%);
+  -webkit-backdrop-filter: blur(24px) saturate(130%);
+  border: 1px solid var(--win-border-card);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03), 0 1px 2px rgba(15, 23, 42, 0.02);
+  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease, border-color 0.16s ease;
 }
 
 .macos-card:hover,
 .win11-widget-card:hover {
-  border-color: rgba(0, 122, 255, 0.25);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 120, 212, 0.25);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
 }
 
 .theme-dark .macos-card,
 .theme-dark .win11-widget-card {
-  background: var(--macos-card-bg);
-  border-color: var(--macos-border-card);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  background: var(--win-card-bg);
+  border-color: var(--win-border-card);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
 }
 
 .theme-dark .macos-card:hover,
 .theme-dark .win11-widget-card:hover {
-  border-color: rgba(10, 132, 255, 0.35);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+  border-color: rgba(56, 189, 248, 0.3);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.4);
 }
 
 .macos-subcard,
 .win11-subcard {
-  background: var(--macos-card-subtle);
-  border: 1px solid var(--macos-border-subtle);
-  border-radius: 12px;
+  background: var(--win-card-subtle);
+  border: 1px solid var(--win-border-subtle);
+  border-radius: 8px;
 }
 
 .theme-dark .macos-subcard,
 .theme-dark .win11-subcard {
-  background: rgba(30, 30, 33, 0.6);
-  border-color: var(--macos-border-subtle);
+  background: rgba(30, 36, 48, 0.6);
+  border-color: var(--win-border-subtle);
 }
 
 /* ==========================================================================
-   macOS Buttons & Segmented Controls
+   Buttons & Controls (Fluent 2)
    ========================================================================== */
 .macos-btn-primary {
-  background: var(--macos-accent);
+  background: var(--win-accent);
   color: #ffffff;
-  border-radius: 10px;
+  border-radius: 6px;
   padding: 6px 14px;
   font-weight: 600;
   font-size: 12px;
-  box-shadow: 0 1px 3px rgba(0, 122, 255, 0.25);
-  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 120, 212, 0.2);
+  transition: all 0.14s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -338,19 +370,28 @@ body.theme-dark {
 }
 
 .macos-btn-primary:hover {
-  background: var(--macos-accent-hover);
-  box-shadow: 0 3px 8px rgba(0, 122, 255, 0.35);
+  background: var(--win-accent-hover);
+  filter: brightness(1.05);
+}
+
+.theme-dark .macos-btn-primary {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.theme-dark .macos-btn-primary:hover {
+  background: #0369a1;
 }
 
 .macos-btn-secondary {
-  background: rgba(0, 0, 0, 0.05);
-  color: var(--macos-text-primary);
-  border: 1px solid var(--macos-border-subtle);
-  border-radius: 10px;
-  padding: 6px 14px;
+  background: rgba(15, 23, 42, 0.04);
+  color: var(--win-text-primary);
+  border: 1px solid var(--win-border-subtle);
+  border-radius: 6px;
+  padding: 6px 13px;
   font-weight: 500;
   font-size: 12px;
-  transition: all 0.15s ease;
+  transition: all 0.14s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -359,114 +400,117 @@ body.theme-dark {
 }
 
 .theme-dark .macos-btn-secondary {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .macos-btn-secondary:hover {
-  background: rgba(0, 0, 0, 0.08);
+  background: rgba(15, 23, 42, 0.08);
 }
 
 .theme-dark .macos-btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* Segmented Picker */
 .macos-segmented {
-  background: rgba(0, 0, 0, 0.06);
+  background: rgba(15, 23, 42, 0.05);
   padding: 3px;
-  border-radius: 11px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.04);
 }
 
 .theme-dark .macos-segmented {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.06);
 }
 
 .macos-segmented-btn {
-  border-radius: 8px;
+  border-radius: 6px;
   padding: 5px 12px;
   font-size: 11.5px;
   font-weight: 500;
-  color: var(--macos-text-secondary);
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--win-text-secondary);
+  transition: all 0.14s ease;
   cursor: pointer;
 }
 
 .macos-segmented-btn.active {
   background: #ffffff;
-  color: var(--macos-text-primary);
+  color: var(--win-text-primary);
   font-weight: 600;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12), 0 0 1px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
 }
 
 .theme-dark .macos-segmented-btn.active {
-  background: #3a3a3c;
+  background: #273142;
   color: #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* ==========================================================================
-   macOS CommandBar & Desktop StatusBar
+   CommandBar & Desktop StatusBar
    ========================================================================== */
 .macos-commandbar,
 .win11-commandbar {
-  height: 44px;
-  background: var(--macos-titlebar-bg);
-  backdrop-filter: blur(24px) saturate(170%);
-  border-bottom: 1px solid var(--macos-border-subtle);
+  height: 42px;
+  background: var(--win-titlebar-bg);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border-bottom: 1px solid var(--win-border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 18px;
+  padding: 0 16px;
   user-select: none;
 }
 
 .theme-dark .macos-commandbar,
 .theme-dark .win11-commandbar {
-  background: var(--macos-titlebar-bg);
-  border-bottom-color: var(--macos-border-subtle);
+  background: var(--win-titlebar-bg);
+  border-bottom-color: var(--win-border-subtle);
 }
 
 .macos-statusbar,
 .win11-statusbar {
   height: 28px;
   min-height: 28px;
-  background: var(--macos-titlebar-bg);
-  backdrop-filter: blur(24px);
-  border-top: 1px solid var(--macos-border-subtle);
+  background: var(--win-titlebar-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--win-border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 14px;
   font-size: 11.5px;
-  color: var(--macos-text-secondary);
+  color: var(--win-text-secondary);
   user-select: none;
   z-index: 30;
 }
 
 .theme-dark .macos-statusbar,
 .theme-dark .win11-statusbar {
-  background: var(--macos-titlebar-bg);
-  border-top-color: var(--macos-border-subtle);
-  color: #a1a1a6;
+  background: var(--win-titlebar-bg);
+  border-top-color: var(--win-border-subtle);
+  color: #94a3b8;
 }
 
 .macos-focus-card,
 .win11-focus-card {
-  background: var(--macos-card-bg);
+  background: var(--win-card-bg);
   backdrop-filter: blur(24px);
-  border: 1px solid var(--macos-border-card);
-  border-radius: 14px;
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--win-border-card);
+  border-radius: 12px;
   transition: all 0.2s ease;
 }
 
-/* macOS Thin Scrollbar */
+/* Subtle Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -477,20 +521,20 @@ body.theme-dark {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.18);
+  background: rgba(15, 23, 42, 0.16);
   border-radius: 9999px;
 }
 
 .theme-dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.18);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(15, 23, 42, 0.28);
 }
 
 .theme-dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.32);
 }
 
 /* ==========================================================================
@@ -498,30 +542,30 @@ body.theme-dark {
    ========================================================================== */
 .fgv-sheet-wrapper {
   background: #ffffff;
-  border-radius: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
   overflow: hidden;
   transition: all 0.2s ease;
 }
 
 .theme-dark .fgv-sheet-wrapper {
-  background: #1c1c1e;
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  background: #181d26;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
 }
 
 .fgv-sheet-top {
   padding: 10px 16px;
-  background: #f7f7f8;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: #f8fafc;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 .theme-dark .fgv-sheet-top {
-  background: #252528;
+  background: #1e2430;
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
@@ -533,27 +577,27 @@ body.theme-dark {
 }
 
 .theme-dark .fgv-editor-container {
-  background: #1a1a1c;
+  background: #151922;
 }
 
 .fgv-line-numbers {
   width: 44px;
   flex-shrink: 0;
-  background: #f4f4f6;
-  border-right: 1px solid #e5e5ea;
+  background: #f1f5f9;
+  border-right: 1px solid #e2e8f0;
   user-select: none;
   font-family: var(--font-mono);
   font-size: 11px;
   line-height: 28px;
-  color: #8e8e93;
+  color: #64748b;
   text-align: right;
   padding-right: 8px;
 }
 
 .theme-dark .fgv-line-numbers {
-  background: #202022;
-  border-right-color: #2c2c2e;
-  color: #636366;
+  background: #191f2b;
+  border-right-color: #263041;
+  color: #64748b;
 }
 
 .fgv-lined-textarea {
@@ -566,15 +610,15 @@ body.theme-dark {
   line-height: 28px;
   padding: 0 16px;
   background: transparent;
-  background-image: linear-gradient(to bottom, transparent 27px, #e5e5ea 27px, #e5e5ea 28px);
+  background-image: linear-gradient(to bottom, transparent 27px, #e2e8f0 27px, #e2e8f0 28px);
   background-size: 100% 28px;
-  color: #1d1d1f;
+  color: #0f172a;
   white-space: pre;
 }
 
 .theme-dark .fgv-lined-textarea {
-  background-image: linear-gradient(to bottom, transparent 27px, #2c2c2e 27px, #2c2c2e 28px);
-  color: #f5f5f7;
+  background-image: linear-gradient(to bottom, transparent 27px, #263041 27px, #263041 28px);
+  color: #f8fafc;
 }
 
 .fgv-watermark {
@@ -582,89 +626,161 @@ body.theme-dark {
   top: 40%;
   left: 50%;
   transform: translate(-50%, -50%) rotate(-25deg);
-  font-size: 5rem;
+  font-size: 4.5rem;
   font-weight: 900;
-  color: rgba(255, 149, 0, 0.08);
+  color: rgba(0, 120, 212, 0.05);
   pointer-events: none;
   user-select: none;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.18em;
 }
 
-/* Badges FGV 4 Cores */
+/* ==========================================================================
+   SISTEMA DE 4 CORES EXCLUSIVO DO VADE MECUM (CF/CTN/SÚMULAS - FGV)
+   Mantido rigorosamente para marcação pedagógica e identificação de artigos.
+   ========================================================================== */
 .badge {
   display: inline-flex;
   align-items: center;
-  border-radius: 6px;
-  padding: 2px 8px;
+  border-radius: 4px;
+  padding: 2px 7px;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
 
-.b-ROSA {
-  background-color: rgba(255, 45, 85, 0.12);
-  color: #d81545;
-  border: 1px solid rgba(255, 45, 85, 0.28);
+/* Rosa: Direito Material, Imunidades e Isenções */
+.b-ROSA,
+.vade-highlight-rosa {
+  background-color: rgba(244, 63, 94, 0.12);
+  color: #be123c;
+  border: 1px solid rgba(244, 63, 94, 0.28);
 }
-.theme-dark .b-ROSA {
-  background-color: rgba(255, 45, 85, 0.2);
-  color: #ff375f;
-}
-
-.b-VERDE {
-  background-color: rgba(52, 199, 89, 0.12);
-  color: #1e873b;
-  border: 1px solid rgba(52, 199, 89, 0.28);
-}
-.theme-dark .b-VERDE {
-  background-color: rgba(52, 199, 89, 0.2);
-  color: #30d158;
+.theme-dark .b-ROSA,
+.theme-dark .vade-highlight-rosa {
+  background-color: rgba(244, 63, 94, 0.2);
+  color: #fb7185;
+  border-color: rgba(244, 63, 94, 0.35);
 }
 
-.b-AMARELO {
-  background-color: rgba(255, 149, 0, 0.12);
-  color: #b36b00;
-  border: 1px solid rgba(255, 149, 0, 0.28);
+/* Verde: Direito Processual, Prazos e Ritos (CPC/LEF/LMS) */
+.b-VERDE,
+.vade-highlight-verde {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.28);
 }
-.theme-dark .b-AMARELO {
-  background-color: rgba(255, 149, 0, 0.2);
-  color: #ffd60a;
-}
-
-.b-AZUL {
-  background-color: rgba(0, 122, 255, 0.12);
-  color: #0056b3;
-  border: 1px solid rgba(0, 122, 255, 0.28);
-}
-.theme-dark .b-AZUL {
-  background-color: rgba(10, 132, 255, 0.2);
-  color: #409cff;
+.theme-dark .b-VERDE,
+.theme-dark .vade-highlight-verde {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.35);
 }
 
-.b-CLIPES {
-  background-color: rgba(175, 82, 222, 0.12);
-  color: #7928ca;
-  border: 1px solid rgba(175, 82, 222, 0.28);
+/* Amarelo: Conceito e Fato Gerador / Alíquotas */
+.b-AMARELO,
+.vade-highlight-amarelo {
+  background-color: rgba(234, 179, 8, 0.14);
+  color: #a16207;
+  border: 1px solid rgba(234, 179, 8, 0.3);
 }
-.theme-dark .b-CLIPES {
-  background-color: rgba(175, 82, 222, 0.2);
-  color: #bf5af2;
+.theme-dark .b-AMARELO,
+.theme-dark .vade-highlight-amarelo {
+  background-color: rgba(234, 179, 8, 0.22);
+  color: #facc15;
+  border-color: rgba(234, 179, 8, 0.4);
+}
+
+/* Azul: Precedentes Qualificados, Súmulas Vinculantes e Recursos Extraordinários */
+.b-AZUL,
+.vade-highlight-azul {
+  background-color: rgba(2, 132, 199, 0.12);
+  color: #0369a1;
+  border: 1px solid rgba(2, 132, 199, 0.28);
+}
+.theme-dark .b-AZUL,
+.theme-dark .vade-highlight-azul {
+  background-color: rgba(2, 132, 199, 0.22);
+  color: #38bdf8;
+  border-color: rgba(2, 132, 199, 0.35);
+}
+
+/* Clipes: Remissões Cruzadas Autorizadas FGV */
+.b-CLIPES,
+.vade-highlight-clipes {
+  background-color: rgba(100, 116, 139, 0.14);
+  color: #334155;
+  border: 1px solid rgba(100, 116, 139, 0.28);
+}
+.theme-dark .b-CLIPES,
+.theme-dark .vade-highlight-clipes {
+  background-color: rgba(100, 116, 139, 0.24);
+  color: #cbd5e1;
+  border-color: rgba(100, 116, 139, 0.38);
+}
+
+/* ==========================================================================
+   ESTILOS DE GAMIFICAÇÃO INTEGRAL DO APP
+   Progresso, Patentes, Badges, Níveis e Bônus
+   ========================================================================== */
+.gamification-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border: 1px solid var(--win-border-card);
+  background: var(--win-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--win-text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.gamification-streak-flame {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  color: #d97706;
+}
+.theme-dark .gamification-streak-flame {
+  color: #f59e0b;
+}
+
+.gamification-badge-card {
+  border-radius: 10px;
+  border: 1px solid var(--win-border-card);
+  background: var(--win-card-bg);
+  padding: 12px;
+  transition: all 0.16s ease;
+}
+
+.gamification-badge-card.unlocked {
+  border-color: rgba(0, 120, 212, 0.35);
+  background: rgba(0, 120, 212, 0.04);
+}
+
+.theme-dark .gamification-badge-card.unlocked {
+  border-color: rgba(56, 189, 248, 0.35);
+  background: rgba(56, 189, 248, 0.06);
 }
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.98); }
+  from { opacity: 0; transform: scale(0.985); }
   to { opacity: 1; transform: scale(1); }
 }
 
 .macos-animate,
 .win11-animate {
-  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* ==========================================================================
-   Garantia Total de Cores no Modo Claro vs Escuro (macOS Sequoia)
+   Garantia Total de Cores no Modo Claro vs Escuro (Windows 11 26H2)
    Corrige todos os quadros, cards, inputs e textos para alternarem perfeitamente
    ========================================================================== */
 .theme-light .bg-\[\#2b3646\],
@@ -682,18 +798,13 @@ html:not(.dark) .bg-\[\#202937\],
 html:not(.dark) .bg-\[\#222c3a\],
 html:not(.dark) .bg-\[\#222d3d\],
 html:not(.dark) .bg-\[\#202733\],
-.theme-light .bg-\[\#2b3646\],
-.theme-light .bg-\[\#344154\],
-.theme-light .bg-\[\#272727\],
-.theme-light .bg-\[\#232323\],
-.theme-light .bg-\[\#2b2b2b\],
 .theme-light .bg-\[\#253040\],
 .theme-light .bg-\[\#202937\],
 .theme-light .bg-\[\#222c3a\],
 .theme-light .bg-\[\#222d3d\],
 .theme-light .bg-\[\#202733\] {
   background-color: #ffffff !important;
-  color: #1d1d1f !important;
+  color: #0f172a !important;
 }
 
 .theme-light .bg-\[\#1b232e\],
@@ -708,8 +819,8 @@ html:not(.dark) .bg-\[\#1e2530\],
 html:not(.dark) .bg-\[\#1e293b\],
 html:not(.dark) .bg-\[\#242e3e\],
 html:not(.dark) .bg-\[\#2a3648\] {
-  background-color: #f5f5f7 !important;
-  color: #1d1d1f !important;
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
 }
 
 .theme-light .bg-\[\#3b495e\],
@@ -718,15 +829,15 @@ html:not(.dark) .bg-\[\#2a3648\] {
 html:not(.dark) .bg-\[\#3b495e\],
 html:not(.dark) .bg-\[\#3d4d63\],
 html:not(.dark) .bg-\[\#334155\] {
-  background-color: #f0f0f3 !important;
-  color: #1d1d1f !important;
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
 }
 
 .theme-light .border-\[\#455468\],
 .theme-light .border-\[\#56677d\],
 html:not(.dark) .border-\[\#455468\],
 html:not(.dark) .border-\[\#56677d\] {
-  border-color: rgba(0, 0, 0, 0.12) !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
 }
 
 .theme-light .text-slate-300,
@@ -735,28 +846,7 @@ html:not(.dark) .border-\[\#56677d\] {
 html:not(.dark) .text-slate-300,
 html:not(.dark) .text-slate-200,
 html:not(.dark) .text-slate-400 {
-  color: #48484a !important;
-}
-
-.theme-light .bg-\[\#2b3646\] h2,
-.theme-light .bg-\[\#2b3646\] h3,
-.theme-light .bg-\[\#2b3646\] h4,
-.theme-light .bg-\[\#344154\] h2,
-.theme-light .bg-\[\#344154\] h3,
-.theme-light .bg-\[\#344154\] h4,
-.theme-light .bg-\[\#1b232e\] h2,
-.theme-light .bg-\[\#1b232e\] h3,
-.theme-light .bg-\[\#1b232e\] h4,
-html:not(.dark) .bg-\[\#2b3646\] h2,
-html:not(.dark) .bg-\[\#2b3646\] h3,
-html:not(.dark) .bg-\[\#2b3646\] h4,
-html:not(.dark) .bg-\[\#344154\] h2,
-html:not(.dark) .bg-\[\#344154\] h3,
-html:not(.dark) .bg-\[\#344154\] h4,
-html:not(.dark) .bg-\[\#1b232e\] h2,
-html:not(.dark) .bg-\[\#1b232e\] h3,
-html:not(.dark) .bg-\[\#1b232e\] h4 {
-  color: #1d1d1f !important;
+  color: #475569 !important;
 }
 
 .theme-light select.bg-\[\#1b232e\],
@@ -766,121 +856,6 @@ html:not(.dark) select.bg-\[\#1b232e\],
 html:not(.dark) input.bg-\[\#1b232e\],
 html:not(.dark) textarea.bg-\[\#1b232e\] {
   background-color: #ffffff !important;
-  color: #1d1d1f !important;
-  border-color: rgba(0, 0, 0, 0.15) !important;
+  color: #0f172a !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
 }
-
-/* ==========================================================================
-   Universal Light Mode Fallback via Attribute Substring Matching
-   Guarantees zero dark boxes regardless of component tree or nesting
-   ========================================================================== */
-.theme-light [class*="2b3646"],
-.theme-light [class*="253040"],
-.theme-light [class*="202937"],
-.theme-light [class*="222c3a"],
-.theme-light [class*="222d3d"],
-.theme-light [class*="202733"],
-html:not(.dark) [class*="2b3646"],
-html:not(.dark) [class*="253040"],
-html:not(.dark) [class*="202937"],
-html:not(.dark) [class*="222c3a"],
-html:not(.dark) [class*="222d3d"],
-html:not(.dark) [class*="202733"] {
-  background-color: #ffffff !important;
-  color: #1d1d1f !important;
-}
-
-.theme-light [class*="344154"],
-html:not(.dark) [class*="344154"] {
-  background-color: #f8f9fa !important;
-  color: #1d1d1f !important;
-}
-
-.theme-light [class*="1b232e"],
-.theme-light [class*="1e2530"],
-.theme-light [class*="1e293b"],
-.theme-light [class*="242e3e"],
-.theme-light [class*="2a3648"],
-html:not(.dark) [class*="1b232e"],
-html:not(.dark) [class*="1e2530"],
-html:not(.dark) [class*="1e293b"],
-html:not(.dark) [class*="242e3e"],
-html:not(.dark) [class*="2a3648"] {
-  background-color: #f1f3f5 !important;
-  color: #1d1d1f !important;
-}
-
-.theme-light [class*="455468"],
-.theme-light [class*="56677d"],
-html:not(.dark) [class*="455468"],
-html:not(.dark) [class*="56677d"] {
-  border-color: rgba(0, 0, 0, 0.12) !important;
-}
-
-.theme-light [class*="2b3646"] h1,
-.theme-light [class*="2b3646"] h2,
-.theme-light [class*="2b3646"] h3,
-.theme-light [class*="2b3646"] h4,
-.theme-light [class*="344154"] h1,
-.theme-light [class*="344154"] h2,
-.theme-light [class*="344154"] h3,
-.theme-light [class*="344154"] h4,
-.theme-light [class*="1b232e"] h1,
-.theme-light [class*="1b232e"] h2,
-.theme-light [class*="1b232e"] h3,
-.theme-light [class*="1b232e"] h4,
-html:not(.dark) [class*="2b3646"] h1,
-html:not(.dark) [class*="2b3646"] h2,
-html:not(.dark) [class*="2b3646"] h3,
-html:not(.dark) [class*="2b3646"] h4,
-html:not(.dark) [class*="344154"] h1,
-html:not(.dark) [class*="344154"] h2,
-html:not(.dark) [class*="344154"] h3,
-html:not(.dark) [class*="344154"] h4,
-html:not(.dark) [class*="1b232e"] h1,
-html:not(.dark) [class*="1b232e"] h2,
-html:not(.dark) [class*="1b232e"] h3,
-html:not(.dark) [class*="1b232e"] h4 {
-  color: #1d1d1f !important;
-}
-
-.theme-light [class*="2b3646"] p,
-.theme-light [class*="344154"] p,
-.theme-light [class*="1b232e"] p,
-html:not(.dark) [class*="2b3646"] p,
-html:not(.dark) [class*="344154"] p,
-html:not(.dark) [class*="1b232e"] p {
-  color: #3a3a3c !important;
-}
-
-.theme-light [class*="2b3646"] .text-white,
-.theme-light [class*="344154"] .text-white,
-.theme-light [class*="1b232e"] .text-white,
-html:not(.dark) [class*="2b3646"] .text-white,
-html:not(.dark) [class*="344154"] .text-white,
-html:not(.dark) [class*="1b232e"] .text-white {
-  color: #1d1d1f !important;
-}
-
-.theme-light [class*="2b3646"] .text-slate-300,
-.theme-light [class*="2b3646"] .text-slate-200,
-.theme-light [class*="2b3646"] .text-slate-400,
-.theme-light [class*="344154"] .text-slate-300,
-.theme-light [class*="344154"] .text-slate-200,
-.theme-light [class*="344154"] .text-slate-400,
-.theme-light [class*="1b232e"] .text-slate-300,
-.theme-light [class*="1b232e"] .text-slate-200,
-.theme-light [class*="1b232e"] .text-slate-400,
-html:not(.dark) [class*="2b3646"] .text-slate-300,
-html:not(.dark) [class*="2b3646"] .text-slate-200,
-html:not(.dark) [class*="2b3646"] .text-slate-400,
-html:not(.dark) [class*="344154"] .text-slate-300,
-html:not(.dark) [class*="344154"] .text-slate-200,
-html:not(.dark) [class*="344154"] .text-slate-400,
-html:not(.dark) [class*="1b232e"] .text-slate-300,
-html:not(.dark) [class*="1b232e"] .text-slate-200,
-html:not(.dark) [class*="1b232e"] .text-slate-400 {
-  color: #48484a !important;
-}
-
-

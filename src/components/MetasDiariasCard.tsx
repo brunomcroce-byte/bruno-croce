@@ -44,6 +44,7 @@ interface MetasDiariasCardProps {
   onMostrarToast: (msg: string) => void;
   totalLinhasSemana?: number;
   pomodoroBlocosHoje?: number;
+  onMetaConcluida?: (metaTexto: string, todasConcluidas: boolean) => void;
 }
 
 export function getHojeDataString(): string {
@@ -76,7 +77,8 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
   onNavigateToTab,
   onMostrarToast,
   totalLinhasSemana = 80,
-  pomodoroBlocosHoje = 2
+  pomodoroBlocosHoje = 2,
+  onMetaConcluida
 }) => {
   const [tempoRestante, setTempoRestante] = useState<string>(getTempoAteMeiaNoite());
   const [novoTextoMeta, setNovoTextoMeta] = useState('');
@@ -189,10 +191,12 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
       tocarAlarmeWebAudio('padrao');
       onMostrarToast('🏆 Capítulo de Hoje Concluído! Você avançou um passo decisivo rumo à aprovação!');
       novoStreak = Math.max(streak, 1);
+      onMetaConcluida?.('Todas as Metas Diárias', true);
     } else {
       const meta = metas.find(m => m.id === id);
       if (meta && !meta.concluida) {
         onMostrarToast('⚔️ Ato concluído com maestria!');
+        onMetaConcluida?.(meta.texto, false);
       }
     }
 
@@ -327,32 +331,32 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
       <div className="rounded-2xl border border-black/5 dark:border-white/10 bg-zinc-50/70 dark:bg-zinc-900/60 p-4.5 space-y-3 transition-all">
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400 animate-pulse" />
+            <TrendingUp className="h-4 w-4 text-[#0078d4] dark:text-[#4cc2ff]" />
             <span className="font-semibold text-zinc-900 dark:text-white">
-              {concluidasCount} de {totalMetas} atos desbravados ({percentualProgresso}%)
+              {concluidasCount} de {totalMetas} metas cumpridas ({percentualProgresso}%)
             </span>
           </div>
-          <span className="font-mono text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-            {todasConcluidas ? 'Capítulo Cumprido 🏆' : `${totalMetas - concluidasCount} atos restantes`}
+          <span className="font-mono text-[11px] font-semibold text-[#0078d4] dark:text-[#4cc2ff]">
+            {todasConcluidas ? 'Metas do Dia Concluídas 🏆' : `${totalMetas - concluidasCount} restantes`}
           </span>
         </div>
 
-        {/* Linha da Jornada com Gradiente Fluido Animado */}
-        <div className="h-2.5 w-full bg-black/5 dark:bg-white/10 rounded-full overflow-hidden shadow-inner">
+        {/* Linha da Jornada Padronizada */}
+        <div className="h-2 w-full bg-black/5 dark:bg-white/10 rounded-full overflow-hidden shadow-inner">
           <div
-            className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-sky-400 rounded-full animate-gradient-flow shadow-[0_0_12px_rgba(16,185,129,0.35)] transition-all duration-700"
+            className="h-full bg-[#0078d4] dark:bg-[#4cc2ff] rounded-full transition-all duration-700"
             style={{ width: `${percentualProgresso}%` }}
           />
         </div>
       </div>
 
-      {/* 3. ATO EM DESTAQUE (CONVITE ATIVO PARA O PRÓXIMO ATO DA NARRATIVA COM AURA) */}
+      {/* 3. ATO EM DESTAQUE (CONVITE ATIVO PARA O PRÓXIMO ATO DA NARRATIVA) */}
       {!todasConcluidas && proximoPasso ? (
-        <div className="rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-50/50 via-white to-teal-50/30 dark:from-emerald-950/30 dark:via-zinc-800/95 dark:to-zinc-800/95 p-5 shadow-sm space-y-3.5 transition-all animate-emerald-aura">
+        <div className="rounded-2xl border border-blue-200/60 dark:border-white/10 bg-blue-50/30 dark:bg-zinc-800/80 p-5 shadow-xs space-y-3.5 transition-all">
           <div className="flex items-center justify-between text-xs flex-wrap gap-2">
-            <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 font-bold uppercase tracking-wider text-[10.5px]">
-              <MapPin className="h-3.5 w-3.5 text-emerald-600" />
-              <span>{proximoPasso.capituloTitulo || 'Ato em Andamento'}</span>
+            <div className="flex items-center gap-1.5 text-[#0078d4] dark:text-[#4cc2ff] font-bold uppercase tracking-wider text-[10.5px]">
+              <MapPin className="h-3.5 w-3.5" />
+              <span>{proximoPasso.capituloTitulo || 'Meta em Andamento'}</span>
             </div>
             {proximoPasso.tempoEstimado && (
               <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
@@ -377,34 +381,34 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
               <button
                 type="button"
                 onClick={() => onNavigateToTab(proximoPasso.destinoAba!)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs shadow-xs transition cursor-pointer active:scale-95"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0078d4] hover:bg-[#006cbd] text-white font-semibold text-xs shadow-xs transition cursor-pointer active:scale-95"
               >
                 <Play className="h-3 w-3 fill-current" />
-                <span>Desbravar {getNomeAbaFormatado(proximoPasso.destinoAba)} →</span>
+                <span>Acessar {getNomeAbaFormatado(proximoPasso.destinoAba)} →</span>
               </button>
             )}
 
             <button
               type="button"
               onClick={() => alternarConclusaoMeta(proximoPasso.id)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-emerald-400/60 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 font-semibold text-xs transition cursor-pointer active:scale-95"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-semibold text-xs transition cursor-pointer active:scale-95"
             >
               <Check className="h-3.5 w-3.5 stroke-[2.5]" />
-              <span>Concluir Ato</span>
+              <span>Concluir</span>
             </button>
           </div>
         </div>
       ) : todasConcluidas ? (
-        <div className="rounded-2xl border border-emerald-400/30 bg-emerald-50/50 dark:bg-emerald-950/20 p-6 text-center space-y-3">
-          <div className="h-11 w-11 rounded-2xl bg-emerald-500 text-white flex items-center justify-center mx-auto shadow-md">
+        <div className="rounded-2xl border border-blue-400/30 bg-blue-50/30 dark:bg-zinc-800/80 p-6 text-center space-y-3">
+          <div className="h-11 w-11 rounded-2xl bg-[#0078d4] text-white flex items-center justify-center mx-auto shadow-md">
             <CheckCheck className="h-5 w-5 stroke-[2.5]" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-emerald-900 dark:text-emerald-200">
-              Capítulo Concluído com Vitória! 🏆
+            <h3 className="text-base font-bold text-zinc-900 dark:text-white">
+              Metas de Hoje Concluídas com Sucesso! 🏆
             </h3>
             <p className="text-xs text-zinc-600 dark:text-zinc-300 max-w-md mx-auto mt-1">
-              Todos os atos do dia foram realizados. Descanse ou avance no simulador semanal.
+              Todas as atividades do dia foram realizadas. Descanse ou avance no simulador semanal.
             </p>
           </div>
         </div>
@@ -413,13 +417,13 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
       {/* 4. LINHA DO TEMPO DA HISTÓRIA COM TODOS OS ATOS */}
       <div className="space-y-3">
         <div className="flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400 font-medium">
-          <span>Atos da História de Hoje ({concluidasCount}/{totalMetas})</span>
+          <span>Metas de Estudo ({concluidasCount}/{totalMetas})</span>
           {metas.length > 0 && (
             <button
               onClick={reiniciarMetasSugeridas}
-              className="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+              className="text-[11px] text-[#0078d4] dark:text-[#4cc2ff] hover:underline cursor-pointer"
             >
-              Restaurar narrativa padrão
+              Restaurar metas padrão
             </button>
           )}
         </div>
@@ -433,19 +437,19 @@ export const MetasDiariasCard: React.FC<MetasDiariasCardProps> = ({
                 onClick={() => alternarConclusaoMeta(meta.id)}
                 className={`group flex items-center justify-between gap-3.5 rounded-2xl border p-3.5 transition-all duration-200 cursor-pointer shadow-xs ${
                   meta.concluida
-                    ? 'border-emerald-300/40 dark:border-emerald-800/30 bg-emerald-50/30 dark:bg-emerald-950/15 text-zinc-400 dark:text-zinc-500'
+                    ? 'border-black/5 dark:border-white/5 bg-zinc-50/50 dark:bg-zinc-900/30 text-zinc-400 dark:text-zinc-500'
                     : isAtiva
-                    ? 'border-emerald-400 bg-white dark:bg-zinc-800 ring-2 ring-emerald-400/20 shadow-sm'
-                    : 'border-black/5 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:border-emerald-300'
+                    ? 'border-[#0078d4] bg-white dark:bg-zinc-800 ring-2 ring-[#0078d4]/15 shadow-sm'
+                    : 'border-black/5 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:border-black/20 dark:hover:border-white/20'
                 }`}
               >
                 <div className="flex items-center gap-3.5 min-w-0 flex-1">
                   <div
                     className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-xl border text-xs font-bold transition-all ${
                       meta.concluida
-                        ? 'border-emerald-500 bg-emerald-500 text-white'
+                        ? 'border-[#0078d4] bg-[#0078d4] text-white'
                         : isAtiva
-                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
+                        ? 'border-[#0078d4] bg-blue-50 dark:bg-blue-950/40 text-[#0078d4] dark:text-[#4cc2ff]'
                         : 'border-black/15 dark:border-white/15 bg-zinc-50 dark:bg-zinc-900 text-zinc-400'
                     }`}
                   >

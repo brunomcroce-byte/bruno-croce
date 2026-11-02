@@ -383,50 +383,72 @@ export const BannerPrazosOAB: React.FC<BannerPrazosOABProps> = ({ onAbrirModal }
     return (
       <motion.button
         type="button"
-        initial={{ opacity: 0.85, scale: 0.995 }}
+        initial={{ opacity: 0.9, scale: 0.995 }}
         animate={{
-          opacity: [0.85, 1, 0.85],
-          scale: [0.995, 1.005, 0.995]
+          opacity: [0.9, 1, 0.9],
+          scale: [0.995, 1.003, 0.995],
+          boxShadow: [
+            '0 1px 4px rgba(245, 158, 11, 0.08)',
+            '0 0 16px rgba(245, 158, 11, 0.35)',
+            '0 1px 4px rgba(245, 158, 11, 0.08)'
+          ]
         }}
-        transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
         whileHover={{ opacity: 1, scale: 1 }}
         onClick={() => {
           setDispensado(false);
           SafeStorage.set('tributa_banner_prazos_dispensado', 'false');
         }}
-        className="w-full bg-gradient-to-r from-amber-500/10 via-sky-500/10 to-purple-500/10 border-b border-amber-500/20 px-3 py-1 text-[11px] text-amber-700 dark:text-amber-300 font-semibold flex items-center justify-center gap-2 hover:bg-amber-500/15 transition cursor-pointer"
+        className="w-full bg-amber-500/10 dark:bg-amber-500/15 border-b border-amber-500/30 px-3 py-1.5 text-[11.5px] text-amber-800 dark:text-amber-200 font-semibold flex items-center justify-center gap-2 hover:bg-amber-500/20 transition cursor-pointer"
       >
-        <span>⚠️ 2 Alertas Críticos da OAB: Resultado 12/11 (17h) & Repescagem 13/11</span>
-        <span className="underline text-[10px]">Expandir banner</span>
+        <span>⚠️ 2 Alertas Críticos FGV: Resultado 12/11 (17h) & Repescagem 13/11</span>
+        <span className="underline text-[10px] font-bold">Expandir banner</span>
       </motion.button>
     );
   }
 
   return (
     <motion.div
-      initial={{ opacity: 0.92, scale: 0.998 }}
+      initial={{ opacity: 0.94, scale: 0.998 }}
       animate={{
-        opacity: [0.9, 1, 0.9],
-        scale: [0.998, 1.006, 0.998]
+        opacity: [0.92, 1, 0.92],
+        scale: [0.998, 1.004, 0.998],
+        boxShadow: [
+          '0 2px 10px rgba(245, 158, 11, 0.10)',
+          '0 0 28px rgba(245, 158, 11, 0.42), 0 4px 18px rgba(245, 158, 11, 0.22)',
+          '0 2px 10px rgba(245, 158, 11, 0.10)'
+        ]
       }}
       transition={{
-        duration: 2.8,
+        duration: 3.2,
         repeat: Infinity,
         ease: 'easeInOut'
       }}
-      whileHover={{ opacity: 1, scale: 1 }}
-      className="relative z-30 shrink-0 border-b border-amber-400/50 dark:border-amber-500/40 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-sky-500/15 dark:from-amber-950/40 dark:via-orange-950/25 dark:to-sky-950/40 backdrop-blur-md px-3 sm:px-5 py-2 shadow-[0_2px_16px_rgba(245,158,11,0.12)]"
+      whileHover={{ opacity: 1, scale: 1, boxShadow: '0 0 32px rgba(245, 158, 11, 0.5)' }}
+      className="relative z-30 shrink-0 overflow-hidden border-b border-amber-500/40 dark:border-amber-500/50 bg-amber-500/[0.08] dark:bg-amber-500/[0.12] backdrop-blur-md px-3 sm:px-5 py-2"
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 flex-wrap">
-        {/* Lado Esquerdo: Os 2 Alertas Claros e Diretos */}
+      {/* Pulso de luz suave ocasional deslizando suavemente pelo banner */}
+      <motion.div
+        className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-amber-300/25 dark:via-amber-400/20 to-transparent"
+        animate={{ x: ['-100%', '200%'] }}
+        transition={{
+          repeat: Infinity,
+          duration: 3.5,
+          repeatDelay: 2.8,
+          ease: 'easeInOut'
+        }}
+      />
+
+      <div className="relative max-w-7xl mx-auto flex items-center justify-between gap-3 flex-wrap">
+        {/* Lado Esquerdo: Os 2 Alertas com visual padronizado e sem excesso de cores */}
         <div className="flex items-center gap-3 flex-wrap min-w-0">
           <motion.div
             animate={{
-              scale: [1, 1.12, 1],
-              rotate: [0, -6, 6, -3, 0]
+              scale: [1, 1.1, 1],
+              rotate: [0, -4, 4, -2, 0]
             }}
             transition={{
-              duration: 2.8,
+              duration: 3.2,
               repeat: Infinity,
               ease: 'easeInOut'
             }}
@@ -437,49 +459,28 @@ export const BannerPrazosOAB: React.FC<BannerPrazosOABProps> = ({ onAbrirModal }
 
           {/* Alerta 1 */}
           <div className="flex items-center gap-1.5 text-xs">
-            <span className="font-bold text-amber-800 dark:text-amber-300">
-              1. Resultado da Prova:
+            <span className="font-bold text-amber-900 dark:text-amber-200">
+              1. Resultado Preliminar:
             </span>
-            <motion.span
-              animate={{
-                scale: [1, 1.025, 1]
-              }}
-              transition={{
-                duration: 2.8,
-                repeat: Infinity,
-                ease: 'easeInOut'
-              }}
-              className="font-mono font-bold text-zinc-900 dark:text-white bg-amber-200/60 dark:bg-amber-900/50 px-2 py-0.5 rounded border border-amber-300 dark:border-amber-600/40 inline-block"
-            >
+            <span className="font-mono font-bold text-zinc-900 dark:text-white bg-amber-500/20 dark:bg-amber-500/30 px-2 py-0.5 rounded border border-amber-500/40 inline-block">
               12/11/2026 às 17h00
-            </motion.span>
-            <span className="hidden sm:inline font-mono text-[10px] text-amber-700 dark:text-amber-400">
+            </span>
+            <span className="hidden sm:inline font-mono text-[10px] text-amber-800/80 dark:text-amber-300/80">
               ({tempoResultado.dias}d {tempoResultado.horas}h restantes)
             </span>
           </div>
 
-          <span className="text-zinc-400 hidden md:inline">•</span>
+          <span className="text-amber-500/50 hidden md:inline">•</span>
 
           {/* Alerta 2 */}
           <div className="flex items-center gap-1.5 text-xs">
-            <span className="font-bold text-blue-800 dark:text-sky-300">
+            <span className="font-bold text-amber-900 dark:text-amber-200">
               2. Inscrição na Repescagem:
             </span>
-            <motion.span
-              animate={{
-                scale: [1, 1.025, 1]
-              }}
-              transition={{
-                duration: 2.8,
-                repeat: Infinity,
-                ease: 'easeInOut',
-                delay: 0.15
-              }}
-              className="font-mono font-bold text-zinc-900 dark:text-white bg-blue-200/60 dark:bg-sky-900/50 px-2 py-0.5 rounded border border-blue-300 dark:border-sky-600/40 inline-block"
-            >
+            <span className="font-mono font-bold text-zinc-900 dark:text-white bg-amber-500/20 dark:bg-amber-500/30 px-2 py-0.5 rounded border border-amber-500/40 inline-block">
               A partir de 13/11/2026
-            </motion.span>
-            <span className="hidden lg:inline text-[10.5px] text-blue-700 dark:text-sky-400 font-medium">
+            </span>
+            <span className="hidden lg:inline text-[10.5px] text-amber-800/80 dark:text-amber-300/80 font-medium">
               (Aproveitamento da 1ª fase)
             </span>
           </div>
@@ -490,7 +491,7 @@ export const BannerPrazosOAB: React.FC<BannerPrazosOABProps> = ({ onAbrirModal }
           <button
             type="button"
             onClick={onAbrirModal}
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs shadow-xs transition cursor-pointer active:scale-95"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-xs transition cursor-pointer active:scale-95"
           >
             <span>Ver Orientações & Contagem</span>
             <ChevronRight className="h-3 w-3" />
@@ -502,7 +503,7 @@ export const BannerPrazosOAB: React.FC<BannerPrazosOABProps> = ({ onAbrirModal }
               setDispensado(true);
               SafeStorage.set('tributa_banner_prazos_dispensado', 'true');
             }}
-            className="p-1 rounded-md text-zinc-500 hover:bg-black/5 dark:text-zinc-400 dark:hover:bg-white/10 transition cursor-pointer"
+            className="p-1 rounded-md text-amber-800/70 dark:text-amber-300/70 hover:bg-amber-500/10 transition cursor-pointer"
             title="Minimizar banner de avisos"
           >
             <X className="h-3.5 w-3.5" />

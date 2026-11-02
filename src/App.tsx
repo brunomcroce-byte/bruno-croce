@@ -65,6 +65,7 @@ import {
 import { analisarPecaEmTempoReal } from './utils/pecaAnalyzer';
 import { SimuladorAnalisePecaCard } from './components/SimuladorAnalisePecaCard';
 import { CentralUnificadaDesempenhoCard } from './components/CentralUnificadaDesempenhoCard';
+import { RadarDesempenhoPecometroCard } from './components/RadarDesempenhoPecometroCard';
 import { GuiaEstruturalProgressao5hCard } from './components/GuiaEstruturalProgressao5hCard';
 import { VadeMecumView } from './components/VadeMecumView';
 import { PlannerView } from './components/PlannerView';
@@ -77,6 +78,17 @@ import {
   StatusPermissaoNotificacao,
   inicializarServiceWorker
 } from './utils/browserNotifications';
+import {
+  GamificationState,
+  carregarEstadoGamificacao,
+  salvarEstadoGamificacao,
+  creditarXP,
+  calcularInfoNivel,
+  LISTA_CONQUISTAS
+} from './utils/gamification';
+import { CentralGamificacaoModal } from './components/CentralGamificacaoModal';
+import { CardGamificacaoDashboard } from './components/CardGamificacaoDashboard';
+import { ModalSubidaNivel } from './components/ModalSubidaNivel';
 import {
   BookOpen,
   Calendar,
@@ -124,7 +136,9 @@ import {
   Pause,
   RefreshCw,
   Wifi,
-  Database
+  Database,
+  Flame,
+  Trophy
 } from 'lucide-react';
 
 type TabType =
@@ -193,6 +207,50 @@ export default function App() {
   const [pomodoroRunning, setPomodoroRunning] = useState(false);
   const [pomodoroConcluido, setPomodoroConcluido] = useState(false);
 
+  // Estado Global de Gamificação (XP, Níveis, Streaks e Conquistas)
+  const [gamificacao, setGamificacao] = useState<GamificationState>(() => carregarEstadoGamificacao());
+  const [modalGamificacaoAberto, setModalGamificacaoAberto] = useState(false);
+  const [modalSubidaNivelInfo, setModalSubidaNivelInfo] = useState<{
+    aberto: boolean;
+    novoNivel: number;
+    titulo: string;
+  }>({
+    aberto: false,
+    novoNivel: 1,
+    titulo: ''
+  });
+
+  const infoNivel = useMemo(() => {
+    return calcularInfoNivel(gamificacao.xp);
+  }, [gamificacao.xp]);
+
+  const premiarXP = (
+    xp: number,
+    motivo: string,
+    extras?: Partial<Pick<GamificationState, 'linhasEscritasTotal' | 'pomodorosConcluidosTotal' | 'flashcardsDominadosTotal' | 'artigosMarcadosTotal' | 'metasCompletadasTotal' | 'desafiosVadeConcluidos'>>
+  ) => {
+    const res = creditarXP(gamificacao, xp, motivo, extras);
+    setGamificacao(res.novoEstado);
+
+    if (res.conquistasNovas.length > 0) {
+      res.conquistasNovas.forEach(c => {
+        mostrarToast(`🏆 Conquista Desbloqueada: ${c.titulo}! (+${c.xpBonus} XP)`);
+        dispararConfetesSuaves({ count: 45, originY: 0.3 });
+        tocarAlarmeWebAudio('suave');
+      });
+    }
+
+    if (res.subiuNivel) {
+      tocarAlarmeWebAudio('suave');
+      dispararMegaConfetes150L();
+      setModalSubidaNivelInfo({
+        aberto: true,
+        novoNivel: res.novoNivel,
+        titulo: res.tituloNovoNivel
+      });
+    }
+  };
+
   // Contador de Blocos Pomodoro Diários (com auto-reset à meia-noite 00:00)
   const [pomodoroBlocosHoje, setPomodoroBlocosHoje] = useState<number>(() => {
     const hoje = new Date().toISOString().slice(0, 10);
@@ -224,7 +282,10 @@ export default function App() {
     if (delta > 0) {
       tocarAlarmeWebAudio('suave');
       dispararConfetesSuaves({ count: 35, originY: 0.35 });
-      mostrarToast(`🍅 +1 Bloco Pomodoro registrado! Total de hoje: ${novo} bloco${novo > 1 ? 's' : ''}.`);
+      premiarXP(40, 'Bloco Pomodoro Registrado (+1 Bloco)', {
+        pomodorosConcluidosTotal: novo
+      });
+      mostrarToast(`🍅 +1 Bloco Pomodoro registrado (+40 XP)! Total de hoje: ${novo} bloco${novo > 1 ? 's' : ''}.`);
     } else {
       mostrarToast(`Bloco Pomodoro removido. Total de hoje: ${novo}.`);
     }
@@ -238,6 +299,9 @@ export default function App() {
     SafeStorage.set('tributa_pomodoro_data_dia', hoje);
     SafeStorage.set('tributa_pomodoro_blocos_hoje', String(novoTotal));
     setPomodoroBlocosHoje(novoTotal);
+    premiarXP(40, 'Bloco Pomodoro de Foco Concluído', {
+      pomodorosConcluidosTotal: novoTotal
+    });
     return novoTotal;
   };
 
@@ -280,12 +344,13 @@ export default function App() {
       mostrarToast('🔇 Soundscape desligado.');
     } else {
       const opcao = SOUNDSCAPE_OPCOES.find(o => o.id === novoTipo);
+      premiarXP(20, `Ativação de Soundscape (${opcao?.nome || 'Foco'})`);
       if (pomodoroRunning && pomodoroTipo === 'foco') {
         soundscapeManager.reproduzir(novoTipo);
         setSoundscapeTocando(true);
-        mostrarToast(`${opcao?.icone} Soundscape "${opcao?.nome}" tocando no seu bloco de foco!`);
+        mostrarToast(`${opcao?.icone} Soundscape "${opcao?.nome}" tocando no seu bloco de foco! (+20 XP)`);
       } else {
-        mostrarToast(`${opcao?.icone} Soundscape "${opcao?.nome}" ativado para tocar nos blocos de foco!`);
+        mostrarToast(`${opcao?.icone} Soundscape "${opcao?.nome}" ativado para tocar nos blocos de foco! (+20 XP)`);
       }
     }
   };
@@ -622,6 +687,7 @@ export default function App() {
   const abrirModalPrazosOAB = () => {
     setModalPrazosOABAberto(true);
     SafeStorage.set('tributa_prazos_popup_visto', 'true');
+    premiarXP(25, 'Consulta aos Prazos Críticos OAB (12/11 e 13/11)');
   };
 
   const fecharModalPrazosOAB = () => {
@@ -829,7 +895,15 @@ export default function App() {
     setFlashStats(updated);
     SafeStorage.set('tributa_flash_stats', JSON.stringify(updated));
     tocarAlarmeWebAudio();
-    mostrarToast(acertou ? '✓ Acerto contabilizado nas Estatísticas!' : 'Revisão registrada para novo ciclo!');
+    if (acertou) {
+      premiarXP(15, 'Acerto em Flashcard OAB', {
+        flashcardsDominadosTotal: updated.acertos
+      });
+      mostrarToast('✓ Acerto contabilizado (+15 XP)!');
+    } else {
+      premiarXP(5, 'Revisão de Flashcard OAB');
+      mostrarToast('Revisão registrada para novo ciclo (+5 XP)!');
+    }
     proximoFlashcard();
   };
 
@@ -838,7 +912,10 @@ export default function App() {
     setLinhasAcumuladasSemana(novo);
     SafeStorage.set('tributa_linhas_acumuladas_sem', String(novo));
     tocarAlarmeWebAudio();
-    mostrarToast(`+${qtd} linhas registradas nas estatísticas semanais!`);
+    premiarXP(qtd * 2, `Treino de Redação (+${qtd} linhas)`, {
+      linhasEscritasTotal: Math.max(gamificacao.linhasEscritasTotal, novo)
+    });
+    mostrarToast(`+${qtd} linhas registradas (+${qtd * 2} XP)!`);
   };
 
   // Exportação do Relatório Semanal de Progresso (Flashcards, Simulador e Cronograma) em PDF
@@ -1449,6 +1526,10 @@ export default function App() {
     SafeStorage.set('tributa_cronograma_v3', JSON.stringify(updated));
 
     if (isNowCompleting) {
+      premiarXP(35, 'Meta do Cronograma OAB Concluída', {
+        metasCompletadasTotal: gamificacao.metasCompletadasTotal + 1
+      });
+
       // Verifica se completou a semana toda do cronograma
       const [sIdxStr] = id.split('-');
       const sIdx = Number(sIdxStr);
@@ -1463,32 +1544,52 @@ export default function App() {
       tocarAlarmeWebAudio('suave');
       mostrarToast(
         completouSemana
-          ? `🎉 Incrível! Você completou todas as metas da ${sem.semana}!`
-          : '✨ Tarefa do cronograma concluída! Continue com o foco total na OAB!'
+          ? `🎉 Incrível! Você completou todas as metas da ${sem.semana} (+100 XP)!`
+          : '✨ Tarefa do cronograma concluída (+35 XP)! Continue com o foco total na OAB!'
       );
     }
   };
 
   const toggleVade = (index: number) => {
-    const updated = vadeMarcados.includes(index)
-      ? vadeMarcados.filter(i => i !== index)
-      : [...vadeMarcados, index];
+    const isMarcando = !vadeMarcados.includes(index);
+    const updated = isMarcando
+      ? [...vadeMarcados, index]
+      : vadeMarcados.filter(i => i !== index);
     setVadeMarcados(updated);
     SafeStorage.set('tributa_vade_v1', JSON.stringify(updated));
+
+    if (isMarcando) {
+      premiarXP(10, 'Artigo Marcado no Vade Mecum (Código FGV)', {
+        artigosMarcadosTotal: updated.length
+      });
+    }
   };
 
   const marcarTodosVade = (marcar: boolean) => {
     const updated = marcar ? VADE_DATA.map((_, i) => i) : [];
     setVadeMarcados(updated);
     SafeStorage.set('tributa_vade_v1', JSON.stringify(updated));
+    if (marcar) {
+      premiarXP(50, 'Marcação Global no Vade Mecum', {
+        artigosMarcadosTotal: updated.length
+      });
+    }
   };
 
   const handleRedacaoChange = (val: string) => {
+    const antigasLinhas = textoRedacao.split('\n').length;
+    const novasLinhas = val.split('\n').length;
     setTextoRedacao(val);
     SafeStorage.set('tributa_redacao', val);
     if (tooltipInfo) {
       setTooltipInfo(null);
       setTooltipPos(null);
+    }
+    if (novasLinhas > antigasLinhas) {
+      const ganho = (novasLinhas - antigasLinhas) * 2;
+      premiarXP(ganho, `Redação 150L (+${novasLinhas - antigasLinhas} linhas)`, {
+        linhasEscritasTotal: Math.max(gamificacao.linhasEscritasTotal, novasLinhas)
+      });
     }
   };
 
@@ -1778,7 +1879,13 @@ export default function App() {
   const totalTarefas = CRONOGRAMA_DATA.reduce((acc, curr) => acc + curr.tarefas.length, 0);
 
   return (
-    <div className={`flex h-screen w-screen flex-col overflow-hidden select-none ${tema === 'claro' ? 'theme-light bg-[#f3f3f3] text-[#202020]' : 'theme-dark dark bg-[#181818] text-[#ffffff]'}`}>
+    <div className={`relative flex h-screen w-screen flex-col overflow-hidden select-none ${tema === 'claro' ? 'theme-light bg-[#f3f3f3]/95 text-[#202020]' : 'theme-dark dark bg-[#141414]/95 text-[#ffffff]'}`}>
+      {/* WINDOWS 11 26H2 SOBER AMBIENT LIGHTING (CORES PADRONIZADAS & DISCRETAS) */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden z-0" aria-hidden="true">
+        <div className="absolute -top-[15%] -left-[10%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-[#0078d4]/6 to-transparent dark:from-[#4cc2ff]/7 to-transparent blur-[140px] opacity-60" />
+        <div className="absolute -bottom-[15%] -right-[10%] w-[45vw] h-[45vw] rounded-full bg-gradient-to-tl from-[#0078d4]/5 to-transparent dark:from-[#4cc2ff]/6 to-transparent blur-[140px] opacity-50" />
+      </div>
+
       {/* WINDOWS 11 26H2 MICA ALT TITLEBAR */}
       <header className="win11-titlebar shrink-0 z-50">
         {/* Left: Windows 11 App Icon, Title & 26H2 Badge */}
@@ -1812,6 +1919,26 @@ export default function App() {
 
         {/* Right: Theme Toggle, Online Sync, & Windows 11 Native Caption Buttons */}
         <div className="flex items-center h-full">
+          {/* Badge Interativo de Gamificação & Patente OAB */}
+          <button
+            type="button"
+            onClick={() => setModalGamificacaoAberto(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-black/10 dark:border-white/10 bg-white/70 dark:bg-zinc-800/80 hover:bg-[#0078d4]/10 dark:hover:bg-sky-500/15 text-xs transition cursor-pointer mr-2 shadow-xs"
+            title="Clique para abrir a Central de Conquistas & Gamificação OAB"
+          >
+            <span className="text-sm leading-none">{infoNivel.patenteAtual.icone}</span>
+            <span className="font-bold text-zinc-800 dark:text-zinc-200 text-xs">
+              Nv. {infoNivel.patenteAtual.nivel}
+            </span>
+            <span className="hidden lg:inline text-zinc-500 dark:text-zinc-400 font-medium text-[11px]">
+              {infoNivel.patenteAtual.titulo}
+            </span>
+            <span className="flex items-center gap-0.5 text-amber-600 dark:text-amber-400 font-black text-[11px]">
+              <Flame className="h-3 w-3 fill-amber-500 text-amber-500 animate-pulse" />
+              <span>{gamificacao.streakDias}d</span>
+            </span>
+          </button>
+
           {/* Alternar Tema Claro / Escuro */}
           <div className="flex items-center gap-1 mr-2">
             <button
@@ -1976,14 +2103,10 @@ export default function App() {
         <div
           className={`m-2.5 rounded-xl border p-3 shadow-xs transition-all duration-300 relative overflow-hidden win11-focus-card ${
             pomodoroConcluido
-              ? 'pomodoro-success-glow border-emerald-500 bg-emerald-50/80 dark:bg-[#1b3d2f]/90'
+              ? 'border-emerald-500/60 bg-emerald-50/70 dark:bg-emerald-950/30'
               : pomodoroRunning
-              ? pomodoroTipo === 'pausa'
-                ? 'border-amber-500/50 bg-amber-50/60 dark:bg-[#3a2e22]/80'
-                : pomodoroModo === '25m'
-                ? 'border-rose-500/50 bg-rose-50/60 dark:bg-[#38262b]/80'
-                : 'border-[#0067c0]/40 dark:border-sky-500/50 bg-sky-50/60 dark:bg-[#253243]/80'
-              : 'border-black/[0.08] dark:border-white/[0.08] bg-white dark:bg-[#272727]'
+              ? 'border-[#0078d4]/50 dark:border-[#4cc2ff]/50 bg-blue-50/40 dark:bg-zinc-800/80'
+              : 'border-black/[0.08] dark:border-white/[0.08] bg-white/80 dark:bg-[#202020]/80'
           }`}
         >
           {/* Alternador de Modo: 50m Padrão vs 25m Clássico */}
@@ -1993,7 +2116,7 @@ export default function App() {
               onClick={() => alternarModoPomodoro('50m')}
               className={`flex-1 py-1 rounded-md text-[10.5px] font-semibold transition cursor-pointer flex items-center justify-center gap-1 ${
                 pomodoroModo === '50m'
-                  ? 'bg-[#0067c0] dark:bg-sky-600 text-white shadow-xs'
+                  ? 'bg-[#0078d4] text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
               title="Modo Padrão: 50 min foco + 10 min pausa"
@@ -2005,7 +2128,7 @@ export default function App() {
               onClick={() => alternarModoPomodoro('25m')}
               className={`flex-1 py-1 rounded-md text-[10.5px] font-semibold transition cursor-pointer flex items-center justify-center gap-1 ${
                 pomodoroModo === '25m'
-                  ? 'bg-rose-600 text-white shadow-xs'
+                  ? 'bg-[#0078d4] text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
               title="Modo Clássico: 25 min foco + 5 min pausa curta"
@@ -2431,6 +2554,21 @@ export default function App() {
               <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping" />
             </button>
 
+            {/* Widget Interativo de Conquistas & Gamificação */}
+            <button
+              type="button"
+              onClick={() => setModalGamificacaoAberto(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-black/10 dark:border-white/10 bg-white/70 dark:bg-zinc-800/70 hover:bg-[#0078d4]/10 dark:hover:bg-sky-500/15 px-3 py-1 text-xs text-zinc-800 dark:text-zinc-200 font-semibold shadow-xs transition cursor-pointer active:scale-95"
+              title="Abrir Central de Conquistas & Gamificação OAB"
+            >
+              <span>{infoNivel.patenteAtual.icone}</span>
+              <span className="font-bold text-[#0078d4] dark:text-sky-400">Nv. {infoNivel.patenteAtual.nivel}</span>
+              <span className="flex items-center gap-0.5 text-amber-600 dark:text-amber-400 font-black text-[11px] ml-0.5">
+                <Flame className="h-3 w-3 fill-amber-500 text-amber-500 animate-pulse" />
+                <span>{gamificacao.streakDias}d</span>
+              </span>
+            </button>
+
             {/* Contador Dias Prova OAB */}
             <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-slate-300 dark:border-slate-700/60 bg-white/70 dark:bg-slate-800/60 px-3 py-1 text-xs text-slate-700 dark:text-slate-300 font-medium">
               <span>Prova 2ª Fase:</span>
@@ -2440,10 +2578,10 @@ export default function App() {
             {/* Botão Central de Leis & Banco Online */}
             <button
               onClick={() => setModalAtualizacoesAberta(true)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-semibold text-xs px-3 py-1.5 shadow-xs transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-md border border-black/10 dark:border-white/10 bg-white/70 dark:bg-zinc-800/70 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 font-medium text-xs px-3 py-1.5 shadow-xs transition cursor-pointer"
               title="Central de Atualizações de Leis Tributárias & Banco de Dados em Tempo Real"
             >
-              <RefreshCw className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 animate-spin" style={{ animationDuration: '10s' }} />
+              <RefreshCw className="h-3.5 w-3.5 text-[#0078d4] dark:text-[#4cc2ff] animate-spin" style={{ animationDuration: '10s' }} />
               <span className="hidden lg:inline">Leis & Banco Online</span>
               <span className="lg:hidden">Leis Online</span>
             </button>
@@ -2451,7 +2589,7 @@ export default function App() {
             {/* Botão Ação Rápida: Simulado FGV */}
             <button
               onClick={() => setActiveTab('cronograma')}
-              className="inline-flex items-center gap-1.5 rounded-md bg-[#0067c0] hover:bg-[#0055a4] text-white font-semibold text-xs px-3.5 py-1.5 shadow-xs transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-md bg-[#0078d4] hover:bg-[#006cbd] text-white font-semibold text-xs px-3.5 py-1.5 shadow-xs transition cursor-pointer"
             >
               <Calendar className="h-3.5 w-3.5" />
               <span className="hidden md:inline">Simulado Semanal</span>
@@ -2471,67 +2609,65 @@ export default function App() {
               animate="visible"
               className="space-y-6"
             >
-              {/* 1. HERO HEADER: GREETING AMIGÁVEL & STATUS ESSENCIAL */}
+              {/* 1. HERO HEADER: GREETING AMIGÁVEL & STATUS ESSENCIAL (PADRONIZADO) */}
               <motion.div
                 variants={dashboardCardVariants}
-                className="macos-card-interactive rounded-3xl border border-blue-100 dark:border-white/10 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-purple-50/30 dark:from-zinc-800/95 dark:via-zinc-800/85 dark:to-zinc-800/95 p-6 lg:p-7 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-5 transition-all"
+                className="macos-card-interactive rounded-2xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-[#1e1e1e]/85 p-6 lg:p-7 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-5 transition-all"
               >
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-100/70 dark:bg-blue-950/60 px-3 py-0.5 rounded-full border border-blue-300/60 dark:border-blue-700/60 inline-flex items-center gap-1.5">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap text-xs">
+                    <span className="font-semibold text-zinc-700 dark:text-zinc-300 bg-black/[0.04] dark:bg-white/[0.06] px-2.5 py-0.5 rounded-md border border-black/10 dark:border-white/10 inline-flex items-center gap-1.5">
                       <span>⚖️ 2ª Fase OAB</span>
-                      <span>•</span>
+                      <span className="opacity-40">•</span>
                       <span>Direito Tributário</span>
                     </span>
-                    <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/60 px-3 py-0.5 rounded-full border border-emerald-300/60 dark:border-emerald-700/60 inline-flex items-center gap-1">
-                      <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span className="font-medium text-zinc-600 dark:text-zinc-400 bg-black/[0.04] dark:bg-white/[0.06] px-2.5 py-0.5 rounded-md border border-black/10 dark:border-white/10 inline-flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500" />
                       {statusConexao.online ? 'Base FGV Sincronizada' : 'Modo Offline'}
                     </span>
                     <button
                       type="button"
                       onClick={abrirModalPrazosOAB}
-                      className="text-xs font-bold text-amber-800 dark:text-amber-200 bg-amber-100/90 dark:bg-amber-950/70 hover:bg-amber-200/90 dark:hover:bg-amber-900/80 px-3 py-0.5 rounded-full border border-amber-400 dark:border-amber-600/50 inline-flex items-center gap-1.5 cursor-pointer shadow-xs transition active:scale-95"
+                      className="font-bold text-amber-900 dark:text-amber-200 bg-amber-500/15 dark:bg-amber-500/20 hover:bg-amber-500/25 px-2.5 py-0.5 rounded-md border border-amber-500/40 inline-flex items-center gap-1.5 cursor-pointer transition active:scale-95"
                     >
-                      <Bell className="h-3 w-3 text-amber-600 dark:text-amber-400 animate-bounce" />
-                      <span>📢 Resultado: 12/11 (17h)</span>
-                      <span>•</span>
-                      <span>📝 Repescagem: 13/11</span>
-                      <span className="text-[10px] underline ml-0.5">Ver detalhes →</span>
+                      <Bell className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                      <span>Alertas: 12/11 (17h) & 13/11</span>
+                      <span className="text-[10px] underline ml-0.5">Ver →</span>
                     </button>
-                    <span className="text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-100/70 dark:bg-amber-950/60 px-3 py-0.5 rounded-full border border-amber-300/60 dark:border-amber-700/60">
+                    <span className="font-medium text-zinc-600 dark:text-zinc-400 bg-black/[0.04] dark:bg-white/[0.06] px-2.5 py-0.5 rounded-md border border-black/10 dark:border-white/10">
                       ⏳ {diasProva >= 0 ? `Faltam ${diasProva} dias` : 'Hoje é o dia!'}
                     </span>
                   </div>
-                  <h1 className="text-xl sm:text-2xl font-extrabold text-zinc-900 dark:text-white tracking-tight pt-0.5">
+                  <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white tracking-tight">
                     Olá, Futuro(a) Advogado(a) Tributarista! 🎯
                   </h1>
-                  <p className="text-xs text-zinc-600 dark:text-zinc-300 max-w-2xl leading-relaxed">
-                    Tudo pronto para mais uma sessão de alto rendimento? Pratique na folha padrão de 150 linhas com detecção heurística de peça, mantenha o foco nos blocos Pomodoro e domine as teses da FGV.
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-2xl leading-relaxed">
+                    Pratique na folha oficial de 150 linhas com detecção heurística de peça, acompanhe os ciclos do cronograma e consolide os precedentes da FGV.
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2.5 flex-wrap shrink-0">
                   <button
                     onClick={() => setActiveTab('cronograma')}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-sm hover:shadow transition-all cursor-pointer active:scale-95"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0078d4] hover:bg-[#006cbd] text-white text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
                   >
                     <Calendar className="h-4 w-4" />
                     <span>Simulado Semanal FGV</span>
                   </button>
                   <button
                     onClick={handleGerarRelatorioSemanalPdf}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
+                    className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-white/70 dark:bg-zinc-800/70 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
                     title="Exportar relatório completo em PDF"
                   >
-                    <Download className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+                    <Download className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
                     <span>Relatório PDF</span>
                   </button>
                   <button
                     onClick={() => exportarRedacaoNoWord(textoRedacao)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
+                    className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-white/70 dark:bg-zinc-800/70 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
                     title="Backup da redação no Word (.doc)"
                   >
-                    <FileText className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+                    <FileText className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
                     <span>Backup Word</span>
                   </button>
                 </div>
@@ -2564,7 +2700,28 @@ export default function App() {
                 />
               </motion.div>
 
-              {/* 3. WORKFLOW DO DIA: METAS DIÁRIAS & DICA ESTRATÉGICA (VISUAL LIMPO E AREJADO) */}
+              {/* 3. CARD DE GAMIFICAÇÃO & CARREIRA TRIBUTÁRIA FGV */}
+              <motion.div variants={dashboardCardVariants}>
+                <CardGamificacaoDashboard
+                  gamificacao={gamificacao}
+                  onAbrirCentralGamificacao={() => setModalGamificacaoAberto(true)}
+                  onIrParaSimulador={() => setActiveTab('simulador')}
+                  onIrParaFlashcards={() => setActiveTab('flashcards')}
+                />
+              </motion.div>
+
+              {/* 4. GRÁFICO DE RADAR DO PEÇÔMETRO (RECHARTS): DESEMPENHO NAS 4 CATEGORIAS DE PEÇAS */}
+              <motion.div variants={dashboardCardVariants}>
+                <RadarDesempenhoPecometroCard
+                  onNavegarParaTab={(tab) => setActiveTab(tab as TabType)}
+                  analisePecaAtual={analisePecaAtual}
+                  linhasCount={linhasCount}
+                  totalLinhasSemana={totalLinhasSemana}
+                  mostrarToast={mostrarToast}
+                />
+              </motion.div>
+
+              {/* 5. WORKFLOW DO DIA: METAS DIÁRIAS & DICA ESTRATÉGICA (VISUAL LIMPO E AREJADO) */}
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
                 <motion.div variants={dashboardCardVariants} className="h-full">
                   <MetasDiariasCard
@@ -2572,6 +2729,17 @@ export default function App() {
                     onMostrarToast={mostrarToast}
                     totalLinhasSemana={totalLinhasSemana}
                     pomodoroBlocosHoje={pomodoroBlocosHoje}
+                    onMetaConcluida={(metaTexto, todas) => {
+                      if (todas) {
+                        premiarXP(100, 'Todas as Metas Diárias Concluídas!', {
+                          metasCompletadasTotal: gamificacao.metasCompletadasTotal + 1
+                        });
+                      } else {
+                        premiarXP(35, `Meta Diária: ${metaTexto.slice(0, 35)}...`, {
+                          metasCompletadasTotal: gamificacao.metasCompletadasTotal + 1
+                        });
+                      }
+                    }}
                   />
                 </motion.div>
                 <motion.div variants={dashboardCardVariants} className="h-full">
@@ -4678,6 +4846,25 @@ export default function App() {
           mostrarToast('⏰ Configure seu alarme diário para os dias 12 e 13 de novembro!');
         }}
         onMostrarToast={mostrarToast}
+      />
+
+      {/* CENTRAL DE CONQUISTAS & GAMIFICAÇÃO */}
+      <CentralGamificacaoModal
+        isOpen={modalGamificacaoAberto}
+        onClose={() => setModalGamificacaoAberto(false)}
+        gamificacao={gamificacao}
+      />
+
+      {/* MODAL DE CELEBRAÇÃO DE SUBIDA DE NÍVEL / PATENTE */}
+      <ModalSubidaNivel
+        isOpen={modalSubidaNivelInfo.aberto}
+        novoNivel={modalSubidaNivelInfo.novoNivel}
+        tituloNivel={modalSubidaNivelInfo.titulo}
+        onClose={() => setModalSubidaNivelInfo(prev => ({ ...prev, aberto: false }))}
+        onVerTodasConquistas={() => {
+          setModalSubidaNivelInfo(prev => ({ ...prev, aberto: false }));
+          setModalGamificacaoAberto(true);
+        }}
       />
 
       {/* TOAST FEEDBACK DE INTERAÇÃO ENTRE AS ABAS */}
