@@ -273,16 +273,17 @@ export function SimuladorApoioDrawer({
           {abaAtiva === 'vade' && (
             <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
               {VADE_DATA.filter(
-                v => (v.ref + ' ' + v.obs).toLowerCase().includes(busca.toLowerCase())
+                v => (v.ref + ' ' + (v.titulo || '') + ' ' + (v.textoCompleto || '') + ' ' + v.obs).toLowerCase().includes(busca.toLowerCase())
               ).slice(0, 15).map((vade, idx) => {
                 const citacao = `\n\nConforme preconiza o ${vade.ref}${vade.obs ? ` (${vade.obs})` : ''}.\n`;
                 return (
                   <div key={idx} className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-700/60 p-2.5 flex items-start justify-between gap-2">
                     <div className="flex-1">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span className={`badge b-${vade.cor} text-[9px]`}>{vade.cor}</span>
                         <strong className="text-xs text-zinc-900 dark:text-white">{vade.ref}</strong>
                       </div>
+                      {vade.titulo && <p className="text-[11px] font-medium text-zinc-700 dark:text-zinc-200 mt-0.5">{vade.titulo}</p>}
                       {vade.obs && <p className="text-[11px] text-zinc-600 dark:text-slate-300 mt-1">{vade.obs}</p>}
                     </div>
                     <button

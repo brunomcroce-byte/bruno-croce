@@ -68,7 +68,7 @@ export function BuscaGlobalModal({ aberta, onFechar, onSelecionarItem }: BuscaGl
 
     // 3. Vade Mecum
     const vade = VADE_DATA.filter(
-      v => (v.ref + ' ' + v.obs).toLowerCase().includes(q)
+      v => (v.ref + ' ' + (v.titulo || '') + ' ' + (v.textoCompleto || '') + ' ' + (v.descricaoDetalhada || '') + ' ' + v.obs).toLowerCase().includes(q)
     ).slice(0, 5);
 
     // 4. Teses

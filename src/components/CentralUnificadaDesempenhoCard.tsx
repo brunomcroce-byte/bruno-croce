@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileText,
   Clock,
@@ -227,9 +228,18 @@ export const CentralUnificadaDesempenhoCard: React.FC<CentralUnificadaDesempenho
   );
 
   return (
-    <div className="macos-card-interactive rounded-3xl border border-black/5 dark:border-white/10 bg-white/80 dark:bg-zinc-800/90 backdrop-blur-xl shadow-sm p-5 lg:p-6 transition-all duration-300 space-y-4">
+    <motion.div
+      layout
+      transition={{
+        layout: { type: 'spring', stiffness: 280, damping: 28, mass: 0.9 },
+      }}
+      className="macos-card-interactive rounded-3xl border border-black/5 dark:border-white/10 bg-white/80 dark:bg-zinc-800/90 backdrop-blur-xl shadow-sm p-5 lg:p-6 space-y-4"
+    >
       {/* 1. TOPO: TÍTULO, SUBTÍTULO & AÇÕES RÁPIDAS */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-black/5 dark:border-white/5">
+      <motion.div
+        layout
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-black/5 dark:border-white/5"
+      >
         <div className="space-y-0.5">
           <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 font-medium flex-wrap">
             <span className="font-semibold text-blue-600 dark:text-blue-400">Painel de Desempenho</span>
@@ -260,13 +270,25 @@ export const CentralUnificadaDesempenhoCard: React.FC<CentralUnificadaDesempenho
             <Download className="h-4 w-4" />
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* 2. CORPO: GRÁFICO CIRCULAR ÚNICO + WIDGET INTERATIVO DE PRECISÃO JURÍDICA */}
-      <div className="flex flex-col lg:flex-row items-center lg:items-stretch gap-6">
-        {/* GRÁFICO CIRCULAR DE DESEMPENHO (COMPACTO & ELEGANTE) */}
-        <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-zinc-50/70 dark:bg-zinc-900/60 border border-black/5 dark:border-white/5 shrink-0 w-full sm:w-auto">
-          <div className="relative flex items-center justify-center">
+      <motion.div
+        layout
+        transition={{
+          layout: { type: 'spring', stiffness: 280, damping: 28 },
+        }}
+        className="flex flex-col lg:flex-row items-center lg:items-stretch gap-6"
+      >
+        {/* GRÁFICO CIRCULAR DE DESEMPENHO (COMPACTO & ELEGANTE COM TRANSIÇÃO DE LAYOUT) */}
+        <motion.div
+          layout
+          transition={{
+            layout: { type: 'spring', stiffness: 280, damping: 28 },
+          }}
+          className="flex flex-col items-center justify-center p-3 rounded-2xl bg-zinc-50/70 dark:bg-zinc-900/60 border border-black/5 dark:border-white/5 shrink-0 w-full sm:w-auto"
+        >
+          <motion.div layout className="relative flex items-center justify-center">
             <svg className="w-36 h-36 sm:w-40 sm:h-40 transform -rotate-90 overflow-visible" viewBox="0 0 180 180">
               <defs>
                 <linearGradient id="ringLinhasGrad" x1="0" y1="0" x2="1" y2="1">
@@ -335,7 +357,7 @@ export const CentralUnificadaDesempenhoCard: React.FC<CentralUnificadaDesempenho
               />
             </svg>
 
-            {/* Centro do Anel: Índice Ponderado */}
+              {/* Centro do Anel: Índice Ponderado */}
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
               <span className="text-2xl font-extrabold font-mono text-zinc-900 dark:text-white tracking-tight leading-none animate-pop-scale">
                 {indiceProntidao}%
@@ -348,10 +370,13 @@ export const CentralUnificadaDesempenhoCard: React.FC<CentralUnificadaDesempenho
                 {indiceProntidao >= 75 ? 'Ritmo Forte' : 'Evoluindo'}
               </span>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Mini-Métricas Limpas */}
-          <div className="grid grid-cols-3 gap-2 w-full pt-2.5 mt-1 border-t border-black/5 dark:border-white/5 text-center text-xs">
+          {/* Mini-Métricas Limpas com Transição de Layout */}
+          <motion.div
+            layout
+            className="grid grid-cols-3 gap-2 w-full pt-2.5 mt-1 border-t border-black/5 dark:border-white/5 text-center text-xs"
+          >
             <div className="cursor-pointer transition-transform hover:scale-105" onMouseEnter={() => setAnelAtivo('linhas')} onMouseLeave={() => setAnelAtivo(null)}>
               <span className="text-[10px] text-zinc-500 dark:text-zinc-400 block">Redação</span>
               <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">{totalLinhasSemana}/150L</span>
@@ -364,11 +389,17 @@ export const CentralUnificadaDesempenhoCard: React.FC<CentralUnificadaDesempenho
               <span className="text-[10px] text-zinc-500 dark:text-zinc-400 block">Foco</span>
               <span className="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">{pomodoroBlocosHoje}/4🍅</span>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
-        {/* WIDGET INTERATIVO DE PRECISÃO & REFORÇO DE TESES (AMIGÁVEL & SEM CARDS ASSUSTADORES) */}
-        <div className="flex-1 min-w-0 space-y-3 w-full">
+        {/* WIDGET INTERATIVO DE PRECISÃO & REFORÇO DE TESES (AMIGÁVEL & COM LAYOUT SHIFT SUAVE) */}
+        <motion.div
+          layout
+          transition={{
+            layout: { type: 'spring', stiffness: 280, damping: 28 },
+          }}
+          className="flex-1 min-w-0 space-y-3 w-full"
+        >
           {/* Barra Termômetro Superior de Precisão */}
           <div className="p-3 rounded-2xl bg-zinc-50/70 dark:bg-zinc-900/60 border border-black/5 dark:border-white/5 space-y-2 transition-all">
             <div className="flex items-center justify-between text-xs">
@@ -488,11 +519,14 @@ export const CentralUnificadaDesempenhoCard: React.FC<CentralUnificadaDesempenho
               {itemCorrente.sugestao}
             </p>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* 3. RODAPÉ SUTIL COM RESUMO DE CONTEXTO */}
-      <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 pt-1 border-t border-black/5 dark:border-white/5">
+      <motion.div
+        layout
+        className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 pt-1 border-t border-black/5 dark:border-white/5"
+      >
         <span className="truncate flex items-center gap-1.5">
           <Zap className="h-3.5 w-3.5 text-amber-500 shrink-0" />
           <span>Peça: <strong className="text-zinc-800 dark:text-zinc-200">{pecaNome}</strong> ({pecaProb}% probabilidade heurística)</span>
@@ -500,7 +534,7 @@ export const CentralUnificadaDesempenhoCard: React.FC<CentralUnificadaDesempenho
         <span className="font-mono text-[11px] shrink-0">
           Cronograma: <strong className="text-zinc-800 dark:text-zinc-200">{tarefasConcluidas.length}/{totalTarefas}</strong>
         </span>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };

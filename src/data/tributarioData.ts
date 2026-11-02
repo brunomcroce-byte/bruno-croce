@@ -31,6 +31,20 @@ export interface SumulaItem {
   tema?: string;
 }
 
+export interface VadeItem {
+  cor: 'AMARELO' | 'VERDE' | 'ROSA' | 'AZUL' | 'CLIPES' | string;
+  ref: string;
+  artigoNum: string;
+  diplomaNome: string;
+  titulo: string;
+  textoCompleto: string;
+  descricaoDetalhada: string;
+  aplicacaoPeca: string;
+  pegadinhaFGV: string;
+  obs: string;
+  novo?: boolean;
+}
+
 export const CATALOGO_PECAS: PecaCatalogo[] = [
   {
     codigo: "MS",
@@ -779,54 +793,7 @@ export const FLASHCARDS_DATA = [
   { c: "REFORMA", p: "Qual a finalidade constitucional precípua do Imposto Seletivo (Art. 153, VIII, CF)?", r: "Tributo de natureza extrafiscal da União para desestimular a produção, comercialização ou importação de bens e serviços prejudiciais à saúde humana ou ao meio ambiente. Incidência monofásica, desonerando exportações." }
 ];
 
-export const VADE_DATA = [
-  { cor: "AMARELO", ref: "Art. 3º CTN – Conceito formal de tributo", obs: "", novo: false },
-  { cor: "AMARELO", ref: "Arts. 5º a 7º CTN – Espécies tributárias e indelegabilidade de competência", obs: "", novo: false },
-  { cor: "AMARELO", ref: "Arts. 113 a 115 CTN – Obrigação tributária principal e acessória", obs: "", novo: false },
-  { cor: "AMARELO", ref: "Arts. 116 e 118 CTN – Fato gerador e princípio do pecunia non olet", obs: "", novo: false },
-  { cor: "AMARELO", ref: "Arts. 121 a 123 CTN – Sujeito passivo direto e convenções particulares inoponíveis", obs: "", novo: false },
-  { cor: "AMARELO", ref: "Arts. 128 a 138 CTN – Responsabilidade tributária e denúncia espontânea", obs: "", novo: false },
-  { cor: "AMARELO", ref: "Art. 142 CTN – Lançamento tributário", obs: "LC 236/2026: sem multa no lançamento preventivo se suspensa exigibilidade; reduções da multa de ofício (50% a 20%).", novo: true },
-  { cor: "AMARELO", ref: "Art. 150 CTN – Lançamento por homologação", obs: "LC 236/2026 (§§5º e 6º): com dolo/fraude vai para art. 173, I; pagamento parcial conta do fato gerador.", novo: true },
-  { cor: "AMARELO", ref: "Art. 156 CTN – Extinção do crédito", obs: "LC 236/2026: +XII sentença arbitral favorável; +XIII cumprimento de termo de mediação.", novo: true },
-  { cor: "AMARELO", ref: "Art. 166 CTN – Prova do encargo nos tributos indiretos para restituição", obs: "", novo: false },
-  { cor: "VERDE", ref: "Art. 151 CTN – Suspensão da exigibilidade", obs: "LC 236/2026: novos incisos VII arbitragem, VIII transação, IX mediação, X seguro-garantia/fiança aceitos.", novo: true },
-  { cor: "VERDE", ref: "Art. 7º Lei 12.016/09 – Medida liminar em Mandado de Segurança", obs: "", novo: false },
-  { cor: "VERDE", ref: "Art. 23 Lei 12.016/09 – Prazo decadencial de 120 dias do MS", obs: "", novo: false },
-  { cor: "VERDE", ref: "Art. 300 CPC – Tutela provisória de urgência antecipada", obs: "", novo: false },
-  { cor: "VERDE", ref: "Art. 16 Lei 6.830/80 – Embargos à Execução Fiscal", obs: "Prazo de 30 dias contados da garantia do juízo.", novo: false },
-  { cor: "VERDE", ref: "Art. 38 Lei 6.830/80 – Ação Anulatória de Débito Fiscal", obs: "Desnecessidade de depósito prévio (SV 28).", novo: false },
-  { cor: "VERDE", ref: "Art. 1.015 CPC – Cabimento do Agravo de Instrumento", obs: "", novo: false },
-  { cor: "VERDE", ref: "Art. 1.009 CPC – Cabimento da Apelação Cível", obs: "", novo: false },
-  { cor: "VERDE", ref: "Art. 1.021 CPC – Agravo Interno contra decisão monocrática de Relator", obs: "", novo: false },
-  { cor: "VERDE", ref: "Art. 164 CTN – Hipóteses cabíveis de Consignação em Pagamento", obs: "", novo: false },
-  { cor: "ROSA", ref: "Art. 319 CPC – Requisitos estruturais da petição inicial", obs: "", novo: false },
-  { cor: "ROSA", ref: "Art. 292 CPC – Regras de fixação do valor da causa", obs: "", novo: false },
-  { cor: "ROSA", ref: "Art. 82 CPC – Antecipação e recolhimento de despesas processuais", obs: "", novo: false },
-  { cor: "ROSA", ref: "Art. 85 CPC – Honorários advocatícios sucumbenciais contra a Fazenda", obs: "", novo: false },
-  { cor: "ROSA", ref: "Art. 77 CPC – Indicação do endereço profissional para intimações", obs: "", novo: false },
-  { cor: "ROSA", ref: "Art. 1.010 CPC – Requisitos formais da Apelação (Folha de rosto + Razões)", obs: "", novo: false },
-  { cor: "ROSA", ref: "Art. 1.016 CPC – Requisitos do Agravo de Instrumento ao Tribunal", obs: "", novo: false },
-  { cor: "ROSA", ref: "Art. 311 CPC – Tutela provisória da evidência fundada em precedentes", obs: "", novo: false },
-  { cor: "AZUL", ref: "Art. 150 CF – Limitações constitucionais ao poder de tributar", obs: "Princípios da legalidade, anterioridades, irretroatividade e imunidades.", novo: false },
-  { cor: "AZUL", ref: "Art. 145 CF – Sistema tributário: impostos, taxas e contribuição de melhoria", obs: "", novo: false },
-  { cor: "AZUL", ref: "Art. 153 CF – Competência tributária da União (Impostos federais)", obs: "", novo: false },
-  { cor: "AZUL", ref: "Art. 155 CF – Competência dos Estados e do DF (ITCMD, ICMS, IPVA)", obs: "", novo: false },
-  { cor: "AZUL", ref: "Art. 156 CF – Competência dos Municípios (IPTU, ITBI, ISS)", obs: "", novo: false },
-  { cor: "AZUL", ref: "Art. 195 CF – Financiamento da seguridade social e imunidade beneficente (§7º)", obs: "", novo: false },
-  { cor: "CLIPES", ref: "Art. 170-A CTN – Vedação de compensação antes do trânsito em julgado", obs: "", novo: false },
-  { cor: "CLIPES", ref: "Art. 174 CTN – Prescrição da ação de cobrança do crédito tributário", obs: "LC 236/2026 ampliou as hipóteses de interrupção (§1º: protesto da CDA, mediação, arbitragem).", novo: true },
-  { cor: "CLIPES", ref: "Art. 206 CTN – Expedição de CPD-EN com exigibilidade suspensa ou garantia", obs: "", novo: false },
-  { cor: "CLIPES", ref: "Art. 40 Lei 6.830/80 – Prescrição intercorrente na execução fiscal", obs: "", novo: false },
-  { cor: "CLIPES", ref: "Art. 173 CTN – Decadência do direito de constituir o crédito tributário", obs: "", novo: false },
-  { cor: "CLIPES", ref: "Art. 168 CTN – Prazo quinquenal para repetição de indébito tributário", obs: "LC 236/2026 §§2º e 3º: habilitação administrativa do indébito transitado em 5 anos.", novo: true },
-  { cor: "AMARELO", ref: "Art. 38 CTN – Base de cálculo do ITBI pelo valor de mercado à vista", obs: "LC 227/2026: critério técnico de mercado com possibilidade de contraditório pelo contribuinte.", novo: true },
-  { cor: "AMARELO", ref: "Art. 113-A CTN – Teto e limites de razoabilidade das multas punitivas", obs: "LC 236/2026: teto de 75% da exação; 100% com dolo/fraude; 150% reincidência.", novo: true },
-  { cor: "AMARELO", ref: "Art. 138 CTN – Denúncia espontânea com exclusão expressa da multa moratória", obs: "LC 236/2026: abrange expressamente a dispensa da multa de mora.", novo: true },
-  { cor: "VERDE", ref: "Art. 194-A CTN – Obrigatoriedade de o Fisco respeitar teses do STF e STJ", obs: "LC 236/2026: vedada autuação ou inscrição contrária a precedentes qualificados.", novo: true },
-  { cor: "VERDE", ref: "Arts. 208-A a 208-J CTN – Procedimento Administrativo Fiscal Unificado", obs: "LC 236/2026: prazo de 20 dias úteis para impugnação e recurso administrativo.", novo: true },
-  { cor: "AZUL", ref: "Art. 156-A CF / Art. 195, V CF – Reforma Tributária (IBS e CBS)", obs: "EC 132/2023 e LC 214/2025: transição do novo modelo até 2033.", novo: true }
-];
+export { VADE_DATA } from './vadeMecumData';
 
 export const CRONOGRAMA_DATA = [
   {

@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   CATALOGO_PECAS,
   PECOMETRO_DATA,
@@ -65,6 +66,17 @@ import { analisarPecaEmTempoReal } from './utils/pecaAnalyzer';
 import { SimuladorAnalisePecaCard } from './components/SimuladorAnalisePecaCard';
 import { CentralUnificadaDesempenhoCard } from './components/CentralUnificadaDesempenhoCard';
 import { GuiaEstruturalProgressao5hCard } from './components/GuiaEstruturalProgressao5hCard';
+import { VadeMecumView } from './components/VadeMecumView';
+import { PlannerView } from './components/PlannerView';
+import { AlertasPrazosOABModal, BannerPrazosOAB } from './components/AlertasPrazosOABModal';
+import {
+  checarSuporteNotificacao,
+  obterStatusPermissaoNotificacao,
+  solicitarPermissaoNotificacao,
+  dispararNotificacaoDesktop,
+  StatusPermissaoNotificacao,
+  inicializarServiceWorker
+} from './utils/browserNotifications';
 import {
   BookOpen,
   Calendar,
@@ -132,6 +144,37 @@ type TabType =
 
 export type PomodoroModo = '50m' | '25m';
 export type PomodoroTipo = 'foco' | 'pausa';
+
+// Variantes Framer Motion para Entrada Suave Escalonada (Staggered Fade-In) no Dashboard
+const dashboardContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.09,
+      delayChildren: 0.05,
+    },
+  },
+};
+
+const dashboardCardVariants = {
+  hidden: {
+    opacity: 0,
+    y: 20,
+    scale: 0.982,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: 'spring' as const,
+      stiffness: 280,
+      damping: 24,
+      mass: 0.8,
+    },
+  },
+};
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
@@ -571,6 +614,21 @@ export default function App() {
     (SafeStorage.get('tributa_redacao', '').split('\n').length || 0) >= 150
   );
 
+  // Pop-up e Alertas Críticos OAB FGV (12/11 Resultado às 17h & 13/11 Repescagem)
+  const [modalPrazosOABAberto, setModalPrazosOABAberto] = useState(() => {
+    return SafeStorage.get('tributa_prazos_popup_visto', 'false') !== 'true';
+  });
+
+  const abrirModalPrazosOAB = () => {
+    setModalPrazosOABAberto(true);
+    SafeStorage.set('tributa_prazos_popup_visto', 'true');
+  };
+
+  const fecharModalPrazosOAB = () => {
+    setModalPrazosOABAberto(false);
+    SafeStorage.set('tributa_prazos_popup_visto', 'true');
+  };
+
   // Central de Atualizações de Leis & Banco de Dados (Sempre Online & Varredura Contínua)
   const [modalAtualizacoesAberta, setModalAtualizacoesAberta] = useState(false);
   const [statusConexao, setStatusConexao] = useState<StatusConexao>(() => onlineLegalSync.getStatus());
@@ -597,9 +655,30 @@ export default function App() {
     )
   );
 
-  // Aba ativa na seção de Disciplina & Automações do Dashboard (Alarme Diário vs Lembrete Word)
-  const [disciplinaTab, setDisciplinaTab] = useState<'alarme' | 'word'>('alarme');
+  // Aba ativa na seção de Disciplina & Automações do Dashboard (Alarme Diário vs Desktop Push vs Lembrete Word)
+  const [disciplinaTab, setDisciplinaTab] = useState<'alarme' | 'desktop' | 'word'>('alarme');
   const [painelAutomacoesAberto, setPainelAutomacoesAberto] = useState(false);
+
+  // Notificações de Desktop (Push API / Notifications API) & Alertas com App Minimizado
+  const [statusPermissaoDesktop, setStatusPermissaoDesktop] = useState<StatusPermissaoNotificacao>(() => {
+    return obterStatusPermissaoNotificacao();
+  });
+  const [notifDesktopAtiva, setNotifDesktopAtiva] = useState(() => {
+    const salvo = SafeStorage.get('tributa_notif_desktop_ativa', '');
+    if (salvo !== '') return salvo === 'true';
+    return typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted';
+  });
+  const [notifApenasDesktop, setNotifApenasDesktop] = useState(() => {
+    return SafeStorage.get('tributa_notif_apenas_desktop', 'false') === 'true';
+  });
+  const [notifPomodoroDesktop, setNotifPomodoroDesktop] = useState(() => {
+    return SafeStorage.get('tributa_notif_pomodoro_desktop', 'true') === 'true';
+  });
+
+  // Registra Service Worker no ciclo de vida para suporte a background push e foco com app minimizado
+  useEffect(() => {
+    inicializarServiceWorker();
+  }, []);
 
   // Sub-aba no Card Pomodoro da Sidebar (Blocos Diários vs Soundscape de Foco)
   const [pomodoroSubTab, setPomodoroSubTab] = useState<'blocos' | 'soundscape'>('blocos');
@@ -633,15 +712,15 @@ export default function App() {
     return SafeStorage.get('tributa_tema_manual', 'false') === 'true';
   });
 
-  // Tema Visual: detecta automaticamente o SO ao carregar, ou respeita a preferência manual se já definida
+  // Tema Visual: Windows 11 26H2 Dark por padrão (Wpf.Ui.Appearance.ThemeType.Dark)
   const [tema, setTema] = useState<'claro' | 'escuro'>(() => {
     const isManual = SafeStorage.get('tributa_tema_manual', 'false') === 'true';
     const salvo = SafeStorage.get('tributa_tema', '');
     if (isManual && (salvo === 'claro' || salvo === 'escuro')) {
       return salvo;
     }
-    // Caso o usuário não tenha definido manualmente, adota o tema do SO na inicialização
-    return detectarTemaSO();
+    // Aplicação padrão do Tema Escuro do Windows 11 26H2 (Wpf.Ui.Appearance.ThemeType.Dark)
+    return 'escuro';
   });
 
   useEffect(() => {
@@ -850,41 +929,96 @@ export default function App() {
     mostrarToast(`Tom de alarme "${nomesMap[novoTom]}" selecionado e salvo no LocalStorage! 🔊`);
   };
 
-  const testarNotificacaoManual = () => {
-    tocarAlarmeWebAudio(tomAlarme);
-    lerTextoEmVozAlta('Atenção! Horário do seu bloco diário de estudos de Direito Tributário. Vamos produzir?');
-    setNotifTipoModal('estudo');
-    setNotifModalAberta(true);
-
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      if (Notification.permission === 'granted') {
-        try {
-          new Notification('TributaOAB: Hora do Estudo Diário', {
-            body: notifMensagem || 'Hora do Bloco Tributário: 1 Peça + 5 Flashcards',
-            icon: '/favicon.ico'
-          });
-        } catch {
-          // Iframe or browser restriction fallback
-        }
-      } else if (Notification.permission !== 'denied') {
-        Notification.requestPermission();
-      }
+  const handleSolicitarPermissaoDesktop = async () => {
+    const res = await solicitarPermissaoNotificacao();
+    setStatusPermissaoDesktop(res);
+    if (res === 'granted') {
+      setNotifDesktopAtiva(true);
+      SafeStorage.set('tributa_notif_desktop_ativa', 'true');
+      tocarAlarmeWebAudio('suave');
+      dispararConfetesSuaves({ count: 35, originY: 0.35 });
+      mostrarToast('🔔 Permissão concedida! Notificações do Navegador ativadas.');
+      await dispararNotificacaoDesktop('TributaOAB: Notificações de Desktop Ativadas! 🎯', {
+        body: 'Você será alertado na hora certa, mesmo com o navegador minimizado.',
+        onClick: () => window.focus()
+      });
+    } else if (res === 'denied') {
+      setNotifDesktopAtiva(false);
+      SafeStorage.set('tributa_notif_desktop_ativa', 'false');
+      mostrarToast('⚠️ Notificações bloqueadas nas permissões do navegador.');
+    } else {
+      mostrarToast('Permissão de notificações não concedida.');
     }
   };
 
-  const testarLembreteWordManual = () => {
+  const handleAlternarNotifDesktopAtiva = (ativa: boolean) => {
+    if (ativa && statusPermissaoDesktop !== 'granted') {
+      handleSolicitarPermissaoDesktop();
+      return;
+    }
+    setNotifDesktopAtiva(ativa);
+    SafeStorage.set('tributa_notif_desktop_ativa', String(ativa));
+    mostrarToast(ativa ? '🔔 Notificações nativas de desktop ativadas!' : 'Notificações nativas de desktop pausadas.');
+  };
+
+  const handleAlternarApenasDesktop = (apenasDesktop: boolean) => {
+    setNotifApenasDesktop(apenasDesktop);
+    SafeStorage.set('tributa_notif_apenas_desktop', String(apenasDesktop));
+    mostrarToast(
+      apenasDesktop
+        ? '🖥️ Modo Discreto: Alertas serão exibidos no Desktop em vez de abrir modais internos!'
+        : 'Alertas exibirão tanto Notificação no Desktop quanto o Modal Interno.'
+    );
+  };
+
+  const handleAlternarPomodoroDesktop = (ativa: boolean) => {
+    setNotifPomodoroDesktop(ativa);
+    SafeStorage.set('tributa_notif_pomodoro_desktop', String(ativa));
+    mostrarToast(ativa ? '🍅 Alertas do Pomodoro no Desktop ativados!' : 'Alertas do Pomodoro no Desktop desativados.');
+  };
+
+  const testarNotificacaoManual = async () => {
+    tocarAlarmeWebAudio(tomAlarme);
+    lerTextoEmVozAlta('Atenção! Horário do seu bloco diário de estudos de Direito Tributário. Vamos produzir?');
+
+    let enviouDesktop = false;
+    if (notifDesktopAtiva && statusPermissaoDesktop === 'granted') {
+      enviouDesktop = await dispararNotificacaoDesktop('TributaOAB: Hora do Estudo Diário! 🎯', {
+        body: notifMensagem || 'Hora do Bloco Tributário FGV: 1 Peça + 5 Flashcards',
+        onClick: () => {
+          window.focus();
+          setActiveTab('simulador');
+        }
+      });
+      if (enviouDesktop) {
+        mostrarToast('🔔 Notificação enviada para a área de trabalho!');
+      }
+    }
+
+    if (!notifApenasDesktop || !enviouDesktop) {
+      setNotifTipoModal('estudo');
+      setNotifModalAberta(true);
+    }
+  };
+
+  const testarLembreteWordManual = async () => {
     tocarAlarmeWebAudio(tomAlarme);
     lerTextoEmVozAlta('Atenção! Lembrete semanal para exportar sua redação para Word e arquivar seu simulador de 150 linhas.');
-    setNotifTipoModal('word');
-    setNotifModalAberta(true);
 
-    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-      try {
-        new Notification('TributaOAB: Exportar Peça para Word (.doc)', {
-          body: notifWordMsg || 'Lembrete semanal de exportação de redação',
-          icon: '/favicon.ico'
-        });
-      } catch {}
+    let enviouDesktop = false;
+    if (notifDesktopAtiva && statusPermissaoDesktop === 'granted') {
+      enviouDesktop = await dispararNotificacaoDesktop('TributaOAB: Exportar Peça para Word (.doc) 📄', {
+        body: notifWordMsg || 'Lembrete semanal de exportação de redação',
+        onClick: () => {
+          window.focus();
+          exportarRedacaoNoWord(textoRedacao);
+        }
+      });
+    }
+
+    if (!notifApenasDesktop || !enviouDesktop) {
+      setNotifTipoModal('word');
+      setNotifModalAberta(true);
     }
   };
 
@@ -913,18 +1047,24 @@ export default function App() {
           const lastFired = SafeStorage.get('tributa_notif_ult_exec', '');
           if (currentTime === notifHorario && lastFired !== todayStr) {
             SafeStorage.set('tributa_notif_ult_exec', todayStr);
-            tocarAlarmeWebAudio();
+            tocarAlarmeWebAudio(tomAlarme);
             lerTextoEmVozAlta('Atenção! Horário do seu bloco diário de estudos de Direito Tributário! Hora de focar.');
-            setNotifTipoModal('estudo');
-            setNotifModalAberta(true);
 
-            if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-              try {
-                new Notification('TributaOAB: Hora do Estudo Diário!', {
-                  body: notifMensagem,
-                  icon: '/favicon.ico'
-                });
-              } catch {}
+            let enviouDesktop = false;
+            if (notifDesktopAtiva && statusPermissaoDesktop === 'granted') {
+              enviouDesktop = true;
+              dispararNotificacaoDesktop('TributaOAB: Hora do Estudo Diário! 🎯', {
+                body: notifMensagem || 'Hora do Bloco Tributário FGV: 1 Peça + 5 Flashcards',
+                onClick: () => {
+                  window.focus();
+                  setActiveTab('simulador');
+                }
+              });
+            }
+
+            if (!notifApenasDesktop || !enviouDesktop) {
+              setNotifTipoModal('estudo');
+              setNotifModalAberta(true);
             }
           }
         }
@@ -935,25 +1075,31 @@ export default function App() {
         const lastWordFired = SafeStorage.get('tributa_notif_word_ult_exec', '');
         if (lastWordFired !== todayStr) {
           SafeStorage.set('tributa_notif_word_ult_exec', todayStr);
-          tocarAlarmeWebAudio();
+          tocarAlarmeWebAudio(tomAlarme);
           lerTextoEmVozAlta('Atenção! Lembrete semanal programado para exportar sua peça prática para o Word.');
-          setNotifTipoModal('word');
-          setNotifModalAberta(true);
 
-          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-            try {
-              new Notification('TributaOAB: Exportar Peça para Word (.doc)', {
-                body: notifWordMsg,
-                icon: '/favicon.ico'
-              });
-            } catch {}
+          let enviouDesktop = false;
+          if (notifDesktopAtiva && statusPermissaoDesktop === 'granted') {
+            enviouDesktop = true;
+            dispararNotificacaoDesktop('TributaOAB: Exportar Peça para Word (.doc) 📄', {
+              body: notifWordMsg || 'Lembrete semanal de exportação de redação',
+              onClick: () => {
+                window.focus();
+                exportarRedacaoNoWord(textoRedacao);
+              }
+            });
+          }
+
+          if (!notifApenasDesktop || !enviouDesktop) {
+            setNotifTipoModal('word');
+            setNotifModalAberta(true);
           }
         }
       }
     }, 20000);
 
     return () => clearInterval(interval);
-  }, [notifAtiva, notifHorario, notifMensagem, notifDias, notifWordAtivo, notifWordDia, notifWordHora, notifWordMsg]);
+  }, [notifAtiva, notifHorario, notifMensagem, notifDias, notifWordAtivo, notifWordDia, notifWordHora, notifWordMsg, notifDesktopAtiva, notifApenasDesktop, statusPermissaoDesktop, tomAlarme]);
 
   // Funções de Integração Total entre as Abas
   const navegarParaPeca = (codigo: string) => {
@@ -1114,6 +1260,12 @@ export default function App() {
               const msg = 'Pausa curta concluída! Mente revigorada para o próximo bloco de estudos.';
               lerTextoEmVozAlta(msg);
               mostrarToast('☕ Pausa curta concluída! Pronto para retomar os estudos?');
+              if (notifDesktopAtiva && notifPomodoroDesktop && statusPermissaoDesktop === 'granted') {
+                dispararNotificacaoDesktop('TributaOAB: Pausa Curta Concluída! ☕', {
+                  body: 'Hora de retomar seu bloco de estudos de Direito Tributário!',
+                  onClick: () => window.focus()
+                });
+              }
             } else {
               const novoTotalHoje = contabilizarBlocoFocoConcluido();
               const duracaoMin = pomodoroModo === '25m' ? 25 : 50;
@@ -1121,6 +1273,12 @@ export default function App() {
               const msg = `Parabéns! Bloco de ${duracaoMin} minutos de foco concluído com sucesso! Faça uma pausa revigorante de ${pausaMin} minutos.`;
               lerTextoEmVozAlta(msg);
               mostrarToast(`🎉 Bloco de foco de ${duracaoMin} min concluído! (${novoTotalHoje} hoje) Faça uma pausa curta de ${pausaMin} min.`);
+              if (notifDesktopAtiva && notifPomodoroDesktop && statusPermissaoDesktop === 'granted') {
+                dispararNotificacaoDesktop(`TributaOAB: Foco de ${duracaoMin}m Concluído! 🍅`, {
+                  body: `Parabéns! Faça uma pausa revigorante de ${pausaMin} minutos. (${novoTotalHoje} blocos hoje)`,
+                  onClick: () => window.focus()
+                });
+              }
             }
             return 0;
           }
@@ -1129,7 +1287,7 @@ export default function App() {
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [pomodoroRunning, pomodoroSecs, pomodoroTipo, pomodoroModo]);
+  }, [pomodoroRunning, pomodoroSecs, pomodoroTipo, pomodoroModo, notifDesktopAtiva, notifPomodoroDesktop, statusPermissaoDesktop]);
 
   // Pomodoro progress (0 to 1)
   const pomodoroProgresso = useMemo(() => {
@@ -1472,7 +1630,7 @@ export default function App() {
       const atendeCor = corFiltroVade === 'TODAS' || item.cor === corFiltroVade;
       const atendeBusca =
         !q ||
-        (item.ref + ' ' + item.obs + ' ' + item.cor).toLowerCase().includes(q);
+        (item.ref + ' ' + (item.titulo || '') + ' ' + (item.textoCompleto || '') + ' ' + item.obs + ' ' + item.cor).toLowerCase().includes(q);
       const atendeMarcado = !filtroApenasMarcadosVade || vadeMarcados.includes(item.originalIndex);
       return atendeCor && atendeBusca && atendeMarcado;
     });
@@ -1482,7 +1640,7 @@ export default function App() {
   const contagemCoresVade = useMemo(() => {
     const q = buscaVade.trim().toLowerCase();
     const base = VADE_DATA.filter(item =>
-      !q || (item.ref + ' ' + item.obs + ' ' + item.cor).toLowerCase().includes(q)
+      !q || (item.ref + ' ' + (item.titulo || '') + ' ' + (item.textoCompleto || '') + ' ' + item.obs + ' ' + item.cor).toLowerCase().includes(q)
     );
     return {
       TODAS: base.length,
@@ -1620,112 +1778,73 @@ export default function App() {
   const totalTarefas = CRONOGRAMA_DATA.reduce((acc, curr) => acc + curr.tarefas.length, 0);
 
   return (
-    <div className={`flex h-screen w-screen flex-col overflow-hidden select-none ${tema === 'claro' ? 'theme-light bg-[#f6f6f7] text-[#1d1d1f]' : 'theme-dark dark bg-[#18181b] text-[#f4f4f5]'}`}>
-      {/* macOS SEQUOIA TITLEBAR CHROME */}
-      <header className="macos-titlebar shrink-0 z-50">
-        {/* Left: macOS Traffic Lights & Window Title */}
-        <div className="flex items-center gap-3">
-          <div className="macos-traffic-lights flex items-center gap-2">
-            <button
-              className="macos-traffic-btn close cursor-pointer"
-              title="Fechar (Cmd+W)"
-              onClick={() => mostrarToast('Janela fechada (Cmd+W)')}
-            >
-              <span>✕</span>
-            </button>
-            <button
-              className="macos-traffic-btn minimize cursor-pointer"
-              title="Minimizar (Cmd+M)"
-              onClick={() => mostrarToast('Janela minimizada para o Dock')}
-            >
-              <span>―</span>
-            </button>
-            <button
-              className="macos-traffic-btn zoom cursor-pointer"
-              title="Maximizar / Tela Cheia"
-              onClick={() => {
-                if (!document.fullscreenElement) {
-                  document.documentElement.requestFullscreen().catch(() => {});
-                } else {
-                  document.exitFullscreen().catch(() => {});
-                }
-              }}
-            >
-              <span>+</span>
-            </button>
+    <div className={`flex h-screen w-screen flex-col overflow-hidden select-none ${tema === 'claro' ? 'theme-light bg-[#f3f3f3] text-[#202020]' : 'theme-dark dark bg-[#181818] text-[#ffffff]'}`}>
+      {/* WINDOWS 11 26H2 MICA ALT TITLEBAR */}
+      <header className="win11-titlebar shrink-0 z-50">
+        {/* Left: Windows 11 App Icon, Title & 26H2 Badge */}
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-[#0078d4] to-[#4cc2ff] font-bold text-[11px] text-white shadow-xs">
+            §
           </div>
-
-          <div className="flex items-center gap-2 ml-1">
-            <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 font-bold text-[10px] text-white shadow-xs">
-              §
-            </div>
-            <span className="font-semibold tracking-tight text-xs flex items-center gap-1.5 text-zinc-900 dark:text-zinc-100">
-              TributaOAB Pro
-              <span className="hidden sm:inline text-[9.5px] font-medium border border-black/10 dark:border-white/10 px-1.5 py-0.2 rounded-full bg-black/5 dark:bg-white/10 text-zinc-600 dark:text-zinc-300">
-                macOS Sequoia
-              </span>
+          <span className="font-semibold tracking-tight text-xs flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
+            <span>TributaOAB Pro</span>
+            <span className="hidden sm:inline-flex items-center gap-1 text-[9.5px] font-medium border border-black/10 dark:border-white/10 px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-zinc-600 dark:text-zinc-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#4cc2ff] animate-pulse" />
+              Windows 11 26H2 • Mica Alt
             </span>
-          </div>
+          </span>
         </div>
 
-        {/* Center: macOS Spotlight Style Unified Search Bar */}
+        {/* Center: Windows 11 Mica Search Bar */}
         <button
           onClick={() => setBuscaGlobalAberta(true)}
-          className="hidden md:flex items-center justify-between w-72 lg:w-96 rounded-full border border-black/10 dark:border-white/10 bg-black/[0.04] dark:bg-white/[0.08] hover:bg-black/[0.07] dark:hover:bg-white/[0.12] px-3.5 py-1 text-xs text-zinc-700 dark:text-zinc-300 transition cursor-pointer backdrop-blur-md shadow-xs"
-          title="Pesquisar em todas as abas (Cmd+K ou /)"
+          className="hidden md:flex items-center justify-between w-72 lg:w-96 rounded-lg border border-black/10 dark:border-white/10 bg-white/60 dark:bg-black/30 hover:bg-white/80 dark:hover:bg-black/50 px-3 py-1 text-xs text-zinc-700 dark:text-zinc-300 transition cursor-pointer backdrop-blur-md shadow-xs"
+          title="Pesquisar em todas as abas (Ctrl+K ou /)"
         >
           <span className="flex items-center gap-2">
-            <Search className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
-            <span className="text-[11.5px] text-zinc-500 dark:text-zinc-400">Spotlight: Peças, teses, súmulas, vade...</span>
+            <Search className="h-3.5 w-3.5 text-[#0078d4] dark:text-[#4cc2ff]" />
+            <span className="text-[11.5px] text-zinc-500 dark:text-zinc-400">Pesquisar peças, teses, súmulas, vade...</span>
           </span>
-          <kbd className="rounded-md bg-black/10 dark:bg-black/50 border border-black/10 dark:border-white/10 px-1.5 py-0.2 font-mono text-[9px] text-zinc-700 dark:text-zinc-300">
-            ⌘K
+          <kbd className="rounded bg-black/10 dark:bg-white/10 border border-black/10 dark:border-white/10 px-1.5 py-0.2 font-mono text-[9px] text-zinc-700 dark:text-zinc-300">
+            Ctrl+K
           </kbd>
         </button>
 
-        {/* Right: Theme Toggle & Online Legal Sync Pill */}
-        <div className="flex items-center gap-2 h-full">
-          {/* Alternar Tema Claro / Escuro & Sincronização com SO */}
-          <div className="flex items-center gap-1">
+        {/* Right: Theme Toggle, Online Sync, & Windows 11 Native Caption Buttons */}
+        <div className="flex items-center h-full">
+          {/* Alternar Tema Claro / Escuro */}
+          <div className="flex items-center gap-1 mr-2">
             <button
               onClick={alternarTema}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition cursor-pointer ${
                 tema === 'claro'
                   ? 'bg-amber-100/90 text-amber-900 border border-amber-300 hover:bg-amber-200 shadow-xs'
                   : 'bg-zinc-800 text-zinc-200 border border-white/10 hover:bg-zinc-700 shadow-xs'
               }`}
               title={
                 tema === 'claro'
-                  ? `Tema Claro ativo${!temaManual ? ' (Seguindo SO)' : ' (Manual)'} — Clique para alternar para Escuro`
-                  : `Tema Escuro ativo${!temaManual ? ' (Seguindo SO)' : ' (Manual)'} — Clique para alternar para Claro`
+                  ? 'Windows 11 Light Mica ativo — Clique para aplicar Dark Theme'
+                  : 'Windows 11 26H2 Dark Theme ativo — Clique para aplicar Light'
               }
             >
               {tema === 'claro' ? (
                 <>
                   <Sun className="h-3.5 w-3.5 text-amber-600 fill-amber-500/30" />
-                  <span className="hidden sm:inline">Claro</span>
+                  <span className="hidden sm:inline">Light</span>
                 </>
               ) : (
                 <>
-                  <Moon className="h-3.5 w-3.5 text-blue-400 fill-blue-400/30" />
-                  <span className="hidden sm:inline">Escuro</span>
+                  <Moon className="h-3.5 w-3.5 text-[#4cc2ff] fill-[#4cc2ff]/30" />
+                  <span className="hidden sm:inline">Dark Mica</span>
                 </>
-              )}
-              {!temaManual && (
-                <span
-                  className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-black/10 dark:bg-white/15 opacity-80"
-                  title="Detectado automaticamente a partir do Sistema Operacional (prefers-color-scheme)"
-                >
-                  Auto
-                </span>
               )}
             </button>
 
             {temaManual && (
               <button
                 onClick={sincronizarComTemaSO}
-                className="flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-blue-500/10 hover:text-blue-500 dark:hover:text-blue-400 transition cursor-pointer"
-                title="Sincronizar com o tema do Sistema Operacional (prefers-color-scheme)"
+                className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-blue-500/10 hover:text-blue-500 dark:hover:text-blue-400 transition cursor-pointer"
+                title="Sincronizar com o tema do Windows 11 (prefers-color-scheme)"
               >
                 <Monitor className="h-3 w-3" />
                 <span className="hidden md:inline text-[10px]">SO</span>
@@ -1737,8 +1856,8 @@ export default function App() {
           <button
             type="button"
             onClick={() => setModalAtualizacoesAberta(true)}
-            className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 transition cursor-pointer text-xs"
-            title="Sempre Online: Sincronização contínua de Leis e Banco de Dados ativada (Clique para abrir a Central)"
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 transition cursor-pointer text-xs mr-2"
+            title="Sempre Online: Sincronização contínua de Leis e Banco de Dados (Clique para abrir a Central)"
           >
             <span
               className={`h-2 w-2 rounded-full ${
@@ -1748,18 +1867,52 @@ export default function App() {
             <span className="font-medium text-zinc-800 dark:text-zinc-200">
               {statusConexao.online ? `Online (${statusConexao.latenciaMs}ms)` : 'Offline'}
             </span>
-            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">
-              • Leis v3.5
-            </span>
           </button>
+
+          {/* WINDOWS 11 26H2 NATIVE CAPTION BUTTONS (Minimizar, Maximizar, Fechar) */}
+          <div className="flex items-center h-full">
+            <button
+              type="button"
+              className="win11-caption-btn"
+              title="Minimizar (Windows 11)"
+              onClick={() => mostrarToast('Janela minimizada')}
+            >
+              <Minus className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              className="win11-caption-btn"
+              title="Maximizar / Restaurar Tamanho"
+              onClick={() => {
+                if (!document.fullscreenElement) {
+                  document.documentElement.requestFullscreen().catch(() => {});
+                } else {
+                  document.exitFullscreen().catch(() => {});
+                }
+              }}
+            >
+              <Square className="h-3 w-3 stroke-[2]" />
+            </button>
+            <button
+              type="button"
+              className="win11-caption-btn close"
+              title="Fechar"
+              onClick={() => mostrarToast('Aplicação ativa no Windows 11 26H2')}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </header>
+
+      {/* BANNER FIXO DE ALTA VISIBILIDADE: 2 ALERTAS CRÍTICOS (12/11 RESULTADO & 13/11 REPESCAGEM) */}
+      <BannerPrazosOAB onAbrirModal={abrirModalPrazosOAB} />
 
       {/* WORKSPACE AREA (SIDEBAR + MAIN CONTENT) */}
       <div className="flex flex-1 overflow-hidden min-h-0">
         {/* SIDEBAR (WINDOWS 11 FLUENT NAVIGATION VIEW) */}
         <aside
-          className={`fixed inset-y-0 left-0 top-[36px] lg:top-0 z-40 flex w-[275px] shrink-0 flex-col justify-between win11-sidebar border-r border-black/[0.08] dark:border-white/[0.08] transition-transform duration-200 lg:static lg:translate-x-0 ${
+          className={`fixed inset-y-0 left-0 top-[38px] lg:top-0 z-40 flex w-[275px] shrink-0 flex-col justify-between win11-sidebar border-r border-black/[0.08] dark:border-white/[0.08] transition-transform duration-200 lg:static lg:translate-x-0 ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
@@ -1774,7 +1927,7 @@ export default function App() {
                   <div className="text-[14px] font-bold text-slate-900 dark:text-white tracking-tight">
                     Tributa<span className="text-[#0067c0] dark:text-[#4cc2ff]">OAB</span>
                   </div>
-                  <div className="text-[10.5px] text-slate-500 dark:text-[#94a3b8]">2ª Fase FGV • Fluent 11</div>
+                  <div className="text-[10.5px] text-slate-500 dark:text-[#94a3b8]">2ª Fase FGV • Windows 11 26H2</div>
                 </div>
               </div>
               <button
@@ -2265,6 +2418,19 @@ export default function App() {
               <span className="hidden sm:inline text-[10px]">({notifAtiva ? 'Alarme Ativo' : 'Pausado'})</span>
             </button>
 
+            {/* BOTÃO DESTACADO: 2 ALERTAS CRÍTICOS OAB (12/11 RESULTADO & 13/11 REPESCAGEM) */}
+            <button
+              type="button"
+              onClick={abrirModalPrazosOAB}
+              className="inline-flex items-center gap-1.5 rounded-full border border-amber-400 dark:border-amber-500/50 bg-gradient-to-r from-amber-500/20 via-orange-500/15 to-amber-500/20 text-amber-900 dark:text-amber-200 font-bold text-xs px-3 py-1 shadow-xs hover:shadow transition cursor-pointer active:scale-95 animate-pulse"
+              title="Avisos Importantes: Resultado da Prova 12/11 (17h) e Inscrição na Repescagem 13/11"
+            >
+              <Bell className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+              <span className="hidden sm:inline">⚠️ Prazos FGV: 12/11 e 13/11</span>
+              <span className="sm:hidden">12/11 & 13/11</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping" />
+            </button>
+
             {/* Contador Dias Prova OAB */}
             <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-slate-300 dark:border-slate-700/60 bg-white/70 dark:bg-slate-800/60 px-3 py-1 text-xs text-slate-700 dark:text-slate-300 font-medium">
               <span>Prova 2ª Fase:</span>
@@ -2296,11 +2462,20 @@ export default function App() {
 
         {/* Content Body */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-6">
-          {/* TAB 1: DASHBOARD (FLUIDO, INTUITIVO & LIMPO - macOS SEQUOIA) */}
+          {/* TAB 1: DASHBOARD COM ANIMAÇÃO STAGGERED FADE-IN VIA FRAMER MOTION */}
           {activeTab === 'dashboard' && (
-            <div className="space-y-6">
+            <motion.div
+              key="dashboard-view"
+              variants={dashboardContainerVariants}
+              initial="hidden"
+              animate="visible"
+              className="space-y-6"
+            >
               {/* 1. HERO HEADER: GREETING AMIGÁVEL & STATUS ESSENCIAL */}
-              <div className="macos-animate-1 macos-card-interactive rounded-3xl border border-blue-100 dark:border-white/10 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-purple-50/30 dark:from-zinc-800/95 dark:via-zinc-800/85 dark:to-zinc-800/95 p-6 lg:p-7 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-5 transition-all">
+              <motion.div
+                variants={dashboardCardVariants}
+                className="macos-card-interactive rounded-3xl border border-blue-100 dark:border-white/10 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-purple-50/30 dark:from-zinc-800/95 dark:via-zinc-800/85 dark:to-zinc-800/95 p-6 lg:p-7 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-5 transition-all"
+              >
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-100/70 dark:bg-blue-950/60 px-3 py-0.5 rounded-full border border-blue-300/60 dark:border-blue-700/60 inline-flex items-center gap-1.5">
@@ -2312,6 +2487,17 @@ export default function App() {
                       <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
                       {statusConexao.online ? 'Base FGV Sincronizada' : 'Modo Offline'}
                     </span>
+                    <button
+                      type="button"
+                      onClick={abrirModalPrazosOAB}
+                      className="text-xs font-bold text-amber-800 dark:text-amber-200 bg-amber-100/90 dark:bg-amber-950/70 hover:bg-amber-200/90 dark:hover:bg-amber-900/80 px-3 py-0.5 rounded-full border border-amber-400 dark:border-amber-600/50 inline-flex items-center gap-1.5 cursor-pointer shadow-xs transition active:scale-95"
+                    >
+                      <Bell className="h-3 w-3 text-amber-600 dark:text-amber-400 animate-bounce" />
+                      <span>📢 Resultado: 12/11 (17h)</span>
+                      <span>•</span>
+                      <span>📝 Repescagem: 13/11</span>
+                      <span className="text-[10px] underline ml-0.5">Ver detalhes →</span>
+                    </button>
                     <span className="text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-100/70 dark:bg-amber-950/60 px-3 py-0.5 rounded-full border border-amber-300/60 dark:border-amber-700/60">
                       ⏳ {diasProva >= 0 ? `Faltam ${diasProva} dias` : 'Hoje é o dia!'}
                     </span>
@@ -2349,10 +2535,10 @@ export default function App() {
                     <span>Backup Word</span>
                   </button>
                 </div>
-              </div>
+              </motion.div>
 
               {/* 2. CENTRAL UNIFICADA DE DESEMPENHO (CONCENTRA REDAÇÃO 150L, POMODORO, FLASHCARDS E RADAR EM 1 SÓ LUGAR) */}
-              <div className="macos-animate-2">
+              <motion.div variants={dashboardCardVariants}>
                 <CentralUnificadaDesempenhoCard
                   totalLinhasSemana={totalLinhasSemana}
                   linhasCount={linhasCount}
@@ -2376,24 +2562,31 @@ export default function App() {
                   onExportarPdf={handleGerarRelatorioSemanalPdf}
                   onExportarWord={() => exportarRedacaoNoWord(textoRedacao)}
                 />
-              </div>
+              </motion.div>
 
               {/* 3. WORKFLOW DO DIA: METAS DIÁRIAS & DICA ESTRATÉGICA (VISUAL LIMPO E AREJADO) */}
-              <div className="macos-animate-3 grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
-                <MetasDiariasCard
-                  onNavigateToTab={(tab) => setActiveTab(tab as TabType)}
-                  onMostrarToast={mostrarToast}
-                  totalLinhasSemana={totalLinhasSemana}
-                  pomodoroBlocosHoje={pomodoroBlocosHoje}
-                />
-                <DicaDoDiaCard
-                  onNavigateToTab={(tab) => setActiveTab(tab as TabType)}
-                  onMostrarToast={mostrarToast}
-                />
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
+                <motion.div variants={dashboardCardVariants} className="h-full">
+                  <MetasDiariasCard
+                    onNavigateToTab={(tab) => setActiveTab(tab as TabType)}
+                    onMostrarToast={mostrarToast}
+                    totalLinhasSemana={totalLinhasSemana}
+                    pomodoroBlocosHoje={pomodoroBlocosHoje}
+                  />
+                </motion.div>
+                <motion.div variants={dashboardCardVariants} className="h-full">
+                  <DicaDoDiaCard
+                    onNavigateToTab={(tab) => setActiveTab(tab as TabType)}
+                    onMostrarToast={mostrarToast}
+                  />
+                </motion.div>
               </div>
 
-              {/* 6. PREFERÊNCIAS & AUTOMAÇÕES (PAINEL COMPACTO & RETRÁTIL) */}
-              <div className="macos-animate-4 macos-card-interactive rounded-3xl border border-black/5 dark:border-white/10 bg-white dark:bg-zinc-800/90 shadow-sm overflow-hidden transition-all">
+              {/* 4. PREFERÊNCIAS & AUTOMAÇÕES (PAINEL COMPACTO & RETRÁTIL) */}
+              <motion.div
+                variants={dashboardCardVariants}
+                className="macos-card-interactive rounded-3xl border border-black/5 dark:border-white/10 bg-white dark:bg-zinc-800/90 shadow-sm overflow-hidden transition-all"
+              >
                 <button
                   type="button"
                   onClick={() => setPainelAutomacoesAberto(!painelAutomacoesAberto)}
@@ -2430,7 +2623,7 @@ export default function App() {
                 {painelAutomacoesAberto && (
                   <div className="p-4 pt-1 border-t border-black/5 dark:border-white/10 space-y-4">
                     {/* Abas Internas */}
-                    <div className="flex items-center gap-2 border-b border-black/5 dark:border-white/10 pb-2">
+                    <div className="flex items-center gap-2 border-b border-black/5 dark:border-white/10 pb-2 flex-wrap">
                       <button
                         type="button"
                         onClick={() => setDisciplinaTab('alarme')}
@@ -2441,6 +2634,21 @@ export default function App() {
                         }`}
                       >
                         ⏰ Alarme Diário & Tons
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDisciplinaTab('desktop')}
+                        className={`px-3 py-1 text-xs font-semibold rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
+                          disciplinaTab === 'desktop'
+                            ? 'bg-blue-600 text-white shadow-xs'
+                            : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900'
+                        }`}
+                      >
+                        <Bell className="h-3 w-3" />
+                        <span>🔔 Notificações Desktop (Push API)</span>
+                        {statusPermissaoDesktop === 'granted' && (
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                        )}
                       </button>
                       <button
                         type="button"
@@ -2537,6 +2745,126 @@ export default function App() {
                       </div>
                     )}
 
+                    {disciplinaTab === 'desktop' && (
+                      <div className="p-4 rounded-2xl border border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-black/20 space-y-4">
+                        <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-black/10 dark:border-white/10">
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="text-xs font-bold text-zinc-900 dark:text-white">
+                                Notificações de Desktop do Navegador (Push API & Web Worker)
+                              </h4>
+                              {statusPermissaoDesktop === 'granted' && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                                  <Check className="h-3 w-3" /> Permissão Concedida
+                                </span>
+                              )}
+                              {statusPermissaoDesktop === 'denied' && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+                                  ✕ Bloqueada no Navegador
+                                </span>
+                              )}
+                              {statusPermissaoDesktop === 'default' && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                  ⚠️ Aguardando Permissão
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 max-w-xl leading-relaxed">
+                              Receba lembretes nativos do sistema operacional (Windows, macOS ou Linux) mesmo quando a janela estiver minimizada, em outra aba ou em segundo plano.
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {statusPermissaoDesktop !== 'granted' ? (
+                              <button
+                                type="button"
+                                onClick={handleSolicitarPermissaoDesktop}
+                                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                              >
+                                <Bell className="h-3.5 w-3.5" />
+                                <span>Solicitar Permissão no Navegador</span>
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={testarNotificacaoManual}
+                                className="px-3.5 py-1.5 rounded-xl border border-blue-400/60 bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
+                              >
+                                <Bell className="h-3.5 w-3.5" />
+                                <span>Disparar Notificação de Teste</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Opções de Configuração */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                          {/* Toggle 1: Ativar Desktop Push */}
+                          <label className="flex items-start gap-3 p-3 rounded-xl border border-black/5 dark:border-white/5 bg-white dark:bg-zinc-800/80 cursor-pointer hover:border-black/15 dark:hover:border-white/15 transition">
+                            <input
+                              type="checkbox"
+                              checked={notifDesktopAtiva}
+                              onChange={e => handleAlternarNotifDesktopAtiva(e.target.checked)}
+                              className="mt-0.5 h-4 w-4 rounded accent-blue-600 shrink-0"
+                            />
+                            <div className="space-y-0.5">
+                              <span className="text-xs font-bold text-zinc-900 dark:text-white block">
+                                Ativar Notificações Nativas de Desktop
+                              </span>
+                              <span className="text-[11px] text-zinc-500 dark:text-zinc-400 block leading-relaxed">
+                                Notifica na barra de notificações do Windows/macOS/Linux ao atingir os horários de estudo programados.
+                              </span>
+                            </div>
+                          </label>
+
+                          {/* Toggle 2: Modo Apenas Desktop (sem modal invasivo) */}
+                          <label className="flex items-start gap-3 p-3 rounded-xl border border-black/5 dark:border-white/5 bg-white dark:bg-zinc-800/80 cursor-pointer hover:border-black/15 dark:hover:border-white/15 transition">
+                            <input
+                              type="checkbox"
+                              checked={notifApenasDesktop}
+                              onChange={e => handleAlternarApenasDesktop(e.target.checked)}
+                              className="mt-0.5 h-4 w-4 rounded accent-blue-600 shrink-0"
+                            />
+                            <div className="space-y-0.5">
+                              <span className="text-xs font-bold text-zinc-900 dark:text-white block">
+                                Exibir apenas Desktop (Sem modais internos)
+                              </span>
+                              <span className="text-[11px] text-zinc-500 dark:text-zinc-400 block leading-relaxed">
+                                Alerta de forma limpa pelo sistema operacional sem interromper a tela com janelas modais invasivas.
+                              </span>
+                            </div>
+                          </label>
+
+                          {/* Toggle 3: Pomodoro no Desktop */}
+                          <label className="flex items-start gap-3 p-3 rounded-xl border border-black/5 dark:border-white/5 bg-white dark:bg-zinc-800/80 cursor-pointer hover:border-black/15 dark:hover:border-white/15 transition md:col-span-2">
+                            <input
+                              type="checkbox"
+                              checked={notifPomodoroDesktop}
+                              onChange={e => handleAlternarPomodoroDesktop(e.target.checked)}
+                              className="mt-0.5 h-4 w-4 rounded accent-blue-600 shrink-0"
+                            />
+                            <div className="space-y-0.5">
+                              <span className="text-xs font-bold text-zinc-900 dark:text-white block">
+                                Alertar Fim de Pomodoro no Desktop (Foco e Pausa)
+                              </span>
+                              <span className="text-[11px] text-zinc-500 dark:text-zinc-400 block leading-relaxed">
+                                Receba um aviso na área de trabalho quando seus 50/25 minutos de foco ou a pausa curta terminarem, perfeito para quando você estiver lendo leis em outra aba.
+                              </span>
+                            </div>
+                          </label>
+                        </div>
+
+                        {statusPermissaoDesktop === 'denied' && (
+                          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+                            <span>⚠️</span>
+                            <span>
+                              As notificações foram bloqueadas no seu navegador. Para reativar, clique no ícone de cadeado na barra de endereços do navegador e permita "Notificações".
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {disciplinaTab === 'word' && (
                       <div className="p-3.5 rounded-xl border border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-black/20 space-y-3">
                         <div className="flex items-center justify-between flex-wrap gap-2">
@@ -2563,8 +2891,8 @@ export default function App() {
                     )}
                   </div>
                 )}
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           )}
 
           {/* TAB 2: SIMULADO SEMANAL (32 PROVAS FGV & CRONOGRAMA) */}
@@ -3954,231 +4282,17 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 9: VADE MECUM */}
+          {/* TAB 9: VADE MECUM (EXPERIÊNCIA INTERATIVA & ANIMADA COM 4 CORES, CLIPES E DESAFIO RELÂMPAGO) */}
           {activeTab === 'vademecum' && (
-            <div className="space-y-4">
-              {/* Painel de Controle, Busca Textual e Filtros */}
-              <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-4 lg:p-5 shadow-sm space-y-3.5">
-                <div className="flex items-center justify-between flex-wrap gap-3">
-                  <div>
-                    <span className="badge b-AMARELO text-[10px]">
-                      Sistema 4 Cores + Clipes • Atualizado com LC 227 e LC 236/2026
-                    </span>
-                    <h2 className="text-base font-bold text-white mt-1">
-                      Guia de Marcação do Vade Mecum FGV
-                    </h2>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => marcarTodosVade(true)}
-                      className="rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 transition shadow-sm cursor-pointer"
-                    >
-                      ✓ Marcar Todos
-                    </button>
-                    <button
-                      onClick={() => marcarTodosVade(false)}
-                      className="rounded-full border border-slate-600 bg-slate-700/60 px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-600 transition cursor-pointer"
-                    >
-                      Desmarcar Todos
-                    </button>
-                  </div>
-                </div>
-
-                {/* Campo de Busca Textual no Vade Mecum */}
-                <div className="flex flex-col sm:flex-row items-center gap-2.5">
-                  <div className="relative flex-1 w-full">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                    <input
-                      type="text"
-                      value={buscaVade}
-                      onChange={e => setBuscaVade(e.target.value)}
-                      placeholder="Pesquisar por artigo, código, tema (ex: Art. 151, CTN, Prescrição, Decadência, Reforma)..."
-                      className="w-full rounded-xl border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 pl-9 pr-9 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
-                    />
-                    {buscaVade && (
-                      <button
-                        onClick={() => setBuscaVade('')}
-                        className="absolute right-2.5 top-2.5 text-xs text-slate-400 hover:text-white"
-                        title="Limpar busca"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Filtro Rápido: Apenas Marcados */}
-                  <button
-                    onClick={() => setFiltroApenasMarcadosVade(!filtroApenasMarcadosVade)}
-                    className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition-all inline-flex items-center gap-1.5 shrink-0 cursor-pointer ${
-                      filtroApenasMarcadosVade
-                        ? 'bg-emerald-600 text-white border border-emerald-400 shadow-sm'
-                        : 'border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 text-slate-300 hover:bg-slate-800'
-                    }`}
-                    title="Exibir apenas os artigos marcados no seu Vade"
-                  >
-                    <Check className={`h-3.5 w-3.5 ${filtroApenasMarcadosVade ? 'text-white' : 'text-slate-400'}`} />
-                    <span>Apenas Marcados</span>
-                    <span className="font-mono text-[10px] px-1.5 py-0.2 rounded-full bg-black/30 font-bold">
-                      {vadeMarcados.length}
-                    </span>
-                  </button>
-                </div>
-
-                {/* Filtros de Cores com Contadores Dinâmicos */}
-                <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-black/10 dark:border-white/10/60">
-                  <span className="text-[11px] text-slate-400 mr-1 font-medium">Categorias:</span>
-                  {[
-                    { val: 'TODAS', label: 'Todas as Cores', corClass: 'b-AMARELO', count: contagemCoresVade.TODAS },
-                    { val: 'AMARELO', label: '🟡 Amarelo (Material)', corClass: 'b-AMARELO', count: contagemCoresVade.AMARELO },
-                    { val: 'VERDE', label: '🟢 Verde (Processual)', corClass: 'b-VERDE', count: contagemCoresVade.VERDE },
-                    { val: 'ROSA', label: '🩷 Rosa (Estrutura)', corClass: 'b-ROSA', count: contagemCoresVade.ROSA },
-                    { val: 'AZUL', label: '🔵 Azul (Constitucional)', corClass: 'b-AZUL', count: contagemCoresVade.AZUL },
-                    { val: 'CLIPES', label: '📎 Clipes (Prazos)', corClass: 'b-CLIPES', count: contagemCoresVade.CLIPES }
-                  ].map(cat => {
-                    const ativo = corFiltroVade === cat.val;
-                    return (
-                      <button
-                        key={cat.val}
-                        onClick={() => setCorFiltroVade(cat.val)}
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold transition-all inline-flex items-center gap-1.5 cursor-pointer ${
-                          ativo
-                            ? 'bg-amber-500 text-slate-950 font-bold border-2 border-amber-300 shadow-sm'
-                            : 'border border-black/15 dark:border-white/15 bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100 text-slate-200 hover:bg-slate-600'
-                        }`}
-                      >
-                        <span>{cat.label}</span>
-                        <span
-                          className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
-                            ativo ? 'bg-slate-950 text-amber-300' : 'bg-black/30 text-slate-300'
-                          }`}
-                        >
-                          {cat.count}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Barra de Status e Progresso de Marcação */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-black/10 dark:border-white/10/60 text-xs text-slate-300">
-                  <div className="flex items-center gap-2">
-                    <span>
-                      Exibindo <strong className="text-white font-mono">{vadeFiltrados.length}</strong> de {VADE_DATA.length} dispositivos
-                    </span>
-                    {(buscaVade || corFiltroVade !== 'TODAS' || filtroApenasMarcadosVade) && (
-                      <button
-                        onClick={() => {
-                          setBuscaVade('');
-                          setCorFiltroVade('TODAS');
-                          setFiltroApenasMarcadosVade(false);
-                        }}
-                        className="text-[10px] text-sky-400 hover:text-sky-200 underline ml-1 cursor-pointer"
-                      >
-                        Limpar busca e filtros
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-slate-400">Progresso no Vade:</span>
-                    <strong className="text-emerald-400 font-mono text-[11px]">
-                      {vadeMarcados.length} de {VADE_DATA.length} ({Math.round((vadeMarcados.length / VADE_DATA.length) * 100)}%)
-                    </strong>
-                    <div className="w-20 h-2 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-full overflow-hidden border border-black/10 dark:border-white/10">
-                      <div
-                        className="h-full bg-emerald-500 transition-all duration-300"
-                        style={{ width: `${(vadeMarcados.length / VADE_DATA.length) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Grid de Artigos */}
-              {vadeFiltrados.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {vadeFiltrados.map((item) => {
-                    const isChecked = vadeMarcados.includes(item.originalIndex);
-                    return (
-                      <label
-                        key={item.originalIndex}
-                        className={`flex items-start gap-2.5 rounded-xl border p-3.5 cursor-pointer transition select-none ${
-                          isChecked
-                            ? 'border-emerald-500/80 bg-emerald-950/25 ring-1 ring-emerald-500/30 shadow-sm'
-                            : 'border-black/10 dark:border-white/10 bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100 hover:bg-slate-200 dark:bg-zinc-700'
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => toggleVade(item.originalIndex)}
-                          className="mt-0.5 h-4 w-4 rounded accent-emerald-500 shrink-0 cursor-pointer"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className={`badge b-${item.cor}`}>{item.cor}</span>
-                            {item.novo && (
-                              <span className="badge b-AMARELO text-[9px] font-bold">🆕 2026</span>
-                            )}
-                          </div>
-                          <div className="text-xs font-semibold text-white mt-1.5 leading-snug">
-                            {item.ref}
-                          </div>
-                          {item.obs && (
-                            <div className="text-[11px] text-slate-300 mt-1 leading-relaxed">
-                              {item.obs}
-                            </div>
-                          )}
-                          <div className="flex items-center justify-between mt-2 pt-1 border-t border-black/10 dark:border-white/10/50">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                const citacao = `\n\nConforme estabelece o ${item.ref}${item.obs ? ` (${item.obs})` : ''}.\n`;
-                                inserirTextoNaRedacao(citacao, false);
-                              }}
-                              className="rounded bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 border border-black/15 dark:border-white/15 px-2 py-0.5 text-[9px] font-semibold text-amber-300 hover:bg-[#253243] inline-flex items-center gap-1 cursor-pointer"
-                              title="Citar este artigo na folha de 150 linhas do Simulador"
-                            >
-                              <Plus className="h-2.5 w-2.5" /> Citar no Simulador
-                            </button>
-                            <span className={`text-[10px] font-semibold ${isChecked ? 'text-emerald-400' : 'text-slate-400'}`}>
-                              {isChecked ? '✓ Marcado' : 'Clique p/ marcar'}
-                            </span>
-                          </div>
-                        </div>
-                      </label>
-                    );
-                  })}
-                </div>
-              ) : (
-                /* Estado Vazio */
-                <div className="rounded-2xl border border-dashed border-black/15 dark:border-white/15 bg-slate-50 dark:bg-zinc-900/60 text-zinc-800 dark:text-zinc-100 p-8 text-center space-y-3">
-                  <div className="text-3xl">📖</div>
-                  <h4 className="text-sm font-bold text-white">
-                    Nenhum dispositivo encontrado
-                  </h4>
-                  <p className="text-xs text-slate-400 max-w-md mx-auto">
-                    Não localizamos artigos ou súmulas para os termos pesquisados
-                    {buscaVade ? ` ("${buscaVade}")` : ''}
-                    {corFiltroVade !== 'TODAS' ? ` na categoria ${corFiltroVade}` : ''}.
-                  </p>
-                  <div className="flex items-center justify-center gap-2 pt-2">
-                    <button
-                      onClick={() => {
-                        setBuscaVade('');
-                        setCorFiltroVade('TODAS');
-                        setFiltroApenasMarcadosVade(false);
-                      }}
-                      className="rounded-full bg-amber-500 px-4 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-400 transition cursor-pointer"
-                    >
-                      Limpar busca e filtros
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <VadeMecumView
+              vadeMarcados={vadeMarcados}
+              onToggleVade={toggleVade}
+              onMarcarTodosVade={marcarTodosVade}
+              onInserirTextoNaRedacao={inserirTextoNaRedacao}
+              mostrarToast={mostrarToast}
+              corFiltroInicial={corFiltroVade}
+              buscaInicial={buscaVade}
+            />
           )}
 
           {/* TAB 10: LEGISLAÇÃO */}
@@ -4406,298 +4520,17 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 13: PLANNER NATIVO */}
+          {/* TAB 12: PLANNER NATIVO (COM TRANSIÇÕES FRAMER MOTION) */}
           {activeTab === 'planner' && (
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 p-5 shadow-sm space-y-4">
-                <div className="flex items-center justify-between flex-wrap gap-3">
-                  <div>
-                    <span className="badge b-AZUL">Integração Nativa 100% Editável</span>
-                    <h2 className="text-base font-semibold text-white mt-1">
-                      Planner de Estudos — Direito Tributário (Ceisc)
-                    </h2>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={sincronizarCronogramaComPlanner}
-                      className="rounded-full border border-sky-400 bg-sky-600/90 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-500 transition shadow-sm inline-flex items-center gap-1.5"
-                      title="Importa até 5 metas pendentes da semana atual do Cronograma para o checklist do dia"
-                    >
-                      <FileCheck2 className="h-3.5 w-3.5" /> Puxar Metas do Cronograma
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('simulador')}
-                      className="rounded-full border border-emerald-400 bg-emerald-600/90 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 transition shadow-sm inline-flex items-center gap-1.5"
-                    >
-                      <FileText className="h-3.5 w-3.5" /> Abrir Simulador 150L
-                    </button>
-                  </div>
-                </div>
-
-                {/* Sub tabs do Planner */}
-                <div className="flex items-center gap-2 border-b border-black/10 dark:border-white/10 pb-3 flex-wrap">
-                  {[
-                    ['mensal', '📅 Planejamento Mensal'],
-                    ['semanal', '📆 Planejamento Semanal'],
-                    ['diario', '📝 Planejamento Diário'],
-                    ['controle', '✅ Controle de Aulas & Peças']
-                  ].map(([sub, rotulo]) => (
-                    <button
-                      key={sub}
-                      onClick={() => setSubAbaPlanner(sub as any)}
-                      className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-                        subAbaPlanner === sub
-                          ? 'bg-sky-600 text-white border border-sky-400'
-                          : 'border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-700/60 text-zinc-700 dark:text-zinc-200 text-slate-200 hover:bg-slate-600'
-                      }`}
-                    >
-                      {rotulo}
-                    </button>
-                  ))}
-                </div>
-
-                {/* MENSAL */}
-                {subAbaPlanner === 'mensal' && (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <input
-                        type="text"
-                        placeholder="Mês (Ex: Novembro / Dezembro)"
-                        value={plannerData['plM_mes'] || ''}
-                        onChange={e => handlePlannerUpdate('plM_mes', e.target.value)}
-                        className="rounded-lg border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 px-3 py-1.5 text-xs font-bold text-white w-52"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Foco prioritário do mês..."
-                        value={plannerData['plM_foco'] || ''}
-                        onChange={e => handlePlannerUpdate('plM_foco', e.target.value)}
-                        className="flex-1 min-w-[200px] rounded-lg border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 px-3 py-1.5 text-xs text-white"
-                      />
-                    </div>
-                    <textarea
-                      placeholder="Tarefas e metas importantes do mês..."
-                      value={plannerData['plM_tarefas'] || ''}
-                      onChange={e => handlePlannerUpdate('plM_tarefas', e.target.value)}
-                      className="w-full h-16 rounded-xl border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 p-2.5 text-xs text-white resize-none"
-                    />
-
-                    {/* 35 Days Grid */}
-                    <div className="grid grid-cols-7 gap-2">
-                      {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map(d => (
-                        <div
-                          key={d}
-                          className="text-center font-bold text-[11px] text-slate-300 py-1"
-                        >
-                          {d}
-                        </div>
-                      ))}
-                      {Array.from({ length: 35 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 p-2 min-h-[85px] flex flex-col"
-                        >
-                          <input
-                            type="text"
-                            placeholder="Dia"
-                            value={plannerData[`plM_dia_${i}`] || ''}
-                            onChange={e => handlePlannerUpdate(`plM_dia_${i}`, e.target.value)}
-                            className="w-8 border-b border-black/10 dark:border-white/10 bg-transparent text-[10px] text-sky-400 font-bold focus:outline-none mb-1"
-                          />
-                          <textarea
-                            placeholder="..."
-                            value={plannerData[`plM_txt_${i}`] || ''}
-                            onChange={e => handlePlannerUpdate(`plM_txt_${i}`, e.target.value)}
-                            className="w-full flex-1 bg-transparent text-slate-200 text-xs resize-none focus:outline-none"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* SEMANAL */}
-                {subAbaPlanner === 'semanal' && (
-                  <div className="space-y-3">
-                    <textarea
-                      placeholder="Metas da semana e horários disponíveis..."
-                      value={plannerData['plS_metas'] || ''}
-                      onChange={e => handlePlannerUpdate('plS_metas', e.target.value)}
-                      className="w-full h-16 rounded-xl border border-black/15 dark:border-white/15 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 p-2.5 text-xs text-white resize-none"
-                    />
-
-                    <div className="overflow-x-auto rounded-xl border border-black/10 dark:border-white/10">
-                      <table className="w-full border-collapse text-xs">
-                        <thead>
-                          <tr className="bg-slate-50 dark:bg-zinc-800/90 text-zinc-800 dark:text-zinc-100 text-sky-300">
-                            <th className="border border-black/10 dark:border-white/10 p-2 text-center w-20">Turno</th>
-                            {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map(d => (
-                              <th key={d} className="border border-black/10 dark:border-white/10 p-2 text-left">
-                                {d}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {['MANHÃ', 'TARDE', 'NOITE'].map(t => (
-                            <tr key={t} className="bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100">
-                              <td className="border border-black/10 dark:border-white/10 p-2 text-center font-bold text-slate-300 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100">
-                                {t}
-                              </td>
-                              {Array.from({ length: 7 }).map((_, dIdx) => (
-                                <td key={dIdx} className="border border-black/10 dark:border-white/10 p-1.5 align-top">
-                                  <textarea
-                                    value={plannerData[`plS_${t[0]}_${dIdx}`] || ''}
-                                    onChange={e =>
-                                      handlePlannerUpdate(`plS_${t[0]}_${dIdx}`, e.target.value)
-                                    }
-                                    className="w-full min-h-[75px] bg-transparent text-slate-200 text-xs resize-none focus:outline-none"
-                                  />
-                                </td>
-                              ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-
-                {/* DIÁRIO */}
-                {subAbaPlanner === 'diario' && (
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                    {/* Checklist de Tarefas do Dia */}
-                    <div className="md:col-span-6 rounded-xl border border-black/10 dark:border-white/10 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 p-4">
-                      <h3 className="text-xs font-bold text-sky-300 mb-3 border-b border-black/10 dark:border-white/10 pb-2">
-                        Tarefas do Dia
-                      </h3>
-                      <div className="space-y-2">
-                        {Array.from({ length: 10 }).map((_, i) => (
-                          <div key={i} className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={plannerData[`plD_ck_${i}`] || false}
-                              onChange={e => handlePlannerUpdate(`plD_ck_${i}`, e.target.checked)}
-                              className="h-4 w-4 rounded accent-emerald-500"
-                            />
-                            <input
-                              type="text"
-                              placeholder={`Tarefa ${i + 1}...`}
-                              value={plannerData[`plD_txt_${i}`] || ''}
-                              onChange={e => handlePlannerUpdate(`plD_txt_${i}`, e.target.value)}
-                              className="flex-1 border-b border-black/10 dark:border-white/10 bg-transparent text-xs text-white focus:outline-none pb-0.5"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Aulas do Dia & Anotações */}
-                    <div className="md:col-span-6 space-y-4">
-                      <div className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 p-4">
-                        <h3 className="text-xs font-bold text-emerald-300 mb-3 border-b border-black/10 dark:border-white/10 pb-2">
-                          Aulas do Dia
-                        </h3>
-                        <table className="w-full text-xs">
-                          <thead>
-                            <tr className="text-slate-400 border-b border-black/10 dark:border-white/10">
-                              <th className="text-left py-1">Aula / Conteúdo</th>
-                              <th className="text-left py-1 w-20">EAD</th>
-                              <th className="text-left py-1 w-20">Horário</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {Array.from({ length: 4 }).map((_, i) => (
-                              <tr key={i} className="border-b border-black/10 dark:border-white/10/50">
-                                <td className="py-1 pr-2">
-                                  <input
-                                    type="text"
-                                    value={plannerData[`plD_a_${i}`] || ''}
-                                    onChange={e => handlePlannerUpdate(`plD_a_${i}`, e.target.value)}
-                                    className="w-full bg-transparent text-white focus:outline-none"
-                                  />
-                                </td>
-                                <td className="py-1 pr-2">
-                                  <input
-                                    type="text"
-                                    value={plannerData[`plD_ead_${i}`] || ''}
-                                    onChange={e => handlePlannerUpdate(`plD_ead_${i}`, e.target.value)}
-                                    className="w-full bg-transparent text-white focus:outline-none"
-                                  />
-                                </td>
-                                <td className="py-1">
-                                  <input
-                                    type="text"
-                                    value={plannerData[`plD_h_${i}`] || ''}
-                                    onChange={e => handlePlannerUpdate(`plD_h_${i}`, e.target.value)}
-                                    className="w-full bg-transparent text-white focus:outline-none"
-                                  />
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      <div className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 p-4">
-                        <h3 className="text-xs font-bold text-amber-300 mb-2 border-b border-black/10 dark:border-white/10 pb-1">
-                          Anotações & Insights
-                        </h3>
-                        <textarea
-                          placeholder="Escreva aqui suas observações, dúvidas ou artigos para reler..."
-                          value={plannerData['plD_anotacoes'] || ''}
-                          onChange={e => handlePlannerUpdate('plD_anotacoes', e.target.value)}
-                          className="w-full h-24 bg-transparent text-xs text-white resize-none focus:outline-none"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* CONTROLE DE AULAS */}
-                {subAbaPlanner === 'controle' && (
-                  <div className="space-y-4">
-                    <p className="text-xs text-slate-300">
-                      Marque abaixo as aulas e os treinamentos conforme for concluindo a visualização e a resolução dos exercícios.
-                    </p>
-                    <div className="space-y-4">
-                      {ESTRUTURA_CONTROLE_AULAS.map((sec, secIdx) => (
-                        <div
-                          key={secIdx}
-                          className="rounded-xl border border-black/10 dark:border-white/10 bg-slate-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 p-4"
-                        >
-                          <h3 className="text-xs font-bold text-sky-300 border-b border-black/10 dark:border-white/10 pb-2 mb-3">
-                            {sec.titulo}
-                          </h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                            {sec.itens.map((it, itIdx) => {
-                              const key = `plC_ck_${secIdx}_${itIdx}`;
-                              const checked = plannerData[key] || false;
-                              return (
-                                <label
-                                  key={itIdx}
-                                  className="flex items-start gap-2 text-xs text-slate-200 cursor-pointer select-none"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={checked}
-                                    onChange={e => handlePlannerUpdate(key, e.target.checked)}
-                                    className="mt-0.5 h-4 w-4 rounded accent-emerald-500 shrink-0"
-                                  />
-                                  <span className={checked ? 'line-through text-slate-400' : ''}>
-                                    {it}
-                                  </span>
-                                </label>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+            <PlannerView
+              plannerData={plannerData}
+              onPlannerUpdate={handlePlannerUpdate}
+              onSincronizarCronograma={sincronizarCronogramaComPlanner}
+              onAbrirSimulador={() => setActiveTab('simulador')}
+              subAbaPlanner={subAbaPlanner}
+              setSubAbaPlanner={setSubAbaPlanner}
+              mostrarToast={mostrarToast}
+            />
           )}
         </main>
       </div>
@@ -4833,6 +4666,18 @@ export default function App() {
           if (destino.teseCat !== undefined) navegarParaTese('', destino.teseCat);
           if (destino.flashCat) navegarParaFlashcards(destino.flashCat);
         }}
+      />
+
+      {/* POP-UP / MODAL DE ALERTAS CRÍTICOS DA OAB (12/11 RESULTADO ÀS 17H & 13/11 REPESCAGEM) */}
+      <AlertasPrazosOABModal
+        aberto={modalPrazosOABAberto}
+        onFechar={fecharModalPrazosOAB}
+        onDefinirAlarme={() => {
+          setActiveTab('dashboard');
+          setDisciplinaTab('alarme');
+          mostrarToast('⏰ Configure seu alarme diário para os dias 12 e 13 de novembro!');
+        }}
+        onMostrarToast={mostrarToast}
       />
 
       {/* TOAST FEEDBACK DE INTERAÇÃO ENTRE AS ABAS */}

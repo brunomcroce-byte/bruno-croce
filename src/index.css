@@ -1,6 +1,17 @@
 @import "tailwindcss";
 
 :root {
+  /* 🎨 Cores Oficiais do Tema do Windows 11 26H2 (Fluent Design 2.0 / Mica Alt) */
+  --win11-bg: #f3f3f3;
+  --win11-surface: #ffffff;
+  --win11-card: #f9f9f9;
+  --win11-text: #202020;
+  --win11-text-secondary: #5d5d5d;
+  --win11-accent: #0078d4; /* Azul clássico Fluent */
+  --win11-accent-glow: rgba(0, 120, 212, 0.25);
+  --win11-border: #e5e5e5;
+  --win11-border-subtle: rgba(0, 0, 0, 0.06);
+
   --bg-main: #f3f3f3;
   --bg-sidebar: #f8fafc;
   --bg-panel: #ffffff;
@@ -25,20 +36,157 @@
   --cor-clipe-borda: #94a3b8;
 }
 
-.theme-dark {
-  --bg-main: #222b38;
-  --bg-sidebar: #1b232e;
-  --bg-panel: #2b3646;
-  --bg-card: #344154;
-  --border: #455468;
-  --text-main: #f1f5f9;
-  --text-muted: #cbd5e1;
+/* Windows 11 26H2 Dark Theme (Wpf.Ui.Appearance.ThemeType.Dark Mica Alt) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --win11-bg: #181818;
+    --win11-surface: #202020;
+    --win11-card: #272727;
+    --win11-text: #ffffff;
+    --win11-text-secondary: #b0b0b0;
+    --win11-accent: #4cc2ff; /* Azul Ciano Fluent 2.0 Alto Contraste */
+    --win11-accent-glow: rgba(76, 194, 255, 0.3);
+    --win11-border: rgba(255, 255, 255, 0.08);
+    --win11-border-subtle: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.theme-dark,
+.dark {
+  --win11-bg: #181818;
+  --win11-surface: #202020;
+  --win11-card: #272727;
+  --win11-text: #ffffff;
+  --win11-text-secondary: #b0b0b0;
+  --win11-accent: #4cc2ff;
+  --win11-accent-glow: rgba(76, 194, 255, 0.3);
+  --win11-border: rgba(255, 255, 255, 0.08);
+  --win11-border-subtle: rgba(255, 255, 255, 0.05);
+  --bg-main: #181818;
+  --bg-sidebar: #1f1f1f;
+  --bg-panel: #242424;
+  --bg-card: #2b2b2b;
+  --border: rgba(255, 255, 255, 0.08);
+  --text-main: #ffffff;
+  --text-muted: #a1a1aa;
+}
+
+/* Titlebar Nativa Windows 11 26H2 */
+.win11-titlebar {
+  height: 38px;
+  background-color: var(--win11-surface);
+  border-bottom: 1px solid var(--win11-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 12px;
+  user-select: none;
+  backdrop-filter: blur(30px) saturate(130%);
+  -webkit-backdrop-filter: blur(30px) saturate(130%);
+}
+
+.win11-caption-btn {
+  width: 46px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--win11-text);
+  font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", "Segoe UI Variable Text", sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.win11-caption-btn:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.win11-caption-btn.close:hover {
+  background-color: #c42b1c !important;
+  color: #ffffff !important;
+}
+
+.win11-mica-card {
+  background-color: var(--win11-card);
+  border: 1px solid var(--win11-border);
+  backdrop-filter: blur(28px) saturate(125%);
+  -webkit-backdrop-filter: blur(28px) saturate(125%);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.win11-nav-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  transition: all 0.15s ease;
+  position: relative;
+  cursor: pointer;
+}
+
+.win11-nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.win11-nav-item.active {
+  background-color: rgba(255, 255, 255, 0.09);
+  font-weight: 600;
+}
+
+.win11-nav-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 18%;
+  bottom: 18%;
+  width: 3px;
+  border-radius: 99px;
+  background-color: var(--win11-accent);
+}
+
+/* Estilo para caixas, containers ou cards (estilo Windows 11 Fluent) */
+.card-projeto {
+  background-color: var(--win11-surface);
+  border: 1px solid var(--win11-border);
+  border-radius: 8px; /* Cantos arredondados característicos do Win 11 */
+  padding: 16px;
+  color: var(--win11-text);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+/* Botão no estilo Windows 11 Fluent */
+.btn-win11,
+button.btn-win11 {
+  background-color: var(--win11-accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  transition: background-color 0.15s ease, filter 0.15s ease;
+}
+
+.btn-win11:hover,
+button.btn-win11:hover {
+  filter: brightness(1.1);
+}
+
+.btn-win11:active,
+button.btn-win11:active {
+  filter: brightness(0.95);
 }
 
 body {
-  font-family: 'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background-color: var(--bg-main);
-  color: var(--text-main);
+  font-family: "Segoe UI Variable Text", "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, sans-serif;
+  background-color: var(--win11-bg);
+  color: var(--win11-text);
   height: 100vh;
   width: 100vw;
   overflow: hidden;
@@ -456,6 +604,64 @@ body {
   animation: popScale 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+@keyframes markerSweep {
+  0% {
+    width: 0%;
+    opacity: 0.4;
+  }
+  60% {
+    width: 100%;
+    opacity: 0.9;
+  }
+  100% {
+    width: 100%;
+    opacity: 0.85;
+  }
+}
+
+.animate-marker-sweep {
+  animation: markerSweep 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes clipWiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-12deg) scale(1.1);
+  }
+  75% {
+    transform: rotate(12deg) scale(1.1);
+  }
+}
+
+.animate-clip-wiggle {
+  animation: clipWiggle 0.6s ease-in-out;
+}
+
+@keyframes rainbowBorder {
+  0%, 100% {
+    border-color: rgba(245, 158, 11, 0.5);
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.2);
+  }
+  25% {
+    border-color: rgba(16, 185, 129, 0.5);
+    box-shadow: 0 0 14px rgba(16, 185, 129, 0.2);
+  }
+  50% {
+    border-color: rgba(236, 72, 153, 0.5);
+    box-shadow: 0 0 14px rgba(236, 72, 153, 0.2);
+  }
+  75% {
+    border-color: rgba(14, 165, 233, 0.5);
+    box-shadow: 0 0 14px rgba(14, 165, 233, 0.2);
+  }
+}
+
+.animate-vade-glow {
+  animation: rainbowBorder 6s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .macos-animate-1,
   .macos-animate-2,
@@ -470,7 +676,10 @@ body {
   .animate-soundwave-2,
   .animate-soundwave-3,
   .animate-soundwave-4,
-  .animate-pop-scale {
+  .animate-pop-scale,
+  .animate-marker-sweep,
+  .animate-clip-wiggle,
+  .animate-vade-glow {
     animation: none !important;
     transform: none !important;
   }
