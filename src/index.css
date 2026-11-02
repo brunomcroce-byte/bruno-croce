@@ -298,3 +298,181 @@ body {
   animation: pomodoroRingFillAnimation 2s infinite ease-in-out;
 }
 
+/* ==========================================================================
+   macOS SEQUOIA SMOOTH ENTRANCE & INTERACTION ANIMATIONS
+   ========================================================================== */
+
+@keyframes macosSlideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.995);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.macos-animate-1 {
+  animation: macosSlideUpFade 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.macos-animate-2 {
+  animation: macosSlideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+}
+
+.macos-animate-3 {
+  animation: macosSlideUpFade 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.16s both;
+}
+
+.macos-animate-4 {
+  animation: macosSlideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.24s both;
+}
+
+.macos-card-interactive {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+
+.macos-card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+}
+
+@keyframes subtleFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.macos-subtle-float {
+  animation: subtleFloat 3.5s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   ENHANCED BEAUTIFUL ANIMATIONS (COCKPIT, JORNADA & INSIGHTS)
+   ========================================================================== */
+
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient-flow {
+  background-size: 200% 200%;
+  animation: gradientFlow 5s ease infinite;
+}
+
+@keyframes pulseAura {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 15px 4px rgba(59, 130, 246, 0.2);
+    transform: scale(1.02);
+  }
+}
+
+.animate-pulse-aura {
+  animation: pulseAura 3s ease-in-out infinite;
+}
+
+@keyframes pulseEmeraldAura {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 14px 3px rgba(16, 185, 129, 0.2);
+  }
+}
+
+.animate-emerald-aura {
+  animation: pulseEmeraldAura 2.8s ease-in-out infinite;
+}
+
+@keyframes pulseAmberAura {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 14px 3px rgba(245, 158, 11, 0.2);
+  }
+}
+
+.animate-amber-aura {
+  animation: pulseAmberAura 2.8s ease-in-out infinite;
+}
+
+@keyframes soundWaveBar {
+  0%, 100% {
+    height: 6px;
+  }
+  50% {
+    height: 18px;
+  }
+}
+
+.animate-soundwave-1 {
+  animation: soundWaveBar 0.6s ease-in-out infinite;
+}
+
+.animate-soundwave-2 {
+  animation: soundWaveBar 0.45s ease-in-out infinite 0.15s;
+}
+
+.animate-soundwave-3 {
+  animation: soundWaveBar 0.75s ease-in-out infinite 0.3s;
+}
+
+.animate-soundwave-4 {
+  animation: soundWaveBar 0.5s ease-in-out infinite 0.2s;
+}
+
+@keyframes popScale {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  60% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-pop-scale {
+  animation: popScale 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .macos-animate-1,
+  .macos-animate-2,
+  .macos-animate-3,
+  .macos-animate-4,
+  .macos-subtle-float,
+  .animate-gradient-flow,
+  .animate-pulse-aura,
+  .animate-emerald-aura,
+  .animate-amber-aura,
+  .animate-soundwave-1,
+  .animate-soundwave-2,
+  .animate-soundwave-3,
+  .animate-soundwave-4,
+  .animate-pop-scale {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+

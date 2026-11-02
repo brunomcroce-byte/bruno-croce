@@ -64,6 +64,7 @@ import {
 import { analisarPecaEmTempoReal } from './utils/pecaAnalyzer';
 import { SimuladorAnalisePecaCard } from './components/SimuladorAnalisePecaCard';
 import { CentralUnificadaDesempenhoCard } from './components/CentralUnificadaDesempenhoCard';
+import { GuiaEstruturalProgressao5hCard } from './components/GuiaEstruturalProgressao5hCard';
 import {
   BookOpen,
   Calendar,
@@ -2297,9 +2298,9 @@ export default function App() {
         <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-6">
           {/* TAB 1: DASHBOARD (FLUIDO, INTUITIVO & LIMPO - macOS SEQUOIA) */}
           {activeTab === 'dashboard' && (
-            <div className="space-y-6 macos-animate">
+            <div className="space-y-6">
               {/* 1. HERO HEADER: GREETING AMIGÁVEL & STATUS ESSENCIAL */}
-              <div className="rounded-3xl border border-blue-100 dark:border-white/10 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-purple-50/30 dark:from-zinc-800/95 dark:via-zinc-800/85 dark:to-zinc-800/95 p-6 lg:p-7 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-5 transition-all">
+              <div className="macos-animate-1 macos-card-interactive rounded-3xl border border-blue-100 dark:border-white/10 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-purple-50/30 dark:from-zinc-800/95 dark:via-zinc-800/85 dark:to-zinc-800/95 p-6 lg:p-7 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-5 transition-all">
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-100/70 dark:bg-blue-950/60 px-3 py-0.5 rounded-full border border-blue-300/60 dark:border-blue-700/60 inline-flex items-center gap-1.5">
@@ -2333,7 +2334,7 @@ export default function App() {
                   </button>
                   <button
                     onClick={handleGerarRelatorioSemanalPdf}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold shadow-xs transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
                     title="Exportar relatório completo em PDF"
                   >
                     <Download className="h-4 w-4 text-blue-500 dark:text-blue-400" />
@@ -2341,7 +2342,7 @@ export default function App() {
                   </button>
                   <button
                     onClick={() => exportarRedacaoNoWord(textoRedacao)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold shadow-xs transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
                     title="Backup da redação no Word (.doc)"
                   >
                     <FileText className="h-4 w-4 text-blue-500 dark:text-blue-400" />
@@ -2351,32 +2352,34 @@ export default function App() {
               </div>
 
               {/* 2. CENTRAL UNIFICADA DE DESEMPENHO (CONCENTRA REDAÇÃO 150L, POMODORO, FLASHCARDS E RADAR EM 1 SÓ LUGAR) */}
-              <CentralUnificadaDesempenhoCard
-                totalLinhasSemana={totalLinhasSemana}
-                linhasCount={linhasCount}
-                pomodoroBlocosHoje={pomodoroBlocosHoje}
-                pomodoroModo={pomodoroModo}
-                pomodoroRunning={pomodoroRunning}
-                soundscapeTipo={soundscapeTipo}
-                taxaAcertoEstimada={taxaAcertoEstimada}
-                flashStats={flashStats}
-                tarefasConcluidas={tarefasConcluidas}
-                totalTarefas={totalTarefas}
-                analisePecaAtual={analisePecaAtual}
-                diasProva={diasProva}
-                onNavegarParaTab={(tab) => setActiveTab(tab as TabType)}
-                onAdicionarLinhas={adicionarLinhasAoTotalSemana}
-                onTogglePomodoro={() => {
-                  if (pomodoroRunning) pausarPomodoro();
-                  else iniciarPomodoro();
-                }}
-                onAjustarBlocos={ajustarBlocosPomodoroHoje}
-                onExportarPdf={handleGerarRelatorioSemanalPdf}
-                onExportarWord={() => exportarRedacaoNoWord(textoRedacao)}
-              />
+              <div className="macos-animate-2">
+                <CentralUnificadaDesempenhoCard
+                  totalLinhasSemana={totalLinhasSemana}
+                  linhasCount={linhasCount}
+                  pomodoroBlocosHoje={pomodoroBlocosHoje}
+                  pomodoroModo={pomodoroModo}
+                  pomodoroRunning={pomodoroRunning}
+                  soundscapeTipo={soundscapeTipo}
+                  taxaAcertoEstimada={taxaAcertoEstimada}
+                  flashStats={flashStats}
+                  tarefasConcluidas={tarefasConcluidas}
+                  totalTarefas={totalTarefas}
+                  analisePecaAtual={analisePecaAtual}
+                  diasProva={diasProva}
+                  onNavegarParaTab={(tab) => setActiveTab(tab as TabType)}
+                  onAdicionarLinhas={adicionarLinhasAoTotalSemana}
+                  onTogglePomodoro={() => {
+                    if (pomodoroRunning) pausarPomodoro();
+                    else iniciarPomodoro();
+                  }}
+                  onAjustarBlocos={ajustarBlocosPomodoroHoje}
+                  onExportarPdf={handleGerarRelatorioSemanalPdf}
+                  onExportarWord={() => exportarRedacaoNoWord(textoRedacao)}
+                />
+              </div>
 
               {/* 3. WORKFLOW DO DIA: METAS DIÁRIAS & DICA ESTRATÉGICA (VISUAL LIMPO E AREJADO) */}
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
+              <div className="macos-animate-3 grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
                 <MetasDiariasCard
                   onNavigateToTab={(tab) => setActiveTab(tab as TabType)}
                   onMostrarToast={mostrarToast}
@@ -2390,7 +2393,7 @@ export default function App() {
               </div>
 
               {/* 6. PREFERÊNCIAS & AUTOMAÇÕES (PAINEL COMPACTO & RETRÁTIL) */}
-              <div className="rounded-3xl border border-black/5 dark:border-white/10 bg-white dark:bg-zinc-800/90 shadow-sm overflow-hidden transition-all">
+              <div className="macos-animate-4 macos-card-interactive rounded-3xl border border-black/5 dark:border-white/10 bg-white dark:bg-zinc-800/90 shadow-sm overflow-hidden transition-all">
                 <button
                   type="button"
                   onClick={() => setPainelAutomacoesAberto(!painelAutomacoesAberto)}
@@ -3777,6 +3780,20 @@ export default function App() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Card Interativo de Dicas Estruturais Passo a Passo Baseadas na Peça e Progressão de 5h */}
+                  <GuiaEstruturalProgressao5hCard
+                    pecaNome={analisePecaAtual.pecaMaisProvavel?.nome || pecaSelecionada.nome}
+                    linhasCount={linhasCount}
+                    prova5hSecs={prova5hSecs}
+                    prova5hRunning={prova5hRunning}
+                    onToggleTimer5h={() => {
+                      if (!prova5hRunning) tocarAlarmeWebAudio();
+                      setProva5hRunning(!prova5hRunning);
+                    }}
+                    onInserirTexto={(texto) => inserirTextoNaRedacao(texto, false)}
+                    onNavigateToTab={(tab) => setActiveTab(tab as TabType)}
+                  />
                 </div>
               </div>
             </div>

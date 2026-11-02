@@ -1,23 +1,43 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   FileText,
   Clock,
   Sparkles,
   Download,
-  Headphones,
   Play,
   Pause,
   Plus,
-  ArrowUpRight,
   TrendingUp,
   CheckCircle2,
   Calendar,
   Zap,
   Target,
-  Award
+  Award,
+  BookOpen,
+  ArrowRight,
+  ShieldCheck,
+  Check,
+  SlidersHorizontal
 } from 'lucide-react';
 import { ResultadoAnalisePeca } from '../utils/pecaAnalyzer';
 import { SoundscapeTipo, SOUNDSCAPE_OPCOES } from '../utils/soundscapes';
+import { SafeStorage } from '../utils/storage';
+import { tocarAlarmeWebAudio } from '../utils/audio';
+
+export interface PilarPrecisao {
+  id: 'estrutura' | 'material' | 'pedidos';
+  nome: string;
+  icone: string;
+  scorePct: number; // 0 a 100% de conformidade/precisão
+  itens: {
+    id: string;
+    titulo: string;
+    artigo: string;
+    conforme: boolean;
+    observacao: string;
+    sugestao: string;
+  }[];
+}
 
 interface CentralUnificadaDesempenhoCardProps {
   totalLinhasSemana: number;
@@ -59,376 +79,427 @@ export const CentralUnificadaDesempenhoCard: React.FC<CentralUnificadaDesempenho
   onAjustarBlocos,
   onExportarPdf
 }) => {
+  const [anelAtivo, setAnelAtivo] = useState<'linhas' | 'retencao' | 'foco' | null>(null);
+  const [pilarAtivo, setPilarAtivo] = useState<'estrutura' | 'material' | 'pedidos'>('estrutura');
+  const [itemSelecionadoId, setItemSelecionadoId] = useState<string>('est-1');
+
   // Cálculo ponderado do Índice de Prontidão (0 a 100%)
   const scoreLinhas = Math.min(100, (totalLinhasSemana / 150) * 100);
   const scoreFoco = Math.min(100, (pomodoroBlocosHoje / 4) * 100);
   const scoreRetencao = Math.min(100, taxaAcertoEstimada);
   const scoreCronograma = totalTarefas > 0 ? Math.min(100, (tarefasConcluidas.length / totalTarefas) * 100) : 50;
-  
+
   const indiceProntidao = Math.round(
     scoreLinhas * 0.35 + scoreRetencao * 0.25 + scoreFoco * 0.2 + scoreCronograma * 0.2
   );
 
   const pecaNome = analisePecaAtual.pecaMaisProvavel?.nome || 'Mandado de Segurança';
   const pecaProb = analisePecaAtual.pecaMaisProvavel?.probabilidade || 88;
-  const soundscapeNome = SOUNDSCAPE_OPCOES.find(o => o.id === soundscapeTipo)?.nome || 'Silencioso';
 
-  // Peças mais recorrentes nos 32 exames FGV
-  const pecasRadar = [
-    { nome: 'Mandado de Segurança', curto: 'MS', freq: '10x', pct: '31%', cor: 'hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400' },
-    { nome: 'Recurso de Apelação', curto: 'Apelação', freq: '9x', pct: '28%', cor: 'hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400' },
-    { nome: 'Agravo de Instrumento', curto: 'Agravo', freq: '7x', pct: '22%', cor: 'hover:border-amber-500 hover:text-amber-600 dark:hover:text-amber-400' },
-    { nome: 'Ação Anulatória', curto: 'Anulatória', freq: '7x', pct: '22%', cor: 'hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400' },
-    { nome: 'Repetição de Indébito', curto: 'Repetição', freq: '6x', pct: '19%', cor: 'hover:border-rose-500 hover:text-rose-600 dark:hover:text-rose-400' }
-  ];
+  // Geometria dos 3 anéis concêntricos do gráfico circular
+  const r1 = 74;
+  const c1 = 2 * Math.PI * r1;
+  const offset1 = c1 - (c1 * scoreLinhas) / 100;
+
+  const r2 = 58;
+  const c2 = 2 * Math.PI * r2;
+  const offset2 = c2 - (c2 * scoreRetencao) / 100;
+
+  const r3 = 42;
+  const c3 = 2 * Math.PI * r3;
+  const offset3 = c3 - (c3 * scoreFoco) / 100;
+
+  // WIDGET INTERATIVO DE PRECISÃO JURÍDICA: Mapeia de forma amigável os 3 pilares
+  const pilares: PilarPrecisao[] = useMemo(() => {
+    const gatilhos = analisePecaAtual.gatilhosGeraisEncontrados || [];
+    const temAutoridade = gatilhos.some(g => g.includes('coator') || g.includes('autoridade'));
+    const temPrazo120 = gatilhos.some(g => g.includes('120') || g.includes('prazo'));
+    const temLiminar = gatilhos.some(g => g.includes('liminar') || g.includes('urgência'));
+    const temDecadencia = gatilhos.some(g => g.includes('decadência') || g.includes('173'));
+    const temSuspensao = gatilhos.some(g => g.includes('suspensão') || g.includes('151'));
+
+    return [
+      {
+        id: 'estrutura',
+        nome: 'Estrutura & Rito',
+        icone: '🏛️',
+        scorePct: temAutoridade && temPrazo120 ? 94 : 82,
+        itens: [
+          {
+            id: 'est-1',
+            titulo: 'Competência do Juízo',
+            artigo: 'Art. 319, I CPC e Art. 109 CF',
+            conforme: true,
+            observacao: 'Endereçamento correto à Vara de Fazenda Pública ou Vara Cível Federal.',
+            sugestao: 'Vara da Fazenda Pública para entes estaduais/municipais; Justiça Federal para a União e suas autarquias.'
+          },
+          {
+            id: 'est-2',
+            titulo: 'Qualificação do Polo Passivo',
+            artigo: 'Art. 6º Lei 12.016/09',
+            conforme: temAutoridade,
+            observacao: temAutoridade ? 'Autoridade e pessoa jurídica de direito público indicadas com clareza.' : 'Lembre-se de apontar a autoridade coatora e também requerer a citação/cientificação da Pessoa Jurídica.',
+            sugestao: 'No Mandado de Segurança, indique a autoridade coatora (ex: Delegado da Receita) E a pessoa jurídica (União).'
+          },
+          {
+            id: 'est-3',
+            titulo: 'Tempestividade do Rito',
+            artigo: 'Art. 23 LMS / Art. 16 LEF',
+            conforme: temPrazo120,
+            observacao: temPrazo120 ? 'Demonstração de tempestividade contemplada.' : 'Demonstre no texto que a ação respeita o prazo formal (120 dias no MS ou 30 dias na LEF).',
+            sugestao: 'Abra um parágrafo objetivo demonstrando a contagem do prazo a partir da ciência do ato.'
+          }
+        ]
+      },
+      {
+        id: 'material',
+        nome: 'Fundamentação Material',
+        icone: '⚖️',
+        scorePct: temDecadencia || temSuspensao ? 88 : 75,
+        itens: [
+          {
+            id: 'mat-1',
+            titulo: 'Decadência (173) vs Prescrição (174)',
+            artigo: 'Arts. 173 e 174 do CTN',
+            conforme: temDecadencia,
+            observacao: 'Diferenciação clara entre constituição do crédito e cobrança judicial.',
+            sugestao: 'Antes da notificação do lançamento, trata-se de decadência (art. 173 CTN). Após a notificação, opera-se a prescrição (art. 174 CTN).'
+          },
+          {
+            id: 'mat-2',
+            titulo: 'Imunidades & Anterioridade',
+            artigo: 'Art. 150, III e VI da CF/88',
+            conforme: true,
+            observacao: 'Aplicação das limitações constitucionais ao poder de tributar.',
+            sugestao: 'A imunidade atinge apenas impostos e deve ser fundamentada na alínea exata do art. 150, VI da CF.'
+          },
+          {
+            id: 'mat-3',
+            titulo: 'Suspensão da Exigibilidade',
+            artigo: 'Art. 151 do CTN',
+            conforme: temSuspensao,
+            observacao: 'Citação das hipóteses taxativas de suspensão do crédito.',
+            sugestao: 'Liminar em MS (inciso IV) e depósito integral em dinheiro (inciso II) suspendem a exigibilidade e asseguram a CPD-EN (art. 206 CTN).'
+          }
+        ]
+      },
+      {
+        id: 'pedidos',
+        nome: 'Tutela & Pedidos',
+        icone: '🎯',
+        scorePct: temLiminar ? 92 : 78,
+        itens: [
+          {
+            id: 'ped-1',
+            titulo: 'Medida Liminar / Tutela Provisória',
+            artigo: 'Art. 7º, III LMS c/c Art. 151, IV CTN',
+            conforme: temLiminar,
+            observacao: temLiminar ? 'Fumus boni iuris e periculum in mora justificados.' : 'Enfatize o risco de dano irreparável pela continuidade da cobrança ilegal.',
+            sugestao: 'Requeira expressamente a expedição de certidão positiva com efeitos de negativa (CPD-EN, art. 206 CTN).'
+          },
+          {
+            id: 'ped-2',
+            titulo: 'Procedência Definitiva',
+            artigo: 'Concessão da Ordem / Anulação',
+            conforme: true,
+            observacao: 'Pedido principal congruente com a causa de pedir.',
+            sugestao: 'Peça a confirmação da liminar e a anulação do débito com cancelamento de eventual CDA.'
+          },
+          {
+            id: 'ped-3',
+            titulo: 'Custas & Sucumbência',
+            artigo: 'Súmula 105 STJ e Art. 85 CPC',
+            conforme: true,
+            observacao: 'Disciplina correta das verbas sucumbenciais na FGV.',
+            sugestao: 'Em Mandado de Segurança, NÃO cabem honorários sucumbenciais (Súmula 105 STJ). Requeira apenas ressarcimento de custas.'
+          }
+        ]
+      }
+    ];
+  }, [analisePecaAtual]);
+
+  const pilarCorrente = pilares.find(p => p.id === pilarAtivo) || pilares[0];
+  const itemCorrente = pilarCorrente.itens.find(it => it.id === itemSelecionadoId) || pilarCorrente.itens[0];
+
+  // Média ponderada de precisão dos 3 pilares
+  const mediaPrecisao = Math.round(
+    pilares.reduce((acc, p) => acc + p.scorePct, 0) / pilares.length
+  );
 
   return (
-    <div className="rounded-3xl border border-black/5 dark:border-white/10 bg-white dark:bg-zinc-800/90 shadow-sm p-6 lg:p-7 space-y-6 transition-all duration-300">
-      {/* 1. TOPO AMIGÁVEL COM MEDIDOR VISUAL DE PRONTIDÃO */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5 pb-2">
-        <div className="flex items-center gap-4">
-          {/* Anel de Progresso Visual e Agradável */}
-          <div className="relative flex items-center justify-center shrink-0">
-            <svg className="w-16 h-16 transform -rotate-90">
-              <circle
-                cx="32"
-                cy="32"
-                r="26"
-                stroke="currentColor"
-                strokeWidth="5"
-                className="text-black/5 dark:text-white/10"
-                fill="transparent"
-              />
-              <circle
-                cx="32"
-                cy="32"
-                r="26"
-                stroke="currentColor"
-                strokeWidth="5"
-                strokeDasharray={163.3}
-                strokeDashoffset={163.3 - (163.3 * indiceProntidao) / 100}
-                strokeLinecap="round"
-                className="text-blue-600 dark:text-blue-400 transition-all duration-1000 ease-out"
-                fill="transparent"
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span className="text-base font-extrabold font-mono text-zinc-900 dark:text-white leading-none">
-                {indiceProntidao}%
-              </span>
-            </div>
+    <div className="macos-card-interactive rounded-3xl border border-black/5 dark:border-white/10 bg-white/80 dark:bg-zinc-800/90 backdrop-blur-xl shadow-sm p-5 lg:p-6 transition-all duration-300 space-y-4">
+      {/* 1. TOPO: TÍTULO, SUBTÍTULO & AÇÕES RÁPIDAS */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-black/5 dark:border-white/5">
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 font-medium flex-wrap">
+            <span className="font-semibold text-blue-600 dark:text-blue-400">Painel de Desempenho</span>
+            <span aria-hidden="true">·</span>
+            <span>2ª Fase OAB Tributário</span>
+            <span aria-hidden="true">·</span>
+            <span>{diasProva >= 0 ? `${diasProva} dias para a prova` : 'Hoje é a prova'}</span>
           </div>
-
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-800/40">
-                Preparação Estratégica
-              </span>
-              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/40">
-                {indiceProntidao >= 75 ? '🔥 Ritmo Excelente' : '💪 Evoluindo com Constância'}
-              </span>
-              <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-                • {diasProva >= 0 ? `Faltam ${diasProva} dias para a prova` : 'Dia da prova'}
-              </span>
-            </div>
-            <h2 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white mt-1 tracking-tight">
-              Seu Painel de Desempenho Diário
-            </h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-              Acompanhe sua evolução prática rumo aos 10 pontos da 2ª Fase OAB.
-            </p>
-          </div>
+          <h2 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-white tracking-tight flex items-center gap-2">
+            <span>Prontidão & Precisão Jurídica da Peça</span>
+          </h2>
         </div>
 
-        {/* Ações Rápidas Amigáveis */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => onNavegarParaTab('simulador')}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-sm hover:shadow transition-all cursor-pointer active:scale-95"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-xs transition cursor-pointer active:scale-95"
           >
-            <FileText className="h-4 w-4" />
-            <span>Abrir Simulador 150L</span>
+            <FileText className="h-3.5 w-3.5" />
+            <span>Simulador 150L</span>
           </button>
+
           <button
             onClick={onExportarPdf}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700/60 text-zinc-700 dark:text-zinc-300 text-xs font-medium shadow-xs transition-all cursor-pointer"
+            className="p-1.5 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition cursor-pointer shadow-xs"
             title="Exportar Relatório Semanal em PDF"
           >
-            <Download className="h-4 w-4 text-blue-500" />
-            <span className="hidden sm:inline">Relatório PDF</span>
+            <Download className="h-4 w-4" />
           </button>
         </div>
       </div>
 
-      {/* 2. GRID VISUAL E AGRADÁVEL (4 CARDS COLORIDOS COM PERSONALIDADE) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* CARD 1: REDAÇÃO 150 LINHAS (AZUL / SKY) */}
-        <div className="p-5 rounded-2xl border border-blue-200/60 dark:border-blue-900/40 bg-gradient-to-br from-blue-50/90 via-sky-50/30 to-white dark:from-blue-950/25 dark:via-zinc-900/50 dark:to-zinc-800/60 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
-          <div>
-            <div className="flex items-center justify-between gap-2 mb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 font-bold shadow-xs">
-                  <FileText className="h-4.5 w-4.5" />
-                </div>
-                <div>
-                  <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 block">
-                    Redação 150L
-                  </span>
-                  <span className="text-[10.5px] text-zinc-500 dark:text-zinc-400">
-                    Folha padrão FGV
-                  </span>
-                </div>
-              </div>
-              <span className="text-[11px] font-bold font-mono px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-300">
-                {scoreLinhas.toFixed(0)}%
+      {/* 2. CORPO: GRÁFICO CIRCULAR ÚNICO + WIDGET INTERATIVO DE PRECISÃO JURÍDICA */}
+      <div className="flex flex-col lg:flex-row items-center lg:items-stretch gap-6">
+        {/* GRÁFICO CIRCULAR DE DESEMPENHO (COMPACTO & ELEGANTE) */}
+        <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-zinc-50/70 dark:bg-zinc-900/60 border border-black/5 dark:border-white/5 shrink-0 w-full sm:w-auto">
+          <div className="relative flex items-center justify-center">
+            <svg className="w-36 h-36 sm:w-40 sm:h-40 transform -rotate-90 overflow-visible" viewBox="0 0 180 180">
+              <defs>
+                <linearGradient id="ringLinhasGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#3b82f6" />
+                  <stop offset="100%" stopColor="#06b6d4" />
+                </linearGradient>
+                <linearGradient id="ringRetencaoGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#10b981" />
+                  <stop offset="100%" stopColor="#34d399" />
+                </linearGradient>
+                <linearGradient id="ringFocoGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#f59e0b" />
+                  <stop offset="100%" stopColor="#f43f5e" />
+                </linearGradient>
+              </defs>
+
+              {/* Trilha de Fundo 1 (Externo) */}
+              <circle cx="90" cy="90" r={r1} stroke="currentColor" strokeWidth="6.5" className="text-black/5 dark:text-white/5" fill="transparent" />
+              <circle
+                cx="90"
+                cy="90"
+                r={r1}
+                stroke="url(#ringLinhasGrad)"
+                strokeWidth={anelAtivo === 'linhas' ? '8.5' : '6.5'}
+                strokeDasharray={c1}
+                strokeDashoffset={offset1}
+                strokeLinecap="round"
+                className="transition-all duration-1000 ease-out cursor-pointer"
+                fill="transparent"
+                onMouseEnter={() => setAnelAtivo('linhas')}
+                onMouseLeave={() => setAnelAtivo(null)}
+              />
+
+              {/* Trilha de Fundo 2 (Médio) */}
+              <circle cx="90" cy="90" r={r2} stroke="currentColor" strokeWidth="6.5" className="text-black/5 dark:text-white/5" fill="transparent" />
+              <circle
+                cx="90"
+                cy="90"
+                r={r2}
+                stroke="url(#ringRetencaoGrad)"
+                strokeWidth={anelAtivo === 'retencao' ? '8.5' : '6.5'}
+                strokeDasharray={c2}
+                strokeDashoffset={offset2}
+                strokeLinecap="round"
+                className="transition-all duration-1000 ease-out cursor-pointer"
+                fill="transparent"
+                onMouseEnter={() => setAnelAtivo('retencao')}
+                onMouseLeave={() => setAnelAtivo(null)}
+              />
+
+              {/* Trilha de Fundo 3 (Interno) */}
+              <circle cx="90" cy="90" r={r3} stroke="currentColor" strokeWidth="6.5" className="text-black/5 dark:text-white/5" fill="transparent" />
+              <circle
+                cx="90"
+                cy="90"
+                r={r3}
+                stroke="url(#ringFocoGrad)"
+                strokeWidth={anelAtivo === 'foco' ? '8.5' : '6.5'}
+                strokeDasharray={c3}
+                strokeDashoffset={offset3}
+                strokeLinecap="round"
+                className="transition-all duration-1000 ease-out cursor-pointer"
+                fill="transparent"
+                onMouseEnter={() => setAnelAtivo('foco')}
+                onMouseLeave={() => setAnelAtivo(null)}
+              />
+            </svg>
+
+            {/* Centro do Anel: Índice Ponderado */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+              <span className="text-2xl font-extrabold font-mono text-zinc-900 dark:text-white tracking-tight leading-none animate-pop-scale">
+                {indiceProntidao}%
+              </span>
+              <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mt-0.5">
+                Prontidão
+              </span>
+              <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5 inline-flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
+                {indiceProntidao >= 75 ? 'Ritmo Forte' : 'Evoluindo'}
+              </span>
+            </div>
+          </div>
+
+          {/* Mini-Métricas Limpas */}
+          <div className="grid grid-cols-3 gap-2 w-full pt-2.5 mt-1 border-t border-black/5 dark:border-white/5 text-center text-xs">
+            <div className="cursor-pointer transition-transform hover:scale-105" onMouseEnter={() => setAnelAtivo('linhas')} onMouseLeave={() => setAnelAtivo(null)}>
+              <span className="text-[10px] text-zinc-500 dark:text-zinc-400 block">Redação</span>
+              <span className="font-mono text-xs font-bold text-blue-600 dark:text-blue-400">{totalLinhasSemana}/150L</span>
+            </div>
+            <div className="cursor-pointer transition-transform hover:scale-105" onMouseEnter={() => setAnelAtivo('retencao')} onMouseLeave={() => setAnelAtivo(null)}>
+              <span className="text-[10px] text-zinc-500 dark:text-zinc-400 block">Retenção</span>
+              <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">{taxaAcertoEstimada}%</span>
+            </div>
+            <div className="cursor-pointer transition-transform hover:scale-105" onMouseEnter={() => setAnelAtivo('foco')} onMouseLeave={() => setAnelAtivo(null)}>
+              <span className="text-[10px] text-zinc-500 dark:text-zinc-400 block">Foco</span>
+              <span className="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">{pomodoroBlocosHoje}/4🍅</span>
+            </div>
+          </div>
+        </div>
+
+        {/* WIDGET INTERATIVO DE PRECISÃO & REFORÇO DE TESES (AMIGÁVEL & SEM CARDS ASSUSTADORES) */}
+        <div className="flex-1 min-w-0 space-y-3 w-full">
+          {/* Barra Termômetro Superior de Precisão */}
+          <div className="p-3 rounded-2xl bg-zinc-50/70 dark:bg-zinc-900/60 border border-black/5 dark:border-white/5 space-y-2 transition-all">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                <SlidersHorizontal className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 animate-pulse" />
+                <span>Precisão Jurídica Heurística:</span>
+                <strong className="text-zinc-900 dark:text-white font-bold">{mediaPrecisao}% Conforme</strong>
+              </span>
+              <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                Peça em análise: <strong className="text-zinc-900 dark:text-white">{pecaNome}</strong>
               </span>
             </div>
 
-            <div className="flex items-baseline gap-1.5 my-2">
-              <span className="text-3xl font-extrabold font-mono text-zinc-900 dark:text-white tracking-tight">
-                {totalLinhasSemana}
-              </span>
-              <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">/ 150 linhas</span>
-            </div>
-
-            {/* Barra de Progresso Suave e Colorida */}
-            <div className="h-2 w-full bg-blue-200/50 dark:bg-zinc-800 rounded-full overflow-hidden my-2.5 shadow-inner">
+            {/* Barra Termômetro Suave Segmentada com Animação Gradiente */}
+            <div className="h-2.5 w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden flex shadow-inner">
               <div
-                className="h-full bg-gradient-to-r from-blue-600 to-sky-400 rounded-full transition-all duration-700"
-                style={{ width: `${scoreLinhas}%` }}
+                className="h-full bg-gradient-to-r from-blue-500 to-sky-400 animate-gradient-flow transition-all duration-700"
+                style={{ width: `${pilares[0].scorePct / 3}%` }}
+                title="Estrutura & Rito"
+              />
+              <div
+                className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 animate-gradient-flow transition-all duration-700"
+                style={{ width: `${pilares[1].scorePct / 3}%` }}
+                title="Fundamentação Material"
+              />
+              <div
+                className="h-full bg-gradient-to-r from-indigo-500 to-purple-400 animate-gradient-flow transition-all duration-700"
+                style={{ width: `${pilares[2].scorePct / 3}%` }}
+                title="Tutela & Pedidos"
               />
             </div>
           </div>
 
-          <div className="pt-3 mt-1 flex items-center justify-between border-t border-blue-200/40 dark:border-white/5 text-xs">
-            <span className="text-zinc-600 dark:text-zinc-400 truncate max-w-[125px]" title={pecaNome}>
-              Peça: <strong className="text-blue-600 dark:text-blue-400 font-semibold">{pecaNome.split(' ')[0]}...</strong>
-            </span>
-            <button
-              onClick={() => onAdicionarLinhas(30)}
-              className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-[11px] transition shadow-xs cursor-pointer active:scale-95"
-              title="Registrar +30 linhas (1 página preenchida)"
-            >
-              +30L (Pág)
-            </button>
+          {/* Abas dos 3 Pilares Interativos */}
+          <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-zinc-100/70 dark:bg-zinc-900/80 border border-black/5 dark:border-white/5">
+            {pilares.map((p) => {
+              const ativo = p.id === pilarAtivo;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => {
+                    tocarAlarmeWebAudio('suave');
+                    setPilarAtivo(p.id);
+                    setItemSelecionadoId(p.itens[0].id);
+                  }}
+                  className={`py-1.5 px-2 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 ${
+                    ativo
+                      ? 'bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 shadow-xs scale-[1.02]'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
+                  }`}
+                >
+                  <span className="text-xs">{p.icone}</span>
+                  <span className="truncate">{p.nome}</span>
+                  <span className="text-[10px] font-mono opacity-75">{p.scorePct}%</span>
+                </button>
+              );
+            })}
           </div>
-        </div>
 
-        {/* CARD 2: FOCO POMODORO (CORAL / ROSE) */}
-        <div className="p-5 rounded-2xl border border-rose-200/60 dark:border-rose-900/40 bg-gradient-to-br from-rose-50/90 via-orange-50/30 to-white dark:from-rose-950/25 dark:via-zinc-900/50 dark:to-zinc-800/60 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
-          <div>
-            <div className="flex items-center justify-between gap-2 mb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/15 text-rose-600 dark:text-rose-400 font-bold shadow-xs">
-                  <Clock className="h-4.5 w-4.5" />
-                </div>
-                <div>
-                  <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 block">
-                    Foco Diário
-                  </span>
-                  <span className="text-[10.5px] text-zinc-500 dark:text-zinc-400">
-                    Modo {pomodoroModo}
-                  </span>
-                </div>
-              </div>
-              <span className="text-[11px] font-bold font-mono px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300">
-                {pomodoroBlocosHoje}/4 🍅
-              </span>
-            </div>
+          {/* Lista Amigável de Itens do Pilar Selecionado com Animação de Entrada */}
+          <div key={pilarAtivo} className="space-y-1.5 animate-pop-scale">
+            {pilarCorrente.itens.map((item) => {
+              const isSelected = item.id === itemCorrente.id;
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => {
+                    tocarAlarmeWebAudio('suave');
+                    setItemSelecionadoId(item.id);
+                  }}
+                  className={`p-2.5 rounded-xl border transition-all duration-200 cursor-pointer flex items-center justify-between gap-3 text-xs ${
+                    isSelected
+                      ? 'border-blue-500/60 bg-blue-50/50 dark:bg-blue-950/25 shadow-xs translate-x-1'
+                      : 'border-black/5 dark:border-white/5 bg-zinc-50/50 dark:bg-zinc-900/40 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/60 hover:translate-x-0.5'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div
+                      className={`h-4 w-4 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold transition-transform ${
+                        item.conforme
+                          ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                          : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 animate-pulse'
+                      }`}
+                    >
+                      {item.conforme ? '✓' : '💡'}
+                    </div>
+                    <span className="font-medium text-zinc-900 dark:text-white truncate">
+                      {item.titulo}
+                    </span>
+                    <span className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500 shrink-0">
+                      {item.artigo}
+                    </span>
+                  </div>
 
-            <div className="flex items-baseline gap-1.5 my-2">
-              <span className="text-3xl font-extrabold font-mono text-zinc-900 dark:text-white tracking-tight">
-                {pomodoroBlocosHoje}
-              </span>
-              <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">/ 4 blocos diários</span>
-            </div>
-
-            {/* 4 Pílulas Visuais Amigáveis de Progresso */}
-            <div className="grid grid-cols-4 gap-1.5 my-2.5">
-              {[0, 1, 2, 3].map((idx) => {
-                const ativo = pomodoroBlocosHoje > idx;
-                return (
-                  <div
-                    key={idx}
-                    className={`h-2 rounded-full transition-all duration-500 ${
-                      ativo
-                        ? 'bg-gradient-to-r from-rose-500 to-amber-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]'
-                        : 'bg-rose-200/50 dark:bg-zinc-800'
+                  <span
+                    className={`text-[10.5px] font-semibold shrink-0 transition-colors ${
+                      item.conforme ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
                     }`}
-                  />
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="pt-3 mt-1 flex items-center justify-between border-t border-rose-200/40 dark:border-white/5 text-xs">
-            <span className="text-zinc-600 dark:text-zinc-400 truncate flex items-center gap-1.5 max-w-[110px]" title={`Soundscape ativo: ${soundscapeNome}`}>
-              <Headphones className="h-3.5 w-3.5 text-rose-500 shrink-0" />
-              <span className="text-[11px] font-medium truncate">{soundscapeNome}</span>
-            </span>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={onTogglePomodoro}
-                className={`p-1.5 rounded-lg text-white font-semibold transition cursor-pointer shadow-xs active:scale-95 ${
-                  pomodoroRunning ? 'bg-amber-500 hover:bg-amber-600' : 'bg-rose-600 hover:bg-rose-500'
-                }`}
-                title={pomodoroRunning ? 'Pausar foco' : 'Iniciar sessão de foco'}
-              >
-                {pomodoroRunning ? <Pause className="h-3 w-3 fill-current" /> : <Play className="h-3 w-3 fill-current" />}
-              </button>
-              <button
-                onClick={() => onAjustarBlocos(1)}
-                className="px-2 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/60 dark:hover:bg-rose-900/80 text-rose-700 dark:text-rose-300 font-semibold text-[11px] transition cursor-pointer"
-                title="Registrar +1 bloco de foco concluído"
-              >
-                +1 🍅
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* CARD 3: FLASHCARDS & RETENÇÃO (ESMERALDA / MINT) */}
-        <div className="p-5 rounded-2xl border border-emerald-200/60 dark:border-emerald-900/40 bg-gradient-to-br from-emerald-50/90 via-teal-50/30 to-white dark:from-emerald-950/25 dark:via-zinc-900/50 dark:to-zinc-800/60 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
-          <div>
-            <div className="flex items-center justify-between gap-2 mb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold shadow-xs">
-                  <Sparkles className="h-4.5 w-4.5" />
-                </div>
-                <div>
-                  <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 block">
-                    Flashcards
-                  </span>
-                  <span className="text-[10.5px] text-zinc-500 dark:text-zinc-400">
-                    Fixação das teses
+                  >
+                    {item.conforme ? 'Alinhado' : 'Reforçar'}
                   </span>
                 </div>
-              </div>
-              <span className="text-[11px] font-bold font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
-                Meta 75%
-              </span>
-            </div>
-
-            <div className="flex items-baseline gap-1.5 my-2">
-              <span className="text-3xl font-extrabold font-mono text-zinc-900 dark:text-white tracking-tight">
-                {taxaAcertoEstimada}%
-              </span>
-              <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">taxa de retenção</span>
-            </div>
-
-            {/* Barra de Retenção Gradiente Suave */}
-            <div className="h-2 w-full bg-emerald-200/50 dark:bg-zinc-800 rounded-full overflow-hidden my-2.5 shadow-inner">
-              <div
-                className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-700"
-                style={{ width: `${Math.min(100, taxaAcertoEstimada)}%` }}
-              />
-            </div>
+              );
+            })}
           </div>
 
-          <div className="pt-3 mt-1 flex items-center justify-between border-t border-emerald-200/40 dark:border-white/5 text-xs">
-            <span className="text-zinc-600 dark:text-zinc-400 text-[11px]">
-              {flashStats.acertos}/{flashStats.total} acertos
-            </span>
-            <button
-              onClick={() => onNavegarParaTab('flashcards')}
-              className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300 hover:text-emerald-800 font-semibold text-[11px] cursor-pointer group-hover:underline"
-            >
-              <span>Praticar</span>
-              <ArrowUpRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
-
-        {/* CARD 4: CRONOGRAMA 32 PROVAS FGV (ÍNDIGO / VIOLETA) */}
-        <div className="p-5 rounded-2xl border border-indigo-200/60 dark:border-indigo-900/40 bg-gradient-to-br from-indigo-50/90 via-purple-50/30 to-white dark:from-indigo-950/25 dark:via-zinc-900/50 dark:to-zinc-800/60 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
-          <div>
-            <div className="flex items-center justify-between gap-2 mb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 font-bold shadow-xs">
-                  <Calendar className="h-4.5 w-4.5" />
-                </div>
-                <div>
-                  <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 block">
-                    Cronograma FGV
-                  </span>
-                  <span className="text-[10.5px] text-zinc-500 dark:text-zinc-400">
-                    Ciclo de 8 semanas
-                  </span>
-                </div>
-              </div>
-              <span className="text-[11px] font-bold font-mono px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-700 dark:text-indigo-300">
-                32 Provas
+          {/* Caixa de Sugestão Construtiva & Acolhedora */}
+          <div key={itemCorrente.id} className="p-3 rounded-2xl bg-blue-50/40 dark:bg-zinc-900/80 border border-blue-200/60 dark:border-white/5 text-xs space-y-1 animate-pop-scale shadow-xs">
+            <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
+              <span className="font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                <Sparkles className="h-3 w-3" /> Sugestão para o Espelho FGV:
               </span>
+              <span className="font-mono text-[10px]">{itemCorrente.artigo}</span>
             </div>
-
-            <div className="flex items-baseline gap-1.5 my-2">
-              <span className="text-3xl font-extrabold font-mono text-zinc-900 dark:text-white tracking-tight">
-                {tarefasConcluidas.length}
-              </span>
-              <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">/ {totalTarefas} metas</span>
-            </div>
-
-            {/* Barra de Cronograma Gradiente */}
-            <div className="h-2 w-full bg-indigo-200/50 dark:bg-zinc-800 rounded-full overflow-hidden my-2.5 shadow-inner">
-              <div
-                className="h-full bg-gradient-to-r from-indigo-600 to-purple-500 rounded-full transition-all duration-700"
-                style={{ width: `${totalTarefas > 0 ? (tarefasConcluidas.length / totalTarefas) * 100 : 30}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="pt-3 mt-1 flex items-center justify-between border-t border-indigo-200/40 dark:border-white/5 text-xs">
-            <span className="text-zinc-600 dark:text-zinc-400 text-[11px]">
-              Simulado semanal
-            </span>
-            <button
-              onClick={() => onNavegarParaTab('cronograma')}
-              className="inline-flex items-center gap-1 text-indigo-700 dark:text-indigo-300 hover:text-indigo-800 font-semibold text-[11px] cursor-pointer group-hover:underline"
-            >
-              <span>Acessar</span>
-              <ArrowUpRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. FAIXA VISUAL DE DIAGNÓSTICO & RADAR DE PEÇAS */}
-      <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-slate-50/70 dark:from-zinc-900/60 dark:via-zinc-900/40 dark:to-zinc-900/60 border border-blue-100 dark:border-white/5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 text-xs">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 shrink-0 shadow-xs">
-            <Zap className="h-4 w-4" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-zinc-500 dark:text-zinc-400 font-medium">Peça mais provável para o caso atual:</span>
-              <span className="font-bold text-zinc-900 dark:text-white">{pecaNome}</span>
-              <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-300">
-                {pecaProb}% probabilidade
-              </span>
-            </div>
-            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
-              {analisePecaAtual.pecaMaisProvavel?.justificativaCabimento || 'Identificada automaticamente com base nos fatos narrados e nas teses de 2ª fase.'}
+            <p className="text-zinc-700 dark:text-zinc-300 text-[11.5px] leading-relaxed">
+              {itemCorrente.sugestao}
             </p>
           </div>
         </div>
+      </div>
 
-        {/* Pílulas de Acesso Rápido ao Radar de Peças */}
-        <div className="flex items-center gap-1.5 shrink-0 overflow-x-auto pt-1 lg:pt-0">
-          <span className="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 mr-1 hidden sm:inline">
-            Radar FGV:
-          </span>
-          {pecasRadar.map((p) => (
-            <button
-              key={p.nome}
-              onClick={() => onNavegarParaTab('pecas')}
-              className={`px-2.5 py-1 rounded-xl bg-white dark:bg-zinc-800 border border-black/5 dark:border-white/10 text-[11px] font-medium text-zinc-700 dark:text-zinc-300 shadow-xs transition-all cursor-pointer whitespace-nowrap ${p.cor}`}
-              title={`Clique para estudar o esqueleto de ${p.nome} (Cobrada ${p.freq} na OAB)`}
-            >
-              <span>{p.curto}</span>
-              <span className="ml-1 opacity-60 font-mono text-[10px]">{p.freq}</span>
-            </button>
-          ))}
-        </div>
+      {/* 3. RODAPÉ SUTIL COM RESUMO DE CONTEXTO */}
+      <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 pt-1 border-t border-black/5 dark:border-white/5">
+        <span className="truncate flex items-center gap-1.5">
+          <Zap className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+          <span>Peça: <strong className="text-zinc-800 dark:text-zinc-200">{pecaNome}</strong> ({pecaProb}% probabilidade heurística)</span>
+        </span>
+        <span className="font-mono text-[11px] shrink-0">
+          Cronograma: <strong className="text-zinc-800 dark:text-zinc-200">{tarefasConcluidas.length}/{totalTarefas}</strong>
+        </span>
       </div>
     </div>
   );
